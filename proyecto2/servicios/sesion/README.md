@@ -1,4 +1,4 @@
-# Servicio de Sesión — commits 3 y 4
+# Servicio de Sesión — commits 3, 4 y 5
 
 Implementación del candado exclusivo (`SET NX PX 120000`), el hash de sesión
 (`sesion:{anotador}`) y el conjunto ordenado de usuarios editando
@@ -13,6 +13,7 @@ atómica en una instancia independiente de Valkey.
 | `POST /sesiones/iniciar` | Adquirir lock y registrar sesión | 201 / 409 / 503 |
 | `POST /sesiones/latido` | Renovar lock de su propietario | 200 / 409 / 503 |
 | `POST /sesiones/finalizar` | Liberar lock y cerrar sesión | 200 / 409 / 503 |
+| `POST /sesiones/recuperar` | Recuperar sesión interrumpida y borrador | 200 / 409 / 503 |
 
 Ejemplo del cuerpo JSON de `POST /sesiones/iniciar`:
 
@@ -38,14 +39,12 @@ mismos cuatro identificadores sin necesidad de `etapa`.
 4. La sesión no modifica estados definitivos ni accede a MongoDB.
 5. El simulador no llama directamente a esta API interna, sino al gateway.
 
-El servicio de Sesión ya incluye el guardado de borradores, pero aún no
-implementa la recuperación por API ni el vencimiento en MongoDB.
-Estos aspectos se incorporarán e integrarán después.
+El servicio de Sesión incluye guardado y recuperación de borradores.
+El vencimiento y la nueva asignación operacional deben coordinarse con
+Registro por medio del gateway; Sesión no cambia estados en MongoDB.
 
 > El contrato REST interno y los nombres de los servicios deben validarse
-> con los otros dos integrantes antes de hacer la integración final. Para
-> respetar el máximo de seis rutas por servicio, se reserva una ruta para
-> recuperar borradores, además de las cinco rutas actuales.
+> con los otros dos integrantes antes de hacer la integración final. Se respeta el máximo de seis rutas por servicio REST interno.
 
 ## Pruebas en WSL (más adelante)
 
@@ -117,3 +116,68 @@ VALKEY_TEST_URL=redis://localhost:6379/15 python -m pytest pruebas/test_sesion_b
 Si Valkey no esta disponible, se indica `SKIPPED`; no equivale a pasar.
 Para la prueba P3 completa se requiere reiniciar el contenedor Valkey,
 comprobar que el ultimo borrador se conserva y documentar la evidencia.
+
+
+## Recuperación de sesiones — commit 5
+
+La sexta ruta interna es `POST /sesiones/recuperar`, con el mismo JSON de
+`/sesiones/latido`: `anotador_id`, `tarea_id`, `proyecto_id` y `token`.
+Solo el gateway puede llamar a este servicio; el simulador usa el gateway.
+
+El script Lua valida **atómicamente** la sesión y el candado:
+
+- **HTTP 200, estado `activa`**: el token coincide y el lock sigue vigente.
+  Se renueva a 120 segundos y se devuelve el último borrador (si existe).
+- **HTTP 200, estado `requiere_reasignacion`**: la sesión coincide, pero el
+  candado ya venció. Se devuelve el borrador en **solo lectura**, sin crear
+  un lock nuevo. El gateway debe validar con Registro si la tarea puede
+  reasignarse antes de permitir que se edite o envíe.
+- **HTTP 409**: sesión inexistente, token incorrecto o lock de otro
+  propietario. Nunca devuelve el contenido de otro anotador.
+- **HTTP 503**: Valkey no está disponible.
+
+Ejemplo de respuesta exitosa con borrador:
+
+```json
+{
+  "estado": "activa",
+  "tarea_id": "tarea-01",
+  "anotador_id": "anotador-01",
+  "proyecto_id": "proyecto-01",
+  "etapa": "anotacion",
+  "ttl_ms": 120000,
+  "borrador": {"etiquetas": ["lidar#peaton"]},
+  "version": 2,
+  "actualizado_en_ms": 1793970000000
+}
+```
+
+Los identificadores y la fecha anteriores son ilustrativos. Si todavía no
+se ha guardado un borrador, `borrador`, `version` y `actualizado_en_ms`
+son `null`. El borrador no se convierte en anotación definitiva.
+
+### Pruebas de recuperación en WSL
+
+Desde `proyecto2/servicios/sesion` instalar dependencias de desarrollo y
+regresar a `proyecto2` antes de ejecutar:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-dev.txt
+cd ../..
+VALKEY_TEST_URL=redis://localhost:6379/15 python -m pytest pruebas/test_sesion_recuperacion.py -v
+```
+
+Si no existe Valkey, los tests se marcan SKIPPED, **no aprobados**. No se
+ha realizado todavía la prueba de persistencia AOF P3. Para P3, con un
+volumen persistente en el Compose definitivo, se debe crear una sesión,
+guardar un borrador, reiniciar **únicamente** Valkey mediante
+`docker compose restart valkey`, consultar `/sesiones/recuperar` y comparar
+los datos recuperados. El AOF `everysec` puede perder aproximadamente
+el último segundo de cambios ante una caída abrupta; un reinicio normal
+y un fallo abrupto no deben presentarse como el mismo experimento.
+
+La asignación/retorno a cola y las comprobaciones del estado MongoDB
+son responsabilidad del gateway y Registro; no quedan completas con
+este commit.

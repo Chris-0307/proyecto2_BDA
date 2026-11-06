@@ -13,12 +13,13 @@ from redis import Redis, RedisError
 
 from .borradores import GuardarBorrador, ResultadoBorrador, ServicioBorradores
 from .locks import LOCK_TTL_MS
+from .recuperacion import ResultadoRecuperacion, ServicioRecuperacion
 from .sesiones import DatosSesion, InicioSesion, ResultadoSesion, ServicioSesiones
 
 app = FastAPI(
     title="Servicio de Sesion",
     description="Gestion temporal de sesiones y locks con Valkey",
-    version="0.3.0",
+    version="0.4.0",
 )
 
 VALKEY_URL = os.getenv("VALKEY_URL", "redis://valkey:6379/0")
@@ -122,3 +123,22 @@ def guardar_borrador(tarea_id: str, datos: GuardarBorrador):
     if guardado is None:
         raise HTTPException(status_code=409, detail="Lock vencido, sesion inexistente o token incorrecto")
     return guardado
+
+
+@app.post("/sesiones/recuperar", response_model=ResultadoRecuperacion)
+def recuperar_sesion(datos: DatosSesion):
+    """Recupera la sesion interrumpida y, si existe, su ultimo borrador.
+
+    Con lock valido se renueva y se devuelve la sesion activa. Sin lock,
+    el borrador es de solo lectura: el gateway debe consultar Registro
+    antes de permitir una nueva asignacion de la tarea.
+    """
+    try:
+        with obtener_cliente() as cliente:
+            recuperacion = ServicioRecuperacion(cliente).recuperar(datos)
+    except (RedisError, OSError, ValueError, TypeError):
+        raise HTTPException(status_code=503, detail="No se pudo consultar Valkey") from None
+
+    if recuperacion is None:
+        raise HTTPException(status_code=409, detail="Sesion inexistente, token incorrecto o lock ajeno")
+    return recuperacion
