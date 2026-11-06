@@ -11,13 +11,14 @@ from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import JSONResponse
 from redis import Redis, RedisError
 
+from .borradores import GuardarBorrador, ResultadoBorrador, ServicioBorradores
 from .locks import LOCK_TTL_MS
 from .sesiones import DatosSesion, InicioSesion, ResultadoSesion, ServicioSesiones
 
 app = FastAPI(
     title="Servicio de Sesion",
     description="Gestion temporal de sesiones y locks con Valkey",
-    version="0.2.0",
+    version="0.3.0",
 )
 
 VALKEY_URL = os.getenv("VALKEY_URL", "redis://valkey:6379/0")
@@ -101,3 +102,23 @@ def finalizar_sesion(datos: DatosSesion):
         estado="finalizada", tarea_id=datos.tarea_id,
         anotador_id=datos.anotador_id,
     )
+
+
+@app.put("/tareas/{tarea_id}/borrador", response_model=ResultadoBorrador)
+def guardar_borrador(tarea_id: str, datos: GuardarBorrador):
+    """Guarda el borrador si el lock coincide y renueva los 120 segundos.
+
+    El gateway debe comprobar el estado de la tarea en Registro. Aqui solo
+    se valida la propiedad de la sesion temporal, sin consultar MongoDB.
+    """
+    if tarea_id != datos.tarea_id:
+        raise HTTPException(status_code=422, detail="El ID de la ruta no coincide con la tarea")
+    try:
+        with obtener_cliente() as cliente:
+            guardado = ServicioBorradores(cliente).guardar(datos)
+    except (RedisError, OSError, ValueError, TypeError):
+        raise HTTPException(status_code=503, detail="Valkey no disponible o contenido invalido") from None
+
+    if guardado is None:
+        raise HTTPException(status_code=409, detail="Lock vencido, sesion inexistente o token incorrecto")
+    return guardado
