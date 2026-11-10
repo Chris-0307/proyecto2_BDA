@@ -1,7 +1,7 @@
 """API REST interna para recibir eventos historicos del gateway.
 
 Esta aplicacion no publica puertos al host: solo el gateway debe ser accesible
-para el simulador. El proceso de consumo para Parquet llegara en commit 7.
+para el simulador. Un worker independiente materializa Parquet.
 """
 
 import os
@@ -20,7 +20,7 @@ from .eventos import (
 app = FastAPI(
     title="Servicio de Historial",
     description="Recepcion idempotente de eventos mediante Valkey Streams",
-    version="0.1.0",
+    version="0.2.0",
 )
 
 VALKEY_URL = os.getenv("VALKEY_URL", "redis://valkey:6379/0")

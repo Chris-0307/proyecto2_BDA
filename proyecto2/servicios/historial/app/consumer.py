@@ -1,8 +1,8 @@
-"""Base del consumidor de eventos de Valkey Streams.
+"""Consumidor de Valkey Streams con confirmacion posterior a Parquet.
 
-NO hay worker automatico en este commit, porque aun falta el escritor
-Parquet. Confirmar (XACK) antes de publicar el archivo durable perderia
-el evento si el proceso falla. En el commit 7 se agregara el writer real.
+El proceso app.worker conecta este consumidor con EscritorParquet.
+XACK se ejecuta solo tras publicar exitosamente todos los archivos del lote.
+La recuperacion de mensajes pendientes tras fallas se agregara en commit 8.
 """
 
 import json
@@ -28,7 +28,7 @@ def asegurar_grupo(cliente: Redis, grupo: str = GRUPO) -> None:
 
 def procesar_lote(
     cliente: Redis,
-    escribir_y_publicar: Callable[[list[EventoNegocio]], None],
+    escribir_y_publicar: Callable[[list[EventoNegocio]], object],
     *,
     consumidor: str,
     grupo: str = GRUPO,
@@ -36,10 +36,9 @@ def procesar_lote(
 ) -> int:
     """Lee un lote y confirma solo DESPUES de la persistencia externa.
 
-    `escribir_y_publicar` debe completar la publicacion atomica de un
-    archivo Parquet antes de regresar. No usar callbacks que solo
-    mantengan eventos en memoria. La recuperacion de pendientes luego
-    de una caida se agregara en el commit 8.
+    `escribir_y_publicar` debe publicar todos los Parquet necesarios
+    antes de regresar. No usar callbacks que solo mantengan eventos
+    en memoria. La recuperacion de pendientes se agrega en commit 8.
     """
     if cantidad < 1:
         raise ValueError("cantidad debe ser positiva")
