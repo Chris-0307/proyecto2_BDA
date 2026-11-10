@@ -17,7 +17,7 @@ from uuid import UUID
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from .eventos import EventoNegocio
+from .eventos import EventoNegocio, serializar_evento
 
 
 # Esquema explícito: evita que los micro-lotes con muchos campos nulos
@@ -79,6 +79,27 @@ def _fila(evento: EventoNegocio) -> dict:
     }
 
 
+def _deduplicar_lote(eventos: list[EventoNegocio]) -> list[EventoNegocio]:
+    """Elimina repeticiones exactas de event_id DENTRO de un micro-lote.
+
+    Un mismo event_id con datos diferentes es un error de consistencia.
+    Este control no reemplaza la deduplicacion global de Spark cuando
+    archivos distintos contienen eventos superpuestos.
+    """
+    huellas: dict[str, str] = {}
+    unicos: list[EventoNegocio] = []
+    for evento in eventos:
+        identificador = str(evento.event_id)
+        contenido = serializar_evento(evento)
+        anterior = huellas.get(identificador)
+        if anterior is None:
+            huellas[identificador] = contenido
+            unicos.append(evento)
+        elif anterior != contenido:
+            raise ValueError(f"event_id repetido con contenido diferente: {identificador}")
+    return unicos
+
+
 def _id_microlote(eventos: Iterable[EventoNegocio]) -> str:
     """Nombre reproducible a partir de los IDs que componen el micro-lote."""
     ids = sorted(str(evento.event_id) for evento in eventos)
@@ -117,6 +138,8 @@ class EscritorParquet:
         if not eventos:
             raise ValueError("No se puede publicar un micro-lote vacio")
 
+        # No agrega filas repetidas dentro de un mismo lote.
+        eventos = _deduplicar_lote(eventos)
         grupos: dict[str, list[EventoNegocio]] = defaultdict(list)
         for evento in eventos:
             # La validación Pydantic exige una zona horaria y normaliza a UTC.

@@ -1,10 +1,8 @@
-"""Proceso independiente que pasa eventos de Valkey Streams a Parquet.
+"""Worker de historial con recuperación de pendientes de Valkey Streams.
 
-Ejecutar como segundo servicio Docker usando la misma imagen del historial:
-    python -m app.worker
-
-Todavía consume entradas nuevas (XREADGROUP '>'). La recuperación de
-entradas pendientes tras un fallo se implementará en el commit 8.
+Ejecutar con: python -m app.worker
+Los mensajes no confirmados por una interrupción se reclaman con XAUTOCLAIM
+tras el tiempo mínimo de inactividad configurado.
 """
 
 import logging
@@ -14,7 +12,7 @@ import time
 
 from redis import Redis
 
-from .consumer import procesar_lote
+from .consumer import MIN_IDLE_MS, procesar_lote
 from .parquet_writer import EscritorParquet
 
 LOG = logging.getLogger("historial.worker")
@@ -29,31 +27,40 @@ def main() -> None:
     datalake_dir = os.getenv("DATALAKE_DIR", "/datalake/eventos")
     consumidor = os.getenv("HISTORIAL_CONSUMIDOR", socket.gethostname())
     cantidad = int(os.getenv("HISTORIAL_TAMANO_LOTE", "100"))
+    min_idle_ms = int(os.getenv("HISTORIAL_RECUPERACION_IDLE_MS", str(MIN_IDLE_MS)))
     if not 1 <= cantidad <= 1000:
         raise ValueError("HISTORIAL_TAMANO_LOTE debe estar entre 1 y 1000")
+    if min_idle_ms < 1:
+        raise ValueError("HISTORIAL_RECUPERACION_IDLE_MS debe ser positivo")
 
     escritor = EscritorParquet(datalake_dir)
     cliente = Redis.from_url(
         valkey_url, decode_responses=True,
         socket_connect_timeout=3, socket_timeout=5,
     )
-    LOG.info("Iniciando consumidor %s; datalake=%s", consumidor, datalake_dir)
+    LOG.info(
+        "Worker %s iniciado; datalake=%s; recuperación después de %d ms",
+        consumidor, datalake_dir, min_idle_ms,
+    )
     try:
         while True:
             try:
                 total = procesar_lote(
                     cliente, escritor.publicar,
-                    consumidor=consumidor, cantidad=cantidad,
+                    consumidor=consumidor,
+                    cantidad=cantidad,
+                    recuperar_pendientes=True,
+                    min_idle_ms=min_idle_ms,
                 )
                 if total:
-                    LOG.info("Micro-lote publicado: %d eventos confirmados", total)
+                    LOG.info("Parquet publicado; %d eventos confirmados", total)
             except Exception:
-                # No se confirma el lote al fallar la publicación.
-                # El pendiente requerirá reprocesamiento (commit 8).
-                LOG.exception("No se pudo procesar el micro-lote")
+                # Si Parquet no se publicó, no se ha reconocido el lote.
+                # Un reintento posterior o un worker nuevo lo reclamará.
+                LOG.exception("Error al consumir o publicar micro-lote")
                 time.sleep(3)
     except KeyboardInterrupt:
-        LOG.info("Deteniendo consumidor")
+        LOG.info("Deteniendo worker de historial")
     finally:
         cliente.close()
 
