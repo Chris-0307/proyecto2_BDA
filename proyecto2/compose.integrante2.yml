@@ -1,0 +1,60 @@
+# Entorno aislado de integración del integrante 2.
+# NO reemplaza proyecto2/docker-compose.yml del equipo.
+# No publica puertos al host: el simulador debe acceder solo al gateway.
+services:
+  valkey:
+    image: valkey/valkey:8.1.11-alpine
+    command: ["valkey-server", "/etc/valkey/valkey.conf"]
+    volumes:
+      - valkey_datos:/data
+      - ./servicios/sesion/valkey.conf:/etc/valkey/valkey.conf:ro
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    restart: unless-stopped
+
+  sesion:
+    build:
+      context: ./servicios/sesion
+    depends_on:
+      valkey:
+        condition: service_healthy
+    environment:
+      VALKEY_URL: redis://valkey:6379/0
+    expose:
+      - "8001"
+    restart: unless-stopped
+
+  historial:
+    build:
+      context: ./servicios/historial
+    depends_on:
+      valkey:
+        condition: service_healthy
+    environment:
+      VALKEY_URL: redis://valkey:6379/0
+    expose:
+      - "8002"
+    restart: unless-stopped
+
+  historial-worker:
+    build:
+      context: ./servicios/historial
+    command: ["python", "-m", "app.worker"]
+    depends_on:
+      valkey:
+        condition: service_healthy
+    environment:
+      VALKEY_URL: redis://valkey:6379/0
+      DATALAKE_DIR: /datalake/eventos
+      HISTORIAL_TAMANO_LOTE: "100"
+      HISTORIAL_RECUPERACION_IDLE_MS: "30000"
+    volumes:
+      - ./.sandbox_integrante2/datalake:/datalake
+    restart: unless-stopped
+
+volumes:
+  valkey_datos:

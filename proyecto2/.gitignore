@@ -1,0 +1,9 @@
+# Generados localmente durante pruebas y desarrollo del proyecto2.
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.sandbox_integrante2/
+
+# El datalake se genera reproduciblemente, no se versionan lotes masivos.
+datalake/
