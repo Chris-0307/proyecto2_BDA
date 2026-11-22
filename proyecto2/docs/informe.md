@@ -21,7 +21,7 @@ causa. Las mediciones disponibles se hicieron en una sola máquina: Linux WSL2
 |---|---|---|
 | 1. Arquitectura y límites de responsabilidad | Jimmy | Completa |
 | 2. Justificación de motores | Jimmy, Christian y Emmanuel | Falta Spark (Emmanuel) |
-| 3. API REST y contratos | Jimmy | Completa; falta `/analitica` y salud por mensajes en Valkey |
+| 3. API REST y contratos | Jimmy | Completa; falta `/analitica` |
 | 4. Recorrido de una tarea (LiDAR) | Jimmy | Completa |
 | 5. Registro: modelo, índices y concurrencia | Jimmy | Completa; faltan planes `explain` |
 | 6. Sesión y recuperación del borrador | Christian | Diseño escrito; faltan resultados de P3 |
@@ -51,6 +51,7 @@ flowchart TB
     valkey[("Valkey<br/>AOF everysec")]
     lake[("Datalake Parquet<br/>eventos/mes=AAAA-MM")]
     ana["Analítica (Spark)<br/>PENDIENTE"]
+    salud[("Valkey base 2<br/>salud:capa:*, salud:eventos")]
 
     sim -->|"HTTP :8000<br/>único puerto publicado"| gw
     gw --> reg
@@ -63,6 +64,7 @@ flowchart TB
     worker --> lake
     ana -->|"solo lectura"| lake
     gw -.->|"/analitica (PENDIENTE)"| ana
+    gw -->|"monitor de salud"| salud
 ```
 
 | Componente | Responsabilidad | Tecnología | Responsable |
@@ -74,13 +76,15 @@ flowchart TB
 | Analítica | Q1–Q5 sobre Parquet | Spark | Emmanuel (PENDIENTE) |
 | Simulador | Anotadores, revisores y consumidores vía HTTP | Cliente HTTP | Emmanuel (PENDIENTE) |
 
-**Reglas de aislamiento y su evidencia** (`p1_salud_aislamiento.txt`, 33/33):
+**Reglas de aislamiento y su evidencia** (`p1_salud_aislamiento.txt`, 42/42):
 
 - Solo el gateway publica puerto al host: en `docker compose ps` únicamente
   `gateway` tiene puerto publicado (8000). Desde el host, 8001, 8002, 8003,
   27017 y 6379 rechazan la conexión.
-- El gateway no tiene `pymongo` ni `redis` (ni en el código, ni en la imagen, ni
-  en las variables de entorno): no accede a ninguna base.
+- El gateway no tiene `pymongo` (ni en el código, ni en la imagen, ni en las
+  variables de entorno): no accede a MongoDB. Usa Valkey solo para los mensajes
+  de salud, en su propia base (2) y con llaves `salud:*`; no lee ni escribe la
+  base 0 de Sesión e Historial.
 - El registro no tiene `redis`: no consulta Valkey.
 - Sesión e Historial no tienen `pymongo`: no acceden a MongoDB, y por lo tanto
   Sesión no puede decidir el estado definitivo de una tarea.
@@ -135,23 +139,35 @@ La documentación completa de rutas, cuerpos y códigos está en
   códigos de los servicios internos (403, 404, 409, 422) se propagan tal cual.
 - **Identificadores.** `X-Request-ID` se propaga a los servicios internos y se
   devuelve al cliente.
-- **Salud por capa** (`p1_salud_aislamiento.txt`). El gateway consulta en
-  paralelo el `/salud` de cada servicio y responde aunque alguno esté caído:
+- **Salud por capa con mensajes en Valkey.** Un monitor en segundo plano del
+  gateway consulta cada 5 s el `/salud` de Registro, Sesión e Historial y
+  publica el estado de cada capa en Valkey: `salud:capa:{capa}` con expiración
+  de 15 s (si el monitor se detiene, el estado expira en lugar de quedar viejo)
+  y un stream `salud:eventos` con cada cambio (`capa:antes->ahora`). `GET /salud`
+  lee esos mensajes (`fuente: valkey`); si Valkey no responde, consulta cada
+  capa directamente (`fuente: directo`). El gateway responde siempre.
+  - **Por qué el gateway publica por las capas:** el reporte de salud es
+    responsabilidad del gateway según el enunciado, y el registro no puede
+    escribir en Valkey. Se usa una base propia (2) para no mezclar datos con
+    Sesión e Historial.
+  - **Costo:** el estado puede tener hasta un intervalo (5 s) de atraso.
 
-| Servicio detenido | `/salud` | Detectado en | Además |
+Resultados (`p1_salud_aislamiento.txt`, 42/42):
+
+| Servicio detenido | `/salud` | Reflejado en | Además |
 |---|---|---|---|
-| Sesión | 200 `degradado`, solo `sesion` caída | 2,0 s | `exportar` sigue respondiendo; guardar borrador da 503 |
-| Historial | 200 `degradado`, solo `historial` caída | 2,0 s | `exportar` sigue respondiendo |
-| Registro | 503 `caido` | 2,0 s | `exportar` da 503 |
+| Sesión | 200 `degradado`, solo `sesion` caída | 5,0 s | Cambio registrado en `salud:eventos`; `exportar` sigue respondiendo; guardar borrador da 503 |
+| Historial | 200 `degradado`, solo `historial` caída | 6,0 s | Cambio registrado en `salud:eventos`; `exportar` sigue respondiendo |
+| Registro | 503 `caido` | 5,0 s | Cambio registrado en `salud:eventos`; `exportar` da 503 |
+| Valkey | 200 `degradado`, `fuente: directo`; Sesión e Historial caídos | 16,0 s | Al volver Valkey, `fuente: valkey` y `operativo` |
 
-En los tres casos `/salud` vuelve a `operativo` al arrancar el servicio.
+En todos los casos `/salud` vuelve a `operativo` al arrancar el servicio. Los
+tiempos de 5–6 s corresponden al intervalo del monitor. El caso de Valkey tardó
+16,0 s en reflejarse; no se midió el desglose de ese tiempo.
 
 Resultados funcionales: rutas básicas 14/14 (`p1_gateway_smoke.txt`) y flujo
 completo 26/26 (`p1_gateway_flujo.txt`), que incluye que los cinco tipos de
 evento pasan la validación de Historial y que ningún evento queda pendiente.
-
-**PENDIENTE:** el enunciado pide que cada capa notifique su estado con mensajes
-guardados en Valkey; hoy `/salud` consulta cada servicio directamente.
 
 **Contrato de eventos.** El registro arma cada evento dentro de la transición y
 el gateway lo publica sin modificarlo; Historial lo valida con un esquema
@@ -523,7 +539,7 @@ apéndice A.
 
 | Prueba | Criterio del enunciado | Resultado | Sección |
 |---|---|---|---|
-| P1. REST y despliegue | Rutas, `/salud` normal, degradado y caído; solo el gateway expuesto | Rutas 14/14; flujo 26/26; salud, puertos y aislamiento 33/33. Falta el tráfico del simulador | 3 |
+| P1. REST y despliegue | Rutas, `/salud` normal, degradado y caído; solo el gateway expuesto | Rutas 14/14; flujo 26/26; salud por capa con Valkey, puertos y aislamiento 42/42. Falta el tráfico del simulador | 3 |
 | P2. Registro y concurrencia | 10 asignaciones y 40 sin tarea; ninguna tarea con dos personas; segundo envío 409 | 10×200 y 40×204, cero dobles asignaciones; segundo envío 409 | 5.2 |
 | P3. Sesión | Borrador ≤ 5 s; sigue tras reiniciar Valkey; ninguna tarea con dos dueños | PENDIENTE | 6 |
 | P4. Historial | Parquet válido sin lectura a medias; segundos entre HTTP 200 y Spark | PENDIENTE | 7 |
@@ -645,6 +661,9 @@ restauración a un estado conocido y registro de las acciones de recuperación.
   filtro por estado de MongoDB, la liberación del lock cuando el registro falla
   y el plazo de 120 s de la asignación.
 - Un 503 puede dejar la escritura aplicada (sección 12.1, caso C).
+- `/salud` refleja el estado con hasta 5 s de atraso (intervalo del monitor).
+  El monitor vive en el gateway: si el gateway cae, nadie publica salud, pero
+  en ese caso tampoco hay punto de entrada.
 - Registrar un lote inserta las tareas sin transacción multidocumento: una
   caída a mitad puede dejar un lote parcial.
 - Mientras un evento está pendiente (Historial caído), Spark no lo ve; el
@@ -653,7 +672,7 @@ restauración a un estado conocido y registro de las acciones de recuperación.
   ~1 s (p50).
 - No se capturaron planes de ejecución (`explain`) de las consultas del
   registro.
-- Pendientes: `/salud` con mensajes en Valkey, ruta `/analitica/{q1..q5}`,
+- Pendientes: ruta `/analitica/{q1..q5}`,
   integración de Spark y del simulador.
 
 **Sesión e Historial**
@@ -681,7 +700,7 @@ restauración a un estado conocido y registro de las acciones de recuperación.
 | `p1_gateway_flujo.txt` | Flujo completo de una tarea | 2026-11-22 06:13:46 | `make smoke-flujo` | 26/26 |
 | `p2_concurrencia_gateway.txt` | 50 contra 10 por el gateway | 2026-11-22 06:13:55 | `make p2-gateway` | 9/9 |
 | `p2_write_concern.txt` | `w:1` frente a `w:majority` | 2026-11-22 06:52:30 | `make write-concern` | Tabla de la sección 5.3 |
-| `p1_salud_aislamiento.txt` | `/salud` por capa, puertos y aislamiento | 2026-11-22 07:29:30 | `make p1-salud` | 33/33 |
+| `p1_salud_aislamiento.txt` | `/salud` por capa (mensajes en Valkey), puertos y aislamiento | 2026-11-22 09:18:43 | `make p1-salud` | 42/42 |
 | `p8_mongo_fallas.txt` | Fallas de MongoDB | 2026-11-22 07:48:58 | `make p8-mongo` | 14/14 |
 | `smoke_integrante2_20261122T055742Z.txt` | Sesión + Historial en entorno aislado (sin gateway) | 2026-11-22 05:57:42 | `make i2-smoke` | Completado: borrador tras reinicio de Valkey y Parquet publicado |
 | P3, P4, P5, P6, P8 Valkey | — | — | — | PENDIENTE |

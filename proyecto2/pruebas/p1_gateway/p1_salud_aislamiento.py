@@ -1,8 +1,11 @@
 """P1 — /salud por capa, exposición de puertos y reglas de aislamiento.
 
-1. /salud con cada servicio interno detenido (Sesión, Historial, Registro):
-   el gateway sigue respondiendo y marca la capa caída. Se restaura después
-   de cada caso.
+1. /salud con cada servicio interno detenido (Sesión, Historial, Registro) y
+   con Valkey detenido: el gateway sigue respondiendo y marca la capa caída.
+   El estado sale de los mensajes que el monitor del gateway guarda en Valkey
+   (base 2, llaves salud:*); cada cambio queda en el stream salud:eventos.
+   Con Valkey caído, el gateway consulta cada capa directamente. Se restaura
+   después de cada caso.
 2. Puertos: solo el gateway publica un puerto al host (8000). Se revisa la
    configuración de Docker y se intenta conectar desde el host a los puertos
    internos.
@@ -41,7 +44,7 @@ INTERNOS = {"sesion": 8001, "historial": 8002, "registro": 8003,
 
 # Servicio -> (carpeta del código, módulos prohibidos, variables prohibidas)
 REGLAS = {
-    "gateway": ("servicios/gateway/gateway_app", {"pymongo", "redis"}, {"MONGO_URI", "VALKEY_URL"}),
+    "gateway": ("servicios/gateway/gateway_app", {"pymongo"}, {"MONGO_URI", "VALKEY_URL"}),
     "registro": ("servicios/registro/registro_app", {"redis"}, {"VALKEY_URL"}),
     "sesion": ("servicios/sesion/app", {"pymongo"}, {"MONGO_URI"}),
     "historial": ("servicios/historial/app", {"pymongo"}, {"MONGO_URI"}),
@@ -83,6 +86,20 @@ def salud():
     return c, b.get("estado"), {k: v.get("estado") for k, v in b.get("capas", {}).items()}
 
 
+def fuente() -> str:
+    _, b = http("GET", "/salud")
+    return b.get("fuente", "?") if isinstance(b, dict) else "?"
+
+
+def valkey_cli(*args) -> str:
+    return compose("exec", "-T", "valkey", "valkey-cli", *args, timeout=30)[1]
+
+
+def eventos_salud() -> str:
+    """Mensajes recientes del stream salud:eventos (base 2)."""
+    return valkey_cli("-n", "2", "XREVRANGE", "salud:eventos", "+", "-", "COUNT", "100")
+
+
 def esperar(cond, limite_s=90):
     fin = time.monotonic() + limite_s
     while time.monotonic() < fin:
@@ -106,6 +123,8 @@ def caso_salud(servicio: str, global_esperado: str, codigo_esperado: int):
     comprobar(f"la capa {servicio} figura como caída y las demás no",
               capas.get(servicio) == "caido"
               and all(v != "caido" for k, v in capas.items() if k != servicio), str(capas))
+    comprobar(f"el cambio de {servicio} a caído quedó en el stream salud:eventos",
+              f"{servicio}:operativo->caido" in eventos_salud())
 
     # El gateway sigue atendiendo lo que no depende del servicio caído.
     if servicio != "registro":
@@ -124,6 +143,24 @@ def caso_salud(servicio: str, global_esperado: str, codigo_esperado: int):
     compose("start", servicio)
     rec = esperar(lambda: salud()[:2] == (200, "operativo"), 90)
     comprobar(f"tras arrancar {servicio}, /salud vuelve a operativo", rec, str(salud()))
+
+
+def caso_valkey():
+    print("\n--- /salud con valkey detenido ---", flush=True)
+    compose("stop", "valkey")
+    t0 = time.monotonic()
+    ok = esperar(lambda: fuente() == "directo" and salud()[:2] == (200, "degradado"), 30)
+    c, est, capas = salud()
+    print(f"    /salud: {c} {est} fuente={fuente()} {capas}")
+    comprobar("sin Valkey, /salud responde 200 degradado consultando cada capa (fuente directo)",
+              ok, f"{time.monotonic() - t0:.1f}s")
+    comprobar("sin Valkey, Sesión e Historial figuran caídos y el registro no",
+              capas.get("sesion") == "caido" and capas.get("historial") == "caido"
+              and capas.get("registro") != "caido", str(capas))
+    compose("start", "valkey")
+    rec = esperar(lambda: fuente() == "valkey" and salud()[:2] == (200, "operativo"), 90)
+    comprobar("tras arrancar Valkey, /salud vuelve a operativo con fuente valkey", rec,
+              f"{salud()} fuente={fuente()}")
 
 
 # ---------------------------------------------------------------- 2. puertos
@@ -190,6 +227,16 @@ def aislamiento():
                   not dato["paquetes"], str(dato["paquetes"]))
         comprobar(f"{servicio}: el contenedor no recibe {sorted(variables)}",
                   not dato["variables"], str(dato["variables"]))
+    rc, out = compose("exec", "-T", "gateway", "python", "-c",
+                      "import os;print(os.environ.get('SALUD_VALKEY_URL',''))")
+    comprobar("gateway: usa Valkey solo en su base propia (2) para la salud",
+              out.strip().endswith("/2"), out.strip())
+    llaves2 = [k for k in valkey_cli("-n", "2", "--scan").splitlines() if k]
+    comprobar("gateway: en la base 2 solo hay llaves salud:*",
+              llaves2 and all(k.startswith("salud:") for k in llaves2), str(llaves2[:5]))
+    llaves0 = [k for k in valkey_cli("-n", "0", "--scan", "--pattern", "salud:*").splitlines() if k]
+    comprobar("gateway: no escribe llaves salud:* en la base de Sesión e Historial (0)",
+              not llaves0, str(llaves0[:5]))
     print("    Nota: todos los servicios comparten la red de Compose; el aislamiento se")
     print("    garantiza por dependencias y configuración, no por segmentación de red.")
     print("    Analítica y simulador: PENDIENTES (aún no existen en el repositorio).")
@@ -200,8 +247,9 @@ def main():
     print("Objetivo: P1 — /salud por capa, puertos publicados y reglas de aislamiento")
     print(f"Máquina: {platform.platform()}, CPU lógicos: {os.cpu_count()}")
 
-    ok = esperar(lambda: salud()[:2] == (200, "operativo"), 60)
-    comprobar("estado inicial: /salud 200 operativo", ok, str(salud()))
+    ok = esperar(lambda: salud()[:2] == (200, "operativo") and fuente() == "valkey", 60)
+    comprobar("estado inicial: /salud 200 operativo desde los mensajes en Valkey", ok,
+              f"{salud()} fuente={fuente()}")
     if not ok:
         sys.exit(1)
 
@@ -209,8 +257,9 @@ def main():
         caso_salud("sesion", "degradado", 200)
         caso_salud("historial", "degradado", 200)
         caso_salud("registro", "caido", 503)
+        caso_valkey()
     finally:
-        compose("start", "sesion", "historial", "registro")
+        compose("start", "valkey", "sesion", "historial", "registro")
         esperar(lambda: salud()[:2] == (200, "operativo"), 90)
 
     puertos()

@@ -108,7 +108,7 @@ siguen abajo.
 | `make salud` | `curl -i http://localhost:8000/salud` | — |
 | `make smoke-gateway` | Rutas básicas, códigos y salud por capa (requiere `make demo`) | `evidence/p1_gateway_smoke.txt` |
 | `make smoke-flujo` | Flujo completo: siguiente, borrador, recuperar, enviar, liberar, revisión, exportar | `evidence/p1_gateway_flujo.txt` |
-| `make p1-salud` | `/salud` con Sesión, Historial y Registro caídos; puertos publicados; reglas de aislamiento. Corre en el host | `evidence/p1_salud_aislamiento.txt` |
+| `make p1-salud` | `/salud` con Sesión, Historial, Registro y Valkey caídos; mensajes de salud en Valkey; puertos publicados; reglas de aislamiento. Corre en el host | `evidence/p1_salud_aislamiento.txt` |
 
 **Fallas de MongoDB (P8)**
 

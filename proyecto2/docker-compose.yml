@@ -126,10 +126,13 @@ services:
       - registro
       - sesion
       - historial
+      - valkey
     environment:
       REGISTRO_URL: http://registro:8003
       SESION_URL: http://sesion:8001
       HISTORIAL_URL: http://historial:8002
+      # Mensajes de salud por capa: base 2 de Valkey, llaves salud:* (Sesión e Historial usan la base 0)
+      SALUD_VALKEY_URL: redis://valkey:6379/2
     ports:
       - "8000:8000"
     volumes:

@@ -21,7 +21,8 @@ servicios/gateway/
 ├── Dockerfile
 ├── requirements.txt
 └── gateway_app/
-    ├── main.py      # rutas, /salud y reconciliador de eventos
+    ├── main.py      # rutas y tareas de fondo (monitor de salud, reconciliador)
+    ├── salud.py     # monitor de salud por capa con mensajes en Valkey
     ├── flujo.py     # orquestación Sesión + Registro + Historial
     ├── modelos.py   # cuerpos de las rutas del flujo
     └── clientes.py  # httpx, reintentos seguros, traducción a 503
@@ -133,8 +134,24 @@ Un servicio interno que no responde (conexión, timeout) se traduce a **503**.
 
 ## `GET /salud`
 
-Consulta en paralelo el `/salud` de cada capa con timeout corto (3 s). El
-gateway responde siempre, aunque las capas fallen.
+Cada capa notifica su estado con mensajes guardados en Valkey:
+
+1. Un monitor en segundo plano del gateway consulta cada 5 s
+   (`SALUD_INTERVALO_S`) el `/salud` de Registro, Sesión e Historial.
+2. Publica el estado de cada capa en `salud:capa:{capa}` (JSON con `estado`,
+   `detalle` y `revisado_en`), con expiración de 15 s (`SALUD_TTL_S`): si el
+   monitor deja de publicar, el estado expira y no queda un valor viejo.
+3. Cada cambio de estado se agrega al stream `salud:eventos`, con
+   `mensaje` = `capa:antes->ahora` (`inicio` si no había estado previo).
+4. `GET /salud` lee esos mensajes (`fuente: valkey`). Si Valkey no responde o
+   todavía no hay mensajes de las tres capas, consulta cada capa directamente
+   (`fuente: directo`). El gateway responde siempre.
+
+El gateway usa **su propia base de Valkey (2)** y solo llaves `salud:*`.
+Sesión e Historial usan la base 0; el gateway no lee ni escribe sus datos.
+El registro no puede publicar en Valkey (regla del enunciado), así que el
+monitor del gateway, responsable del reporte de salud, publica en nombre de
+cada capa.
 
 | Estado global | Condición | Código |
 |---|---|---|
@@ -148,17 +165,21 @@ Ejemplo:
 {
   "servicio": "gateway",
   "estado": "operativo",
+  "fuente": "valkey",
   "capas": {
-    "registro":  {"estado": "operativo", "detalle": {"...": "/salud del registro"}},
-    "sesion":    {"estado": "operativo", "detalle": {"...": "/salud de sesión"}},
-    "historial": {"estado": "operativo", "detalle": {"...": "/salud de historial"}}
+    "registro":  {"estado": "operativo", "detalle": {"...": "/salud del registro"}, "revisado_en": "2026-11-22T09:00:00+00:00"},
+    "sesion":    {"estado": "operativo", "detalle": {"...": "/salud de sesión"}, "revisado_en": "..."},
+    "historial": {"estado": "operativo", "detalle": {"...": "/salud de historial"}, "revisado_en": "..."}
   }
 }
 ```
 
-**PENDIENTE:** el enunciado pide que cada capa notifique su estado con
-mensajes guardados en Valkey. Hoy `/salud` consulta cada servicio
-directamente.
+Consultar los mensajes:
+
+```bash
+docker compose -f proyecto2/docker-compose.yml exec valkey valkey-cli -n 2 KEYS 'salud:*'
+docker compose -f proyecto2/docker-compose.yml exec valkey valkey-cli -n 2 XREVRANGE salud:eventos + - COUNT 10
+```
 
 ## Variables de entorno
 
@@ -170,6 +191,9 @@ directamente.
 | `GATEWAY_TIMEOUT_S` | `10` |
 | `GATEWAY_TIMEOUT_SALUD_S` | `3` |
 | `GATEWAY_RECONCILIAR_S` | `10` (0 lo desactiva) |
+| `SALUD_VALKEY_URL` | `redis://valkey:6379/2` |
+| `SALUD_INTERVALO_S` | `5` |
+| `SALUD_TTL_S` | `15` |
 
 ## Ejecución
 
@@ -228,9 +252,10 @@ de detenerlo.
 
 | Bloque | Qué comprueba |
 |---|---|
-| `/salud` por capa | Sesión caída -> 200 `degradado`; Historial caído -> 200 `degradado`; Registro caído -> 503 `caido`. Solo la capa detenida figura caída, las rutas que no dependen de ella siguen respondiendo y todo vuelve a `operativo` |
+| `/salud` por capa | Sesión caída -> 200 `degradado`; Historial caído -> 200 `degradado`; Registro caído -> 503 `caido`. Solo la capa detenida figura caída, el cambio queda en `salud:eventos`, las rutas que no dependen de ella siguen respondiendo y todo vuelve a `operativo` con `fuente: valkey` |
+| Valkey caído | 200 `degradado` con `fuente: directo`; Sesión e Historial caídos, Registro no; al volver, `fuente: valkey` |
 | Puertos | En `docker compose ps` solo `gateway` publica, y es el 8000; desde el host, 8001, 8002, 8003, 27017 y 6379 rechazan la conexión |
-| Aislamiento | Gateway sin `pymongo` ni `redis`; Registro sin `redis`; Sesión e Historial sin `pymongo`. Se revisa en tres niveles: imports del código, paquetes instalados en la imagen y variables de entorno del contenedor |
+| Aislamiento | Gateway sin `pymongo`; Registro sin `redis`; Sesión e Historial sin `pymongo`. Se revisa en tres niveles: imports del código, paquetes instalados en la imagen y variables de entorno del contenedor. Además: el gateway usa la base 2 de Valkey, ahí solo hay llaves `salud:*` y no hay llaves `salud:*` en la base 0 |
 
 Todos los servicios comparten la red de Compose: el aislamiento se garantiza
 por dependencias y configuración, no por segmentación de red. Si algo propio

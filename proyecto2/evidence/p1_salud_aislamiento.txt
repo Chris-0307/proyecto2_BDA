@@ -1,29 +1,38 @@
-Inicio UTC: 2026-11-22T07:29:30.872314+00:00
+Inicio UTC: 2026-11-22T09:18:43.047799+00:00
 Objetivo: P1 — /salud por capa, puertos publicados y reglas de aislamiento
 Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.39, CPU lógicos: 16
-[OK] estado inicial: /salud 200 operativo — (200, 'operativo', {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo'})
+[OK] estado inicial: /salud 200 operativo desde los mensajes en Valkey — (200, 'operativo', {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo'}) fuente=valkey
 
 --- /salud con sesion detenido ---
     /salud: 200 degradado {'registro': 'operativo', 'sesion': 'caido', 'historial': 'operativo'}
-[OK] con sesion caído, /salud responde 200 degradado — 2.0s
+[OK] con sesion caído, /salud responde 200 degradado — 5.0s
 [OK] la capa sesion figura como caída y las demás no — {'registro': 'operativo', 'sesion': 'caido', 'historial': 'operativo'}
+[OK] el cambio de sesion a caído quedó en el stream salud:eventos
 [OK] las rutas que solo usan el registro siguen respondiendo (exportar -> 404) — código 404
 [OK] sin Sesión, guardar borrador responde 503 (sin colgarse) — código 503
 [OK] tras arrancar sesion, /salud vuelve a operativo — (200, 'operativo', {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo'})
 
 --- /salud con historial detenido ---
     /salud: 200 degradado {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'caido'}
-[OK] con historial caído, /salud responde 200 degradado — 2.0s
+[OK] con historial caído, /salud responde 200 degradado — 6.0s
 [OK] la capa historial figura como caída y las demás no — {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'caido'}
+[OK] el cambio de historial a caído quedó en el stream salud:eventos
 [OK] las rutas que solo usan el registro siguen respondiendo (exportar -> 404) — código 404
 [OK] tras arrancar historial, /salud vuelve a operativo — (200, 'operativo', {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo'})
 
 --- /salud con registro detenido ---
     /salud: 503 caido {'registro': 'caido', 'sesion': 'operativo', 'historial': 'operativo'}
-[OK] con registro caído, /salud responde 503 caido — 2.0s
+[OK] con registro caído, /salud responde 503 caido — 5.0s
 [OK] la capa registro figura como caída y las demás no — {'registro': 'caido', 'sesion': 'operativo', 'historial': 'operativo'}
+[OK] el cambio de registro a caído quedó en el stream salud:eventos
 [OK] sin registro, exportar responde 503 — código 503
 [OK] tras arrancar registro, /salud vuelve a operativo — (200, 'operativo', {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo'})
+
+--- /salud con valkey detenido ---
+    /salud: 200 degradado fuente=directo {'registro': 'operativo', 'sesion': 'caido', 'historial': 'caido'}
+[OK] sin Valkey, /salud responde 200 degradado consultando cada capa (fuente directo) — 16.0s
+[OK] sin Valkey, Sesión e Historial figuran caídos y el registro no — {'registro': 'operativo', 'sesion': 'caido', 'historial': 'caido'}
+[OK] tras arrancar Valkey, /salud vuelve a operativo con fuente valkey — (200, 'operativo', {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo'}) fuente=valkey
 
 --- Puertos publicados al host ---
     mongo-1           running   publicados=[]
@@ -44,8 +53,8 @@ Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.39, CPU lóg
 [OK] desde el host, valkey (6379) no es accesible — conexión rechazada
 
 --- Reglas de aislamiento ---
-[OK] gateway: el código no importa ['pymongo', 'redis'] — []
-[OK] gateway: la imagen no tiene instalado ['pymongo', 'redis'] — []
+[OK] gateway: el código no importa ['pymongo'] — []
+[OK] gateway: la imagen no tiene instalado ['pymongo'] — []
 [OK] gateway: el contenedor no recibe ['MONGO_URI', 'VALKEY_URL'] — []
 [OK] registro: el código no importa ['redis'] — []
 [OK] registro: la imagen no tiene instalado ['redis'] — []
@@ -56,9 +65,12 @@ Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.39, CPU lóg
 [OK] historial: el código no importa ['pymongo'] — []
 [OK] historial: la imagen no tiene instalado ['pymongo'] — []
 [OK] historial: el contenedor no recibe ['MONGO_URI'] — []
+[OK] gateway: usa Valkey solo en su base propia (2) para la salud — redis://valkey:6379/2
+[OK] gateway: en la base 2 solo hay llaves salud:* — ['salud:capa:registro', 'salud:eventos', 'salud:capa:sesion', 'salud:capa:historial']
+[OK] gateway: no escribe llaves salud:* en la base de Sesión e Historial (0) — []
     Nota: todos los servicios comparten la red de Compose; el aislamiento se
     garantiza por dependencias y configuración, no por segmentación de red.
     Analítica y simulador: PENDIENTES (aún no existen en el repositorio).
 
-Resultado: 33/33 comprobaciones correctas
-Fin UTC: 2026-11-22T07:29:54.371486+00:00
+Resultado: 42/42 comprobaciones correctas
+Fin UTC: 2026-11-22T09:19:50.886694+00:00

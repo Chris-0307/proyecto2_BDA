@@ -17,8 +17,8 @@ from uuid import UUID, uuid4
 from fastapi import Body, FastAPI, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, Response
 
-from . import clientes, flujo
-from .clientes import HISTORIAL_URL, REGISTRO_URL, SESION_URL
+from . import clientes, flujo, salud as salud_capas
+from .clientes import REGISTRO_URL
 from .modelos import Borrador, Envio, DatosSesion, Recuperacion, Revision, SolicitudSiguiente
 
 
@@ -37,10 +37,13 @@ async def _reconciliador():
 
 @asynccontextmanager
 async def ciclo(_app: FastAPI):
-    tarea = asyncio.create_task(_reconciliador()) if RECONCILIAR_S > 0 else None
+    tareas = [asyncio.create_task(salud_capas.monitor())]
+    if RECONCILIAR_S > 0:
+        tareas.append(asyncio.create_task(_reconciliador()))
     yield
-    if tarea:
-        tarea.cancel()
+    for t in tareas:
+        t.cancel()
+    await salud_capas.cerrar()
     await clientes.cerrar()
 
 
@@ -168,42 +171,17 @@ async def recuperar(request: Request, datos: Recuperacion):
 
 # ---------------------------------------------------------------- salud
 
-def _estado_capa(codigo: int | None, cuerpo: dict) -> str:
-    if codigo is None:
-        return "caido"
-    estado = cuerpo.get("estado")
-    if codigo == 200 and estado in ("operativo", "degradado"):
-        return estado
-    return "caido"
-
-
 @app.get("/salud")
 async def salud():
-    """Salud por capa. El gateway responde siempre, aunque las capas fallen.
+    """Salud por capa a partir de los mensajes que el monitor guarda en Valkey.
 
     - caido (503): el registro (fuente de verdad) no está disponible.
     - degradado (200): el registro responde, pero alguna capa falla o MongoDB
       perdió un nodo.
     - operativo (200): todas las capas operativas.
+
+    `fuente`: `valkey` (mensajes del monitor) o `directo` (Valkey no responde o
+    aún no hay mensajes; se consulta cada capa). El gateway responde siempre.
     """
-    (cr, br), (cs, bs), (ch, bh) = await asyncio.gather(
-        clientes.salud(REGISTRO_URL),
-        clientes.salud(SESION_URL),
-        clientes.salud(HISTORIAL_URL),
-    )
-    capas = {
-        "registro": {"estado": _estado_capa(cr, br), "detalle": br},
-        "sesion": {"estado": _estado_capa(cs, bs), "detalle": bs},
-        "historial": {"estado": _estado_capa(ch, bh), "detalle": bh},
-    }
-    estados = [c["estado"] for c in capas.values()]
-    if capas["registro"]["estado"] == "caido":
-        nivel, codigo = "caido", 503
-    elif all(e == "operativo" for e in estados):
-        nivel, codigo = "operativo", 200
-    else:
-        nivel, codigo = "degradado", 200
-    return JSONResponse(
-        status_code=codigo,
-        content={"servicio": "gateway", "estado": nivel, "capas": capas},
-    )
+    codigo, cuerpo = await salud_capas.estado_global()
+    return JSONResponse(status_code=codigo, content=cuerpo)

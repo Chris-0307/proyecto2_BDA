@@ -48,7 +48,10 @@ Significado de los códigos del flujo:
 | 503 | MongoDB, Valkey o un servicio interno no responde. `enviar` no reintenta |
 
 `/salud`: `operativo` (200), `degradado` (200: Sesión o Historial caídos, o
-MongoDB sin un nodo) o `caido` (503: el registro no está disponible).
+MongoDB sin un nodo) o `caido` (503: el registro no está disponible). El estado
+de cada capa sale de los mensajes que el monitor del gateway guarda en Valkey
+(base 2: `salud:capa:{capa}` y el stream `salud:eventos`); `fuente` indica
+`valkey` o `directo` (Valkey no disponible).
 
 ## Registro (`registro:8003`)
 
