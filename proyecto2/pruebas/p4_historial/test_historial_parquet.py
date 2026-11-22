@@ -16,7 +16,7 @@ import pyarrow.parquet as pq
 import pytest
 
 
-APP = Path(__file__).resolve().parents[1] / "servicios" / "historial" / "app"
+APP = Path(__file__).resolve().parents[2] / "servicios" / "historial" / "app"
 spec = importlib.util.spec_from_file_location(
     "historial_app", APP / "__init__.py", submodule_search_locations=[str(APP)],
 )

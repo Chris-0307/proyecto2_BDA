@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
-PROYECTO = Path(__file__).resolve().parents[1]
+PROYECTO = Path(__file__).resolve().parents[2]
 REPO = PROYECTO.parent
 EVIDENCIA = PROYECTO / "evidence"
 
@@ -22,13 +22,13 @@ def principal():
     EVIDENCIA.mkdir(parents=True, exist_ok=True)
     identificador = datetime.now(timezone.utc).strftime("p3_p4_%Y%m%dT%H%M%SZ_") + uuid4().hex[:8]
     pruebas = [
-        "proyecto2/pruebas/test_sesion_locks.py",
-        "proyecto2/pruebas/test_sesion_borradores.py",
-        "proyecto2/pruebas/test_sesion_recuperacion.py",
-        "proyecto2/pruebas/test_historial_eventos.py",
-        "proyecto2/pruebas/test_historial_parquet.py",
-        "proyecto2/pruebas/test_historial_reprocesamiento.py",
-        "proyecto2/pruebas/test_p3_p4_integracion.py",
+        "proyecto2/pruebas/p3_sesion/test_sesion_locks.py",
+        "proyecto2/pruebas/p3_sesion/test_sesion_borradores.py",
+        "proyecto2/pruebas/p3_sesion/test_sesion_recuperacion.py",
+        "proyecto2/pruebas/p4_historial/test_historial_eventos.py",
+        "proyecto2/pruebas/p4_historial/test_historial_parquet.py",
+        "proyecto2/pruebas/p4_historial/test_historial_reprocesamiento.py",
+        "proyecto2/pruebas/p3_p4_integracion/test_p3_p4_integracion.py",
     ]
     comando = [sys.executable, "-m", "pytest", *pruebas, "-v", "-ra"]
     inicio = datetime.now(timezone.utc)

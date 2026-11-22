@@ -2,7 +2,7 @@
 
 Solo biblioteca estándar. Requiere haber ejecutado antes dataset/cargar_demo.py
 (crea el cliente y los anotadores/revisores que usa). Salida con fecha UTC;
-guárdela con tee en evidence/.
+guárdela con tee en evidence/p2_registro_smoke.txt.
 
 NO sustituye la prueba P2 del enunciado (50 solicitudes contra 10 tareas por
 el gateway): comprueba la atomicidad a nivel de registro, con 50 intentos

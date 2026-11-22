@@ -115,7 +115,7 @@ comportamiento del gateway y la deduplicacion en Spark.
 ## 7. Pasos de cierre
 
 1. Revisar `docs/integracion-y-operacion-integrante2.md`.
-2. Ejecutar `bash proyecto2/pruebas/smoke_integrante2.sh` sobre el entorno aislado.
+2. Ejecutar `bash proyecto2/pruebas/p3_p4_integracion/smoke_integrante2.sh` sobre el entorno aislado.
 3. Ejecutar pytest real, prueba AOF y completar evidencia P3/P4.
 4. Integrar via pull request con los otros integrantes, revisar sus contratos.
 5. Hacer pruebas completas a traves del gateway y Spark.

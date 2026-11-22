@@ -19,7 +19,7 @@ from redis import Redis, RedisError
 
 # Importamos con otro nombre de paquete para que pueda coexistir con
 # proyecto2/servicios/sesion/app cuando se ejecute toda la suite de pytest.
-CARPETA_APP = Path(__file__).resolve().parents[1] / "servicios" / "historial" / "app"
+CARPETA_APP = Path(__file__).resolve().parents[2] / "servicios" / "historial" / "app"
 spec = importlib.util.spec_from_file_location(
     "historial_app",
     CARPETA_APP / "__init__.py",

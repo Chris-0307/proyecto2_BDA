@@ -34,7 +34,7 @@ al host únicamente para realizar las pruebas.
 ## P3: sesión, borrador y vencimiento
 
 ```bash
-python -m pytest proyecto2/pruebas/test_p3_p4_integracion.py -v -ra
+python -m pytest proyecto2/pruebas/p3_p4_integracion/test_p3_p4_integracion.py -v -ra
 ```
 
 Los casos P3 prueban por la API interna: escritura y recuperación de un borrador
@@ -47,7 +47,7 @@ Con la configuración `docker-compose.yml` integrada y el servicio llamado
 `valkey`:
 
 ```bash
-python proyecto2/pruebas/p3_reinicio_aof.py \
+python proyecto2/pruebas/p3_sesion/p3_reinicio_aof.py \
   --restart-command 'docker compose -f proyecto2/docker-compose.yml restart valkey'
 ```
 
@@ -79,7 +79,7 @@ Para registrar el resultado de TODA la suite, con pruebas originales de los
 commits anteriores:
 
 ```bash
-python proyecto2/pruebas/ejecutar_evidencias_p3_p4.py
+python proyecto2/pruebas/p3_p4_integracion/ejecutar_evidencias_p3_p4.py
 ```
 
 El script conserva el log de Pytest y un resumen JSON con fecha, plataforma,

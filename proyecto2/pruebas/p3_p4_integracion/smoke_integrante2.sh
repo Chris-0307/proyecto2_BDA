@@ -6,7 +6,7 @@
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROYECTO="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROYECTO="$(cd "$SCRIPT_DIR/../.." && pwd)"
 COMPOSE=(docker compose -f "$PROYECTO/compose.integrante2.yml" -p bda-integrante2)
 
 command -v docker >/dev/null || { echo 'ERROR: falta docker' >&2; exit 1; }

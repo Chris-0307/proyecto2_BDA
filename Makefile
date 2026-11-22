@@ -5,7 +5,6 @@ SHELL       := /bin/bash
 COMPOSE     := docker compose -f proyecto2/docker-compose.yml
 COMPOSE_I2  := docker compose -f proyecto2/compose.integrante2.yml -p bda-integrante2
 EVIDENCIA   := proyecto2/evidence
-FECHA       = $(shell date -u +%Y%m%dT%H%M%SZ)
 
 # Servicio para `make logs s=registro`
 s ?= registro mongo-init sesion historial historial-worker
@@ -39,15 +38,15 @@ logs: ## Logs recientes (make logs s=registro)
 
 ## ---- Registro / MongoDB (Integrante 1) ----
 replica: ## Verifica réplica, mayoría e índices (deja evidencia)
-	bash proyecto2/pruebas/verificar_replica.sh
+	bash proyecto2/pruebas/p2_registro/verificar_replica.sh
 
 demo: ## Carga de demostración del registro
 	$(COMPOSE) run --rm registro python /dataset/cargar_demo.py
 
 smoke-registro: ## Smoke del registro (deja evidencia)
 	@mkdir -p $(EVIDENCIA)
-	set -o pipefail; $(COMPOSE) run --rm registro python /pruebas/smoke_registro.py \
-	  | tee $(EVIDENCIA)/p2_registro_smoke_$(FECHA).txt
+	set -o pipefail; $(COMPOSE) run --rm registro python /pruebas/p2_registro/smoke_registro.py \
+	  | tee $(EVIDENCIA)/p2_registro_smoke.txt
 
 registro: up replica demo smoke-registro ## Flujo completo: up + réplica + demo + smoke
 
@@ -57,8 +56,8 @@ salud: ## GET /salud del gateway desde el host
 
 smoke-gateway: ## Smoke del gateway básico (deja evidencia)
 	@mkdir -p $(EVIDENCIA)
-	set -o pipefail; $(COMPOSE) exec -T gateway python /pruebas/smoke_gateway.py \
-	  | tee $(EVIDENCIA)/p1_gateway_smoke_$(FECHA).txt
+	set -o pipefail; $(COMPOSE) exec -T gateway python /pruebas/p1_gateway/smoke_gateway.py \
+	  | tee $(EVIDENCIA)/p1_gateway_smoke.txt
 
 ## ---- Valkey / Sesión / Historial (Integrante 2) ----
 aof: ## Verifica AOF de Valkey (esperado: yes / everysec)
@@ -72,7 +71,7 @@ i2-down: ## Detiene el entorno aislado
 	$(COMPOSE_I2) down
 
 i2-smoke: ## Smoke del entorno aislado
-	bash proyecto2/pruebas/smoke_integrante2.sh
+	bash proyecto2/pruebas/p3_p4_integracion/smoke_integrante2.sh
 
 i2-pytest: ## Suite pytest de Sesión e Historial en Docker
 	$(COMPOSE_I2) run --rm \
@@ -82,4 +81,4 @@ i2-pytest: ## Suite pytest de Sesión e Historial en Docker
 	  sh -c 'pip install --no-cache-dir -r servicios/sesion/requirements-dev.txt -r servicios/historial/requirements-dev.txt && python -m pytest -p no:cacheprovider pruebas/ -v -ra'
 
 p3-p4: ## Suite P3/P4 con registro de evidencia
-	python3 proyecto2/pruebas/ejecutar_evidencias_p3_p4.py
+	python3 proyecto2/pruebas/p3_p4_integracion/ejecutar_evidencias_p3_p4.py

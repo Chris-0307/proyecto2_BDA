@@ -3,11 +3,11 @@
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROYECTO="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROYECTO="$(cd "$SCRIPT_DIR/../.." && pwd)"
 COMPOSE=(docker compose -f "$PROYECTO/docker-compose.yml")
 
 mkdir -p "$PROYECTO/evidence"
-LOG="$PROYECTO/evidence/p2_replica_$(date -u +%Y%m%dT%H%M%SZ).txt"
+LOG="$PROYECTO/evidence/p2_replica.txt"
 exec > >(tee "$LOG") 2>&1
 
 echo "Inicio UTC: $(date -u +%Y-%m-%dT%H:%M:%SZ)"

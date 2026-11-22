@@ -56,7 +56,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt
 cd ../../
-VALKEY_TEST_URL=redis://localhost:6379/15 python -m pytest pruebas/test_sesion_locks.py -v
+VALKEY_TEST_URL=redis://localhost:6379/15 python -m pytest pruebas/p3_sesion/test_sesion_locks.py -v
 ```
 
 Si Valkey no está activo, las pruebas de integración se marcan `SKIPPED`.
@@ -110,7 +110,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt
 cd ../../
-VALKEY_TEST_URL=redis://localhost:6379/15 python -m pytest pruebas/test_sesion_borradores.py -v
+VALKEY_TEST_URL=redis://localhost:6379/15 python -m pytest pruebas/p3_sesion/test_sesion_borradores.py -v
 ```
 
 Si Valkey no esta disponible, se indica `SKIPPED`; no equivale a pasar.
@@ -166,7 +166,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt
 cd ../..
-VALKEY_TEST_URL=redis://localhost:6379/15 python -m pytest pruebas/test_sesion_recuperacion.py -v
+VALKEY_TEST_URL=redis://localhost:6379/15 python -m pytest pruebas/p3_sesion/test_sesion_recuperacion.py -v
 ```
 
 Si no existe Valkey, los tests se marcan SKIPPED, **no aprobados**. No se

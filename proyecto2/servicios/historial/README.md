@@ -106,7 +106,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt
 cd ../..
-python -m pytest pruebas/test_historial_parquet.py pruebas/test_historial_reprocesamiento.py -v
+python -m pytest pruebas/p4_historial/test_historial_parquet.py pruebas/p4_historial/test_historial_reprocesamiento.py -v
 ```
 
 Las pruebas del escritor usan directorios temporales, sin servidor Valkey.

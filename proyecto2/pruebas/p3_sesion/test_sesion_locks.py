@@ -14,7 +14,7 @@ from fastapi.testclient import TestClient
 from redis import Redis, RedisError
 
 # Este proyecto todavia no esta instalado como paquete Python.
-RUTA_SESION = Path(__file__).resolve().parents[1] / "servicios" / "sesion"
+RUTA_SESION = Path(__file__).resolve().parents[2] / "servicios" / "sesion"
 sys.path.insert(0, str(RUTA_SESION))
 from app import main  # noqa: E402
 

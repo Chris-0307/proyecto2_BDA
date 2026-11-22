@@ -1,7 +1,7 @@
 """Experimento reproducible P3: reinicio REAL de Valkey con AOF.
 
 Llamar desde la raíz del repo, con una instancia Valkey de PRUEBAS:
-  VALKEY_TEST_URL=redis://localhost:6379/15 python proyecto2/pruebas/p3_reinicio_aof.py \\
+  VALKEY_TEST_URL=redis://localhost:6379/15 python proyecto2/pruebas/p3_sesion/p3_reinicio_aof.py \\
     --restart-command 'docker compose -f proyecto2/docker-compose.yml restart valkey'
 
 El comando debe reiniciar SOLO Valkey y conservar el volumen AOF. La prueba
@@ -25,7 +25,7 @@ from uuid import uuid4
 from fastapi.testclient import TestClient
 from redis import Redis
 
-PROYECTO = Path(__file__).resolve().parents[1]
+PROYECTO = Path(__file__).resolve().parents[2]
 ROOT_REPO = PROYECTO.parent
 RUTA_APP = PROYECTO / "servicios" / "sesion" / "app"
 spec = importlib.util.spec_from_file_location(

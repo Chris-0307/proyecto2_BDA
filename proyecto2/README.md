@@ -14,7 +14,7 @@ contenedores: registro operacional (MongoDB en réplica), sesiones y locks
 | Componente | Responsabilidad | Tecnología | Estado |
 |---|---|---|---|
 | Gateway | Único punto de entrada (puerto 8000), validación, enrutamiento, salud por capa | REST (FastAPI + httpx) | Básico implementado (proyectos, lotes, exportar, salud); flujo de tareas y analítica PENDIENTES |
-| Registro | Clientes, proyectos, lotes, tareas, asignaciones, revisiones, exportación | MongoDB, 3 nodos | Réplica e índices verificados (`evidence/p2_replica_20261122T014246Z.txt`); smoke del registro 30/30 (`evidence/p2_registro_smoke_20261122T015847Z.txt`) |
+| Registro | Clientes, proyectos, lotes, tareas, asignaciones, revisiones, exportación | MongoDB, 3 nodos | Réplica e índices verificados (`evidence/p2_replica.txt`); smoke del registro 30/30 (`evidence/p2_registro_smoke.txt`) |
 | Sesión | Locks `SET NX PX` de 120 s, latidos, borradores, sesiones activas, recuperación | Valkey con AOF `everysec` | Implementado, sin ensayos ejecutados |
 | Historial | Recepción de eventos, micro-lotes, escritura del datalake | Valkey Streams + Parquet | Implementado, sin ensayos ejecutados |
 | Analítica | Consultas Q1–Q5 de solo lectura sobre Parquet | Apache Spark | PENDIENTE |
@@ -31,20 +31,38 @@ contenedores: registro operacional (MongoDB en réplica), sesiones y locks
 ## 2. Estructura del repositorio
 
 ```text
-proyecto2/
-├── docker-compose.yml        # Compose final: MongoDB, Valkey, Sesión, Historial, Registro, Gateway
-├── compose.integrante2.yml   # entorno aislado de Sesión + Historial (solo pruebas)
-├── servicios/
-│   ├── gateway/              # API pública (gateway_app), puerto 8000
-│   ├── registro/             # API del registro (registro_app) y scripts de MongoDB
-│   │   └── mongo/            # init-replica.js, configurar-registro.js, inicializar.sh
-│   ├── sesion/               # API de sesiones, locks, borradores, valkey.conf
-│   └── historial/            # API de eventos y worker de Parquet
-├── dataset/                  # carga de datos (hoy: cargador de demostración)
-├── datalake/                 # Parquet publicado por el worker (no se versiona)
-├── pruebas/                  # pytest, smoke, reinicio AOF, verificación de réplica
-├── evidence/                 # resultados originales de las pruebas
-└── docs/                     # contratos, guías de operación e informe base
+proyecto2_BDA/
+├── Makefile                          # atajos de ejecución (make help)
+├── README.md                         # portada; remite a proyecto2/README.md
+└── proyecto2/
+    ├── README.md                     # este documento
+    ├── .gitignore
+    ├── docker-compose.yml            # Compose final: MongoDB, Valkey, Sesión, Historial, Registro, Gateway
+    ├── compose.integrante2.yml       # entorno aislado de Sesión + Historial (solo pruebas)
+    ├── servicios/
+    │   ├── gateway/                  # API pública, puerto 8000
+    │   │   ├── Dockerfile, requirements.txt, README.md
+    │   │   └── gateway_app/          # main.py, clientes.py
+    │   ├── registro/                 # API sobre MongoDB, puerto interno 8003
+    │   │   ├── Dockerfile, requirements.txt, README.md
+    │   │   ├── registro_app/         # main.py, db.py, modelos.py, transiciones.py
+    │   │   └── mongo/                # inicializar.sh, init-replica.js, configurar-registro.js
+    │   ├── sesion/                   # API de sesiones y locks, puerto interno 8001
+    │   │   ├── Dockerfile, requirements*.txt, README.md, valkey.conf
+    │   │   └── app/                  # main.py, locks.py, sesiones.py, borradores.py, recuperacion.py
+    │   └── historial/                # API de eventos y worker Parquet, puerto interno 8002
+    │       ├── Dockerfile, requirements*.txt, README.md
+    │       └── app/                  # main.py, eventos.py, consumer.py, worker.py, parquet_writer.py
+    ├── dataset/                      # cargar_demo.py (carga de demostración)
+    ├── datalake/                     # Parquet publicado por el worker (no se versiona)
+    ├── pruebas/                      # una carpeta por grupo de prueba del enunciado
+    │   ├── p1_gateway/               # smoke_gateway.py
+    │   ├── p2_registro/              # smoke_registro.py, verificar_replica.sh
+    │   ├── p3_sesion/                # test_sesion_*.py, p3_reinicio_aof.py
+    │   ├── p4_historial/             # test_historial_*.py
+    │   └── p3_p4_integracion/        # test_p3_p4_integracion.py, smoke_integrante2.sh, ejecutar_evidencias_p3_p4.py
+    ├── evidence/                     # salidas de las pruebas (ver sección 9)
+    └── docs/                         # contratos, guías de operación e informe base del Integrante 2
 ```
 
 Carpetas previstas, aún no creadas: `servicios/analitica/` y `simulador/`.
@@ -98,7 +116,7 @@ colecciones e índices. El servicio `registro` espera a que termine con éxito.
 Verificar réplica, mayoría e índices (deja evidencia en `evidence/`):
 
 ```bash
-bash proyecto2/pruebas/verificar_replica.sh
+bash proyecto2/pruebas/p2_registro/verificar_replica.sh
 ```
 
 Verificar AOF de Valkey (esperado: `yes` y `everysec`):
@@ -252,10 +270,21 @@ y la comparación de tiempos con las limitaciones del entorno.
 Las pruebas escriben su evidencia en `evidence/`. Un test `SKIPPED` significa
 **no ejecutado**, nunca aprobado.
 
+Las pruebas de gateway y registro guardan su evidencia en **un archivo fijo por
+tema**, sin fecha ni hora en el nombre; cada ejecución sobrescribe la anterior
+y el historial queda en git. La fecha y hora UTC de la corrida van dentro del
+archivo.
+
+| Archivo en `evidence/` | Lo genera |
+|---|---|
+| `p1_gateway_smoke.txt` | `make smoke-gateway` (`pruebas/p1_gateway/smoke_gateway.py`) |
+| `p2_replica.txt` | `make replica` (`pruebas/p2_registro/verificar_replica.sh`) |
+| `p2_registro_smoke.txt` | `make smoke-registro` (`pruebas/p2_registro/smoke_registro.py`) |
+
 | Prueba | Estado |
 |---|---|
-| P1 REST y despliegue | Gateway básico: `smoke_gateway.py` escrito (`make smoke-gateway`), ejecución pendiente. Faltan rutas de tareas y ensayos degradado/caído |
-| P2 Registro y concurrencia (50 contra 10) | Réplica verificada (`evidence/p2_replica_20261122T014246Z.txt`). Atomicidad a nivel de registro: 30/30, 50 asignaciones simultáneas → 1×200 y 49×409 (`evidence/p2_registro_smoke_20261122T015847Z.txt`). La prueba completa requiere el gateway |
+| P1 REST y despliegue | Gateway básico: 14/14 (`evidence/p1_gateway_smoke.txt`). Faltan rutas de tareas y ensayos degradado/caído |
+| P2 Registro y concurrencia (50 contra 10) | Réplica verificada (`evidence/p2_replica.txt`). Atomicidad a nivel de registro: 30/30, 50 asignaciones simultáneas → 1×200 y 49×409 (`evidence/p2_registro_smoke.txt`). La prueba completa requiere el gateway |
 | P3 Sesión (borrador, AOF, vencimiento) | Scripts listos; ejecución y evidencia pendientes |
 | P4 Historial (micro-lotes, reproceso, frescura) | Scripts listos; ejecución y evidencia pendientes |
 | P5 Analítica | PENDIENTE |
@@ -267,14 +296,14 @@ estado, 50 asignaciones concurrentes sobre una misma tarea, eventos
 pendientes). Primero cargue la demostración; luego:
 
 ```bash
-docker compose -f proyecto2/docker-compose.yml run --rm registro python /pruebas/smoke_registro.py \
-  | tee proyecto2/evidence/p2_registro_smoke_$(date -u +%Y%m%dT%H%M%SZ).txt
+docker compose -f proyecto2/docker-compose.yml run --rm registro python /pruebas/p2_registro/smoke_registro.py \
+  | tee proyecto2/evidence/p2_registro_smoke.txt
 ```
 
 **Prueba de humo del entorno aislado de Sesión + Historial:**
 
 ```bash
-bash proyecto2/pruebas/smoke_integrante2.sh
+bash proyecto2/pruebas/p3_p4_integracion/smoke_integrante2.sh
 ```
 
 No usa el gateway, así que **no sustituye** las pruebas P3/P4 de extremo a
@@ -295,14 +324,14 @@ docker compose -f proyecto2/compose.integrante2.yml -p bda-integrante2 \
 **Suite con registro de evidencia** (conserva el log y un resumen JSON):
 
 ```bash
-python proyecto2/pruebas/ejecutar_evidencias_p3_p4.py
+python proyecto2/pruebas/p3_p4_integracion/ejecutar_evidencias_p3_p4.py
 ```
 
 **Reinicio real de Valkey con AOF** (contra el Compose final):
 
 ```bash
 VALKEY_TEST_URL=redis://localhost:6379/15 \
-python proyecto2/pruebas/p3_reinicio_aof.py \
+python proyecto2/pruebas/p3_sesion/p3_reinicio_aof.py \
   --restart-command 'docker compose -f proyecto2/docker-compose.yml restart valkey'
 ```
 

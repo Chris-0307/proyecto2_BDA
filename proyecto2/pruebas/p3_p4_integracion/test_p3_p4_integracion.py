@@ -21,7 +21,7 @@ import pytest
 from fastapi.testclient import TestClient
 from redis import Redis, RedisError
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def cargar_paquete(nombre: str, ruta: Path):

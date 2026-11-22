@@ -113,14 +113,14 @@ make smoke-gateway # smoke con evidencia en evidence/
 Sin `make`:
 
 ```bash
-docker compose -f proyecto2/docker-compose.yml exec -T gateway python /pruebas/smoke_gateway.py \
-  | tee proyecto2/evidence/p1_gateway_smoke_$(date -u +%Y%m%dT%H%M%SZ).txt
+docker compose -f proyecto2/docker-compose.yml exec -T gateway python /pruebas/p1_gateway/smoke_gateway.py \
+  | tee proyecto2/evidence/p1_gateway_smoke.txt
 ```
 
 Desde el host (prueba el puerto publicado):
 
 ```bash
-GATEWAY_URL=http://localhost:8000 python3 proyecto2/pruebas/smoke_gateway.py
+GATEWAY_URL=http://localhost:8000 python3 proyecto2/pruebas/p1_gateway/smoke_gateway.py
 ```
 
 Esperado: todas las líneas en `[OK]`.
@@ -135,4 +135,8 @@ docker compose -f proyecto2/docker-compose.yml start historial registro
 
 ## Evidencia
 
-PENDIENTE: ejecutar `make smoke-gateway` y registrar el archivo aquí.
+| Archivo | Contenido | Resultado |
+|---|---|---|
+| `evidence/p1_gateway_smoke.txt` | Rutas básicas, códigos, `X-Request-ID`, salud por capa | 14/14 |
+
+PENDIENTE: ensayos de `/salud` en estado degradado y caído.

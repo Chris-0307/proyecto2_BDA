@@ -223,8 +223,8 @@ Desde la raíz del repositorio:
 docker compose -f proyecto2/docker-compose.yml up -d --build
 docker compose -f proyecto2/docker-compose.yml ps
 docker compose -f proyecto2/docker-compose.yml run --rm registro python /dataset/cargar_demo.py
-docker compose -f proyecto2/docker-compose.yml run --rm registro python /pruebas/smoke_registro.py \
-  | tee proyecto2/evidence/p2_registro_smoke_$(date -u +%Y%m%dT%H%M%SZ).txt
+docker compose -f proyecto2/docker-compose.yml run --rm registro python /pruebas/p2_registro/smoke_registro.py \
+  | tee proyecto2/evidence/p2_registro_smoke.txt
 ```
 
 Esperado: todas las líneas en `[OK]` y `Resultado: N/N comprobaciones
@@ -233,7 +233,7 @@ correctas`. El nombre de una comprobación fallida indica qué transición revis
 Verificación de réplica, mayoría e índices:
 
 ```bash
-bash proyecto2/pruebas/verificar_replica.sh
+bash proyecto2/pruebas/p2_registro/verificar_replica.sh
 ```
 
 Logs:
@@ -249,8 +249,8 @@ actualización de `transiciones.py`.
 
 | Archivo | Contenido | Resultado |
 |---|---|---|
-| `evidence/p2_replica_20261122T014246Z.txt` | Estado de `rs-plataforma`, mayoría e índices | 1 primario, 2 secundarios |
-| `evidence/p2_registro_smoke_20261122T015847Z.txt` | Flujo completo, 409/403/422, 50 asignaciones simultáneas, eventos pendientes | 30/30; 50 intentos → 1×200, 49×409 |
+| `evidence/p2_replica.txt` | Estado de `rs-plataforma`, mayoría e índices | 1 primario, 2 secundarios |
+| `evidence/p2_registro_smoke.txt` | Flujo completo, 409/403/422, 50 asignaciones simultáneas, eventos pendientes | 30/30; 50 intentos → 1×200, 49×409 |
 
 El smoke valida la atomicidad **a nivel de registro**. P2 completo (50 contra
 10 a través del gateway, con locks de Valkey) sigue pendiente.

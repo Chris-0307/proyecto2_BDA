@@ -55,7 +55,7 @@ docker compose -f proyecto2/compose.integrante2.yml -p bda-integrante2 logs --ta
 ### Prueba de humo automatizada
 
 ```bash
-bash proyecto2/pruebas/smoke_integrante2.sh
+bash proyecto2/pruebas/p3_p4_integracion/smoke_integrante2.sh
 ```
 
 El script levanta el Compose de prueba, crea una sesion con UUID unicos,
