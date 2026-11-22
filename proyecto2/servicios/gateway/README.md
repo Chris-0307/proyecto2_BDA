@@ -2,7 +2,7 @@
 
 Único punto de entrada del backend y **único servicio publicado al host**
 (`8000:8000`). No accede a ninguna base de datos: solo habla HTTP con los
-servicios internos. Responsable: Integrante 1.
+servicios internos. Responsable: Jimmy.
 
 Python 3.12, FastAPI, httpx. Paquete `gateway_app`.
 
@@ -12,7 +12,7 @@ Python 3.12, FastAPI, httpx. Paquete `gateway_app`.
 |---|---|---|
 | 4 — básico | `POST /proyectos`, `POST /proyectos/{id}/lotes`, `GET /proyectos/{id}/exportar`, `GET /salud` | Implementado |
 | 5 — flujo de tareas | `POST /tareas/siguiente`, `PUT /tareas/{id}/borrador`, `POST /tareas/{id}/enviar`, `POST /tareas/{id}/liberar`, `POST /tareas/{id}/revision`, `POST /sesiones/recuperar` | Implementado |
-| 6 — analítica | `GET /analitica/{q1..q5}?conjunto=` | PENDIENTE (Integrante 3) |
+| 6 — analítica | `GET /analitica/{q1..q5}?conjunto=` | PENDIENTE (Emmanuel) |
 
 ## Estructura
 
@@ -211,15 +211,15 @@ docker compose -f proyecto2/docker-compose.yml start historial registro
 
 ## Evidencia
 
-| Archivo | Contenido | Resultado |
+| Archivo | Contenido | Comando |
 |---|---|---|
-| `evidence/p1_gateway_smoke.txt` | Rutas básicas, códigos, `X-Request-ID`, salud por capa | 14/14 |
-| `evidence/p1_gateway_flujo.txt` | Flujo completo: siguiente, borrador, recuperar, enviar, liberar, revisión, exportar | 26/26 |
-| `evidence/p2_concurrencia_gateway.txt` | 50 contra 10 por el gateway, cero dobles asignaciones, latencias p50/p95/p99 | 9/9; 10×200, 40×204; p50 1056 ms, p95 1091 ms, p99 1094 ms (n=50) |
+| `evidence/p1_gateway_smoke.txt` | Rutas básicas, códigos, `X-Request-ID`, salud por capa | `make smoke-gateway` |
+| `evidence/p1_gateway_flujo.txt` | Flujo completo: siguiente, borrador, recuperar, enviar, liberar, revisión, exportar | `make smoke-flujo` |
+| `evidence/p1_salud_aislamiento.txt` | `/salud` con Sesión, Historial y Registro caídos; puertos publicados; aislamiento | `make p1-salud` |
+| `evidence/p2_concurrencia_gateway.txt` | 50 contra 10 por el gateway, latencias p50/p95/p99 | `make p2-gateway` |
+| `evidence/p8_mongo_fallas.txt` | `/salud` degradado y caído por fallas de MongoDB | `make p8-mongo` |
 
-| `evidence/p1_salud_aislamiento.txt` | `/salud` con Sesión, Historial y Registro caídos; puertos publicados; aislamiento | 33/33; detección en ~2 s por capa |
-
-`/salud` degradado (200) y caído (503) por fallas de MongoDB: `evidence/p8_mongo_fallas.txt`.
+Resultados: [informe](../../docs/informe.md), secciones 3, 5.2 y 12.1.
 
 ### `p1_salud_aislamiento.py` (`make p1-salud`)
 

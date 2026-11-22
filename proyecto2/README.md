@@ -4,29 +4,21 @@ Capa de datos de una plataforma de anotación basada en servicios REST y
 contenedores: registro operacional (MongoDB en réplica), sesiones y locks
 (Valkey con AOF), historial en Parquet y analítica con Apache Spark.
 
-> **Estado del proyecto:** en desarrollo. Este README solo describe lo que
-> existe hoy en el repositorio. Las secciones marcadas **PENDIENTE** se
-> completarán al integrar cada componente. No se reportan cifras ni
-> resultados de pruebas que no tengan un archivo en `evidence/`.
+Este README explica cómo ejecutar el sistema. La arquitectura, el diseño, los
+resultados de las pruebas y las limitaciones están en el informe:
+[`docs/informe.md`](docs/informe.md). Las rutas de cada servicio están en
+[`endpoints/README.md`](endpoints/README.md).
 
-## 1. Arquitectura
+## 1. Componentes
 
-| Componente | Responsabilidad | Tecnología | Estado |
-|---|---|---|---|
-| Gateway | Único punto de entrada (puerto 8000), validación, enrutamiento, salud por capa | REST (FastAPI + httpx) | Implementado: registro, flujo de tareas, salud y reconciliador de eventos; analítica PENDIENTE |
-| Registro | Clientes, proyectos, lotes, tareas, asignaciones, revisiones, exportación | MongoDB, 3 nodos | Réplica e índices verificados (`evidence/p2_replica.txt`); smoke del registro 30/30 (`evidence/p2_registro_smoke.txt`); fallas P8 14/14 (`evidence/p8_mongo_fallas.txt`) |
-| Sesión | Locks `SET NX PX` de 120 s, latidos, borradores, sesiones activas, recuperación | Valkey con AOF `everysec` | Implementado, sin ensayos ejecutados |
-| Historial | Recepción de eventos, micro-lotes, escritura del datalake | Valkey Streams + Parquet | Implementado, sin ensayos ejecutados |
-| Analítica | Consultas Q1–Q5 de solo lectura sobre Parquet | Apache Spark | PENDIENTE |
-| Simulador | Anotadores, revisores y consumidores, solo vía HTTP al gateway | Cliente HTTP | PENDIENTE |
-
-**Reglas de aislamiento:**
-
-- Solo el gateway publica un puerto al host (8000).
-- Registro no consulta Valkey.
-- Sesión no decide el estado definitivo de una tarea ni accede a MongoDB.
-- Analítica lee únicamente el lago Parquet.
-- El simulador se comunica solo con el gateway.
+| Componente | Tecnología | Puerto | Documentación | Estado |
+|---|---|---|---|---|
+| Gateway | FastAPI + httpx | 8000, único publicado al host | [`servicios/gateway/`](servicios/gateway/README.md) | Integrado; falta `/analitica` |
+| Registro | FastAPI + MongoDB (3 nodos en réplica) | 8003, interno | [`servicios/registro/`](servicios/registro/README.md) | Integrado |
+| Sesión | FastAPI + Valkey (AOF `everysec`) | 8001, interno | [`servicios/sesion/`](servicios/sesion/README.md) | Integrado |
+| Historial | FastAPI + Valkey Streams + worker Parquet | 8002, interno | [`servicios/historial/`](servicios/historial/README.md) | Integrado |
+| Analítica | Apache Spark | — | — | PENDIENTE |
+| Simulador | Cliente HTTP contra el gateway | — | — | PENDIENTE |
 
 ## 2. Estructura del repositorio
 
@@ -62,8 +54,9 @@ proyecto2_BDA/
     │   ├── p4_historial/             # test_historial_*.py
     │   ├── p3_p4_integracion/        # test_p3_p4_integracion.py, smoke_integrante2.sh, ejecutar_evidencias_p3_p4.py
     │   └── p8_fallas/                # p8_mongo.py (fallas de MongoDB)
+    ├── endpoints/                    # README con las rutas, cuerpos y códigos de cada servicio
     ├── evidence/                     # salidas de las pruebas (ver sección 9)
-    └── docs/                         # contratos, guías de operación e informe base del Integrante 2
+    └── docs/                         # informe.md (informe del proyecto), contratos y guías de Sesión e Historial
 ```
 
 Carpetas previstas, aún no creadas: `servicios/analitica/` y `simulador/`.
@@ -73,7 +66,8 @@ Carpetas previstas, aún no creadas: `servicios/analitica/` y `simulador/`.
 - Docker Engine o Docker Desktop con integración WSL, y `docker compose` v2.
 - Bash (WSL o Linux).
 - Unos 4 GB de RAM libres: cada nodo de MongoDB usa 300–500 MB.
-- Python 3 en el host solo para `p3_reinicio_aof.py`.
+- Python 3 en el host para las pruebas que detienen contenedores o prueban
+  puertos (`make p1-salud`, `make p8-mongo`) y para `p3_reinicio_aof.py`.
 
 ## 4. Levantar y detener el sistema
 
@@ -122,7 +116,7 @@ siguen abajo.
 |---|---|---|
 | `make p8-mongo` | Tumba (SIGKILL) un secundario, luego el primario, luego los dos secundarios; restaura después de cada caso. Corre en el host, ~3-5 min | `evidence/p8_mongo_fallas.txt` |
 
-**Sesión e Historial (P3/P4, Integrante 2)**
+**Sesión e Historial (P3/P4, Christian)**
 
 | Objetivo | Qué hace |
 |---|---|
@@ -190,110 +184,21 @@ docker compose -f proyecto2/compose.integrante2.yml -p bda-integrante2 up -d --b
 docker compose -f proyecto2/compose.integrante2.yml -p bda-integrante2 down
 ```
 
-## 5. Servicios internos
+## 5. Datalake Parquet
 
-### Registro (`registro:8003`)
+El worker de Historial escribe los eventos en `proyecto2/datalake/eventos/`,
+particionados por mes (`mes=AAAA-MM/`). Los archivos en `.staging/` son
+temporales y no deben leerse. `datalake/` está en `.gitignore`: lo produce el
+worker y no se versiona.
 
-Detalle completo (documento de tarea, atomicidad, contratos de eventos y
-notas de P8) en [`servicios/registro/README.md`](servicios/registro/README.md).
-
-Seis rutas. Los clientes y anotadores se cargan con `dataset/` (sin ruta REST).
-
-| Método y ruta | Efecto | Códigos |
-|---|---|---|
-| `POST /proyectos` | Crea proyecto, taxonomía y SLA | 201, 404 (cliente), 422, 503 |
-| `POST /proyectos/{id}/lotes` | Registra un lote y sus tareas | 201, 404, 422, 503 |
-| `GET /tareas` | Consulta: candidatas de un proyecto, tarea de un anotador o eventos pendientes | 200, 422, 503 |
-| `POST /tareas/{id}/transicion` | Una acción por llamada (ver abajo) | 200, 403, 404, 409, 422, 503 |
-| `GET /proyectos/{id}/exportar` | Tareas aprobadas, paginadas por `_id` | 200, 404, 503 |
-| `GET /salud` | Estado de la réplica (operativo, degradado, caído) | 200, 503 |
-
-Acciones de `transicion`:
-
-| Acción | De -> a | Evento generado |
-|---|---|---|
-| `asignar` | `disponible` (o `abierta` vencida) -> `abierta` | `tarea_abierta` |
-| `enviar` | `abierta` -> `anotada` | `tarea_anotada` |
-| `liberar` | `abierta` -> `disponible` | ninguno |
-| `iniciar_revision` | `anotada` -> `en_revision` | `revision_iniciada` |
-| `aprobar` | `en_revision` -> `aprobada` | `revision_aprobada` |
-| `rechazar` | `en_revision` -> `disponible` | `revision_rechazada` (estado `rechazada`) |
-| `confirmar_evento` | no cambia el estado; retira un evento ya publicado | ninguno |
-
-Cada transición es una única operación atómica (`findOneAndUpdate` con
-filtro por estado, token o revisor). La versión sube en cada transición
-válida. Un filtro que no coincide responde 409 (o 404 si la tarea no existe).
-El evento de historial se arma dentro de la misma operación y queda en
-`eventos_pendientes` hasta que el gateway lo publique y llame a
-`confirmar_evento` (o lo reenvíe el reconciliador del gateway).
-
-### Sesión (`sesion:8001`)
-
-| Método y ruta | Efecto | Códigos |
-|---|---|---|
-| `GET /salud` | Comprueba Valkey | 200, 503 |
-| `POST /sesiones/iniciar` | Lock + sesión + `editando` | 201, 409, 503 |
-| `POST /sesiones/latido` | Renueva el lock si el token coincide | 200, 409, 503 |
-| `POST /sesiones/finalizar` | Libera lock y sesión propios | 200, 409, 503 |
-| `PUT /tareas/{tarea_id}/borrador` | Guarda el último borrador y renueva el lock | 200, 409, 422, 503 |
-| `POST /sesiones/recuperar` | Recupera sesión y borrador | 200, 409, 503 |
-
-La recuperación devuelve `activa` si el lock sigue vigente, o
-`requiere_reasignacion` si venció (borrador en solo lectura; la decisión de
-reasignar corresponde al registro, vía gateway).
-
-### Historial (`historial:8002` y worker)
-
-| Método y ruta | Efecto | Códigos |
-|---|---|---|
-| `GET /salud` | Comprueba Valkey | 200, 503 |
-| `POST /eventos` | Encola el evento de forma idempotente por `event_id` | 202 nuevo, 200 repetido, 409 conflicto, 422 inválido, 503 |
-
-El worker (`python -m app.worker`) lee el grupo `historial-parquet`, escribe
-cada micro-lote en `.staging`, lo publica con `os.replace` en
-`eventos/mes=AAAA-MM/` y solo entonces confirma con `XACK`. Los mensajes
-pendientes se reclaman con `XAUTOCLAIM`.
-
-### Gateway (`gateway:8000`, publicado al host)
-
-Detalle en [`servicios/gateway/README.md`](servicios/gateway/README.md).
-
-| Método y ruta | Estado |
-|---|---|
-| `POST /proyectos`, `POST /proyectos/{id}/lotes`, `GET /proyectos/{id}/exportar` | Implementado (reenvía al registro) |
-| `GET /salud` | Implementado: `operativo`/`degradado` (200) o `caido` (503, registro sin servicio), con estado por capa |
-| `POST /tareas/siguiente` | Implementado: lock en Sesión -> asignación en Registro -> evento. 204 sin tareas; 409 si el anotador ya tiene una activa |
-| `PUT /tareas/{id}/borrador`, `POST /sesiones/recuperar` | Implementado (Sesión) |
-| `POST /tareas/{id}/enviar` | Implementado: lock vigente -> Registro -> evento. 409 token ajeno o segundo envío; 503 sin reintento |
-| `POST /tareas/{id}/liberar` | Implementado |
-| `POST /tareas/{id}/revision` | Implementado: aprobar o rechazar (rechazo exige `motivo`) |
-| `GET /analitica/{q1..q5}` | PENDIENTE |
-
-Propaga `X-Request-ID`. Solo reintenta `GET` ante fallo de conexión; `POST`/`PUT`
-nunca se reintentan y un servicio caído responde 503. Los eventos se publican
-en Historial solo después de que MongoDB confirma; si Historial falla, quedan
-en `eventos_pendientes` y un reconciliador del gateway los reenvía cada 10 s.
-
-## 6. Datalake Parquet
-
-```text
-datalake/eventos/
-├── .staging/               # temporales; Spark nunca los lee
-├── mes=2026-10/lote-<hash-ids>.parquet
-└── mes=2026-11/lote-<hash-ids>.parquet
+```bash
+ls -R proyecto2/datalake/eventos | head
 ```
 
-- Partición mensual calculada con `ocurrido_en` en UTC.
-- El consumo es *al menos una vez*: dos micro-lotes solapados pueden repetir
-  un `event_id` en archivos distintos. **Spark debe aplicar
-  `dropDuplicates(["event_id"])` antes de Q1–Q5.**
-- Spark debe leer solo `*.parquet` publicados, con el directorio montado en
-  solo lectura.
-- Un rechazo queda como `rechazada` en Parquet aunque en MongoDB la tarea
-  vuelva a `disponible`. Q4 cuenta esas filas.
-- `datalake/` está en `.gitignore`: lo produce el worker, no se versiona.
+El diseño (publicación atómica, deduplicación por `event_id`, fila
+`rechazada`) está en el informe, sección 7.
 
-## 7. Carga de datos
+## 6. Carga de datos
 
 **Carga de demostración** (solo para desarrollo del registro): crea un
 cliente, seis anotadores (dos son revisores, en dos equipos), un proyecto
@@ -308,12 +213,13 @@ docker compose -f proyecto2/docker-compose.yml run --rm registro python /dataset
 irá también en `dataset/`, con sus conteos y comandos documentados. Debe
 respetar el esquema de documentos del registro.
 
-## 8. Consultas analíticas Q1–Q5
+## 7. Consultas analíticas Q1–Q5
 
-**PENDIENTE.** Se documentarán el comando de ejecución, los planes de Q1 y Q3
-y la comparación de tiempos con las limitaciones del entorno.
+**PENDIENTE (Emmanuel).** Comando de ejecución de cada consulta y del
+conjunto ampliado. Las definiciones, los resultados y los planes de ejecución
+irán en el informe, sección 9.
 
-## 9. Pruebas
+## 8. Pruebas
 
 Las pruebas escriben su evidencia en `evidence/`. Un test `SKIPPED` significa
 **no ejecutado**, nunca aprobado.
@@ -334,15 +240,8 @@ archivo.
 | `p2_write_concern.txt` | `make write-concern` (`pruebas/p2_registro/write_concern.py`) |
 | `p8_mongo_fallas.txt` | `make p8-mongo` (`pruebas/p8_fallas/p8_mongo.py`) |
 
-| Prueba | Estado |
-|---|---|
-| P1 REST y despliegue | Gateway básico 14/14 (`evidence/p1_gateway_smoke.txt`). Flujo de tareas 26/26 (`evidence/p1_gateway_flujo.txt`). `/salud` degradado y caído por MongoDB: ver P8. `/salud` por capa, puertos y aislamiento 33/33 (`evidence/p1_salud_aislamiento.txt`): Sesión o Historial caídos -> 200 degradado; Registro caído -> 503 caído; solo el gateway publica (8000); ningún servicio tiene el cliente de una base ajena. Analítica y simulador: PENDIENTES |
-| P2 Registro y concurrencia (50 contra 10) | Réplica verificada (`evidence/p2_replica.txt`). Atomicidad a nivel de registro: 30/30, 50 asignaciones simultáneas -> 1×200 y 49×409 (`evidence/p2_registro_smoke.txt`). Por el gateway: 9/9, 10×200 y 40×204, cero dobles asignaciones; `/tareas/siguiente` p50 1056 ms, p95 1091 ms, p99 1094 ms, n=50 (`evidence/p2_concurrencia_gateway.txt`). `w:1` frente a `w:majority`: con 1 hilo `majority` es ×3,9–5,2 más lento (346 frente a 1552 ops/s); con 8 hilos ×1,8 (1229 frente a 2123 ops/s), en una sola máquina (`evidence/p2_write_concern.txt`) |
-| P3 Sesión (borrador, AOF, vencimiento) | Scripts listos; ejecución y evidencia pendientes |
-| P4 Historial (micro-lotes, reproceso, frescura) | Scripts listos; ejecución y evidencia pendientes |
-| P5 Analítica | PENDIENTE |
-| P6 Carga (10, 40 y 100 usuarios) | PENDIENTE |
-| P8 Fallas | MongoDB 14/14 con SIGKILL (`evidence/p8_mongo_fallas.txt`): secundario caído sigue escribiendo; primario caído -> elección ~10 s, RTO de escritura entre 7,6 y 9,7 s; sin mayoría 0 respuestas 200; RPO 0 de escrituras confirmadas. Valkey (reinicio y sesión interrumpida): PENDIENTE, Integrante 2 |
+Los resultados de cada prueba y su análisis están en el informe
+([`docs/informe.md`](docs/informe.md), sección 10).
 
 **Prueba del registro** (flujo completo de transiciones, 409 por token o
 estado, 50 asignaciones concurrentes sobre una misma tarea, eventos
@@ -390,9 +289,9 @@ python proyecto2/pruebas/p3_sesion/p3_reinicio_aof.py \
 
 Cada ejecución manual se documenta con fecha UTC, objetivo, máquina,
 comando exacto, configuración, resultado, interpretación y archivo de
-evidencia (plantilla en `docs/`).
+evidencia (formato en el apéndice A del informe).
 
-## 10. Solución de problemas
+## 9. Solución de problemas
 
 | Síntoma | Qué revisar |
 |---|---|
@@ -405,30 +304,14 @@ evidencia (plantilla en `docs/`).
 | Mensajes sin confirmar | `XPENDING historial:eventos historial-parquet`; se reclaman tras `HISTORIAL_RECUPERACION_IDLE_MS` (30 000 ms por defecto) |
 | Poca memoria / contenedores que se reinician | Cada `mongod` usa 300–500 MB; cierre el Compose aislado de Sesión + Historial |
 | Choque de nombres de paquete en pytest | Sesión e Historial usan el paquete `app`; los tests los cargan con nombres distintos. El registro usa `registro_app` |
+| `set: pipefail: invalid option name` en un `.sh` | El archivo tiene fin de línea CRLF (checkout en Windows). Conviértalo: `sed -i 's/\r$//' <archivo>` |
+| `make: getcwd: No such file or directory` | La terminal quedó en una carpeta que se borró y recreó: `cd ~ && cd <ruta del repo>` |
 
-## 11. Limitaciones conocidas
+## 10. Documentación
 
-- No hay transacción única entre MongoDB y Valkey. El evento se guarda en la
-  tarea (`eventos_pendientes`) dentro de la misma operación atómica; el gateway
-  lo publica a Historial y lo confirma. Si Historial falla o el gateway cae entre
-  ambos pasos, el evento queda pendiente y el reconciliador del gateway lo reenvía
-  (cada `GATEWAY_RECONCILIAR_S`, 10 s por defecto). Mientras tanto, Spark no lo ve.
-- Un 503 del registro no garantiza que la escritura no ocurrió. En P8 (caso C,
-  dos corridas) el primer `enviar` sin mayoría respondió 503 pero quedó aplicado
-  en el primario aislado y se conservó al volver la mayoría (el reintento dio
-  409). Lo confirmado con 200 nunca se perdió.
-- Una asignación que responde 503 puede quedar `abierta` sin lock en Valkey;
-  vuelve a ofrecerse cuando vence su plazo (120 s).
-- AOF `everysec` puede perder aproximadamente el último segundo ante una caída
-  abrupta; un reinicio ordenado no equivale a ese ensayo.
-- La publicación Parquet es atómica por archivo, no entre particiones.
-- Registrar un lote inserta las tareas sin transacción multidocumento: una caída
-  a mitad puede dejar un lote parcial.
-- Mediciones disponibles: P2 (latencia de `/tareas/siguiente`), `w:1` frente a
-  `w:majority` y P8 de MongoDB (elección, RTO, RPO). Aún **no hay mediciones**
-  de frescura, carga (P6), analítica (P5) ni fallas de Valkey.
-
-## 12. Documentación adicional
-
-En `docs/`: contratos de Sesión e Historial, guía de integración y operación,
-guía de pruebas P3/P4 e informe técnico base del Integrante 2.
+| Documento | Contenido |
+|---|---|
+| [`docs/informe.md`](docs/informe.md) | Informe del proyecto: arquitectura, recorrido LiDAR, modelo e índices, sesión, datalake, analítica, pruebas, fallas (RTO/RPO), limitaciones y evidencia |
+| [`endpoints/README.md`](endpoints/README.md) | Rutas, cuerpos y códigos de cada servicio y contrato de eventos |
+| `servicios/*/README.md` | Configuración y ejecución de cada servicio |
+| `docs/contratos-sesion-historial.md`, `docs/guia-pruebas-p3-p4.md`, `docs/integracion-y-operacion-integrante2.md` | Contratos, guía de pruebas P3/P4 y operación de Sesión e Historial |

@@ -36,7 +36,7 @@ reset: ## BORRA volúmenes (MongoDB y Valkey) y levanta desde cero
 logs: ## Logs recientes (make logs s=registro)
 	$(COMPOSE) logs --tail=100 $(s)
 
-## ---- Registro / MongoDB (Integrante 1) ----
+## ---- Registro / MongoDB (Jimmy) ----
 replica: ## Verifica réplica, mayoría e índices (deja evidencia)
 	bash proyecto2/pruebas/p2_registro/verificar_replica.sh
 
@@ -85,7 +85,7 @@ p8-mongo: ## P8: caída de secundario, primario y mayoría de MongoDB (deja evid
 	set -o pipefail; python3 proyecto2/pruebas/p8_fallas/p8_mongo.py \
 	  | tee $(EVIDENCIA)/p8_mongo_fallas.txt
 
-## ---- Valkey / Sesión / Historial (Integrante 2) ----
+## ---- Valkey / Sesión / Historial (Christian) ----
 aof: ## Verifica AOF de Valkey (esperado: yes / everysec)
 	$(COMPOSE) exec valkey valkey-cli CONFIG GET appendonly
 	$(COMPOSE) exec valkey valkey-cli CONFIG GET appendfsync

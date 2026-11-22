@@ -1,4 +1,4 @@
-Inicio UTC: 2026-11-22T07:24:04.709439+00:00
+Inicio UTC: 2026-11-22T07:29:30.872314+00:00
 Objetivo: P1 — /salud por capa, puertos publicados y reglas de aislamiento
 Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.39, CPU lógicos: 16
 [OK] estado inicial: /salud 200 operativo — (200, 'operativo', {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo'})
@@ -7,7 +7,7 @@ Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.39, CPU lóg
     /salud: 200 degradado {'registro': 'operativo', 'sesion': 'caido', 'historial': 'operativo'}
 [OK] con sesion caído, /salud responde 200 degradado — 2.0s
 [OK] la capa sesion figura como caída y las demás no — {'registro': 'operativo', 'sesion': 'caido', 'historial': 'operativo'}
-[OK] las rutas que solo usan el registro siguen respondiendo (exportar → 404) — código 404
+[OK] las rutas que solo usan el registro siguen respondiendo (exportar -> 404) — código 404
 [OK] sin Sesión, guardar borrador responde 503 (sin colgarse) — código 503
 [OK] tras arrancar sesion, /salud vuelve a operativo — (200, 'operativo', {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo'})
 
@@ -15,7 +15,7 @@ Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.39, CPU lóg
     /salud: 200 degradado {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'caido'}
 [OK] con historial caído, /salud responde 200 degradado — 2.0s
 [OK] la capa historial figura como caída y las demás no — {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'caido'}
-[OK] las rutas que solo usan el registro siguen respondiendo (exportar → 404) — código 404
+[OK] las rutas que solo usan el registro siguen respondiendo (exportar -> 404) — código 404
 [OK] tras arrancar historial, /salud vuelve a operativo — (200, 'operativo', {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo'})
 
 --- /salud con registro detenido ---
@@ -61,4 +61,4 @@ Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.39, CPU lóg
     Analítica y simulador: PENDIENTES (aún no existen en el repositorio).
 
 Resultado: 33/33 comprobaciones correctas
-Fin UTC: 2026-11-22T07:24:30.143217+00:00
+Fin UTC: 2026-11-22T07:29:54.371486+00:00

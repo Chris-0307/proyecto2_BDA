@@ -1,7 +1,7 @@
 # Servicio de Registro (`registro:8003`)
 
 Estado vigente de la plataforma en MongoDB: clientes, proyectos, lotes, tareas,
-anotadores, asignaciones y revisiones. Responsable: Integrante 1.
+anotadores, asignaciones y revisiones. Responsable: Jimmy.
 
 - Puerto interno 8003, **sin publicar al host**. Solo lo consume el gateway.
 - No consulta Valkey (regla de aislamiento). El lock de 120 s lo toma el
@@ -65,21 +65,7 @@ Los tres nodos corren en la misma máquina, así que la replicación no paga
 latencia de red real: la diferencia medida no se extrapola a un clúster
 distribuido.
 
-Resultado (`evidence/p2_write_concern.txt`, 3 repeticiones alternadas):
-
-| Hilos | Operación | p50 `w:1` | p50 `majority` | Relación | ops/s `w:1` -> `majority` |
-|---|---|---|---|---|---|
-| 1 | `insert_one` | 0,52 ms | 2,66 ms | ×5,15 | 1552 -> 346 |
-| 1 | `find_one_and_update` | 0,71 ms | 2,77 ms | ×3,91 | 1552 -> 346 |
-| 8 | `insert_one` | 3,44 ms | 6,28 ms | ×1,83 | 2123 -> 1229 |
-| 8 | `find_one_and_update` | 3,51 ms | 6,37 ms | ×1,82 | 2123 -> 1229 |
-
-Con un hilo, la espera de confirmación de la mayoría domina cada escritura;
-con 8 hilos esas esperas se solapan y la diferencia relativa baja.
-
-Además de la latencia, `w:1` cambia la garantía: confirma una
-escritura que aún no está en la mayoría y que puede perderse en un rollback
-tras una elección (P8, caso C).
+Resultados y análisis: [informe](../../docs/informe.md), sección 5.3.
 
 ### Variables de entorno
 
@@ -217,7 +203,7 @@ y 3, el evento queda en pendientes; el reconciliador del gateway lo recupera con
 
 ## Contratos con otros integrantes
 
-**Integrante 2 (Historial).** Los eventos siguen el esquema `EventoNegocio`
+**Christian (Historial).** Los eventos siguen el esquema `EventoNegocio`
 de Historial (`extra=forbid`). Campos comunes: `event_id`, `tipo_evento`,
 `estado`, `ocurrido_en`, `tarea_id`, `proyecto_id`, `cliente_id`, `batch_id`,
 `modalidad`, `tipo_tarea`, `version`, `sla_horas`. Campos por evento:
@@ -233,7 +219,7 @@ de Historial (`extra=forbid`). Campos comunes: `event_id`, `tipo_evento`,
 `pruebas/p1_gateway/smoke_flujo.py` (`make smoke-flujo`) comprueba que los cinco
 tipos de evento pasan la validación de `POST /eventos` (campo `evento: publicado`).
 
-**Integrante 3 (Analítica).**
+**Emmanuel (Analítica).**
 
 - `duracion_ms` solo viaja en `tarea_anotada` (tiempo entre tomar y enviar).
   Q3 debe leerlo de ese evento.
@@ -275,16 +261,15 @@ actualización de `transiciones.py`.
 
 ## Evidencia
 
-| Archivo | Contenido | Resultado |
+| Archivo | Contenido | Comando |
 |---|---|---|
-| `evidence/p2_replica.txt` | Estado de `rs-plataforma`, mayoría e índices | 1 primario, 2 secundarios |
-| `evidence/p2_write_concern.txt` | Latencia y rendimiento con `w:1` frente a `w:majority` (driver, 1 y 8 hilos) | Ver tabla en la sección `w:1` frente a `w:majority` |
-| `evidence/p8_mongo_fallas.txt` | P8: secundario, primario y sin mayoría; elección, RTO y RPO | 14/14; ver resultados en la sección P8 |
-| `evidence/p2_concurrencia_gateway.txt` | 50 contra 10 por el gateway (con locks de Valkey) | 9/9; 10×200, 40×204, cero dobles asignaciones |
-| `evidence/p2_registro_smoke.txt` | Flujo completo, 409/403/422, 50 asignaciones simultáneas, eventos pendientes | 30/30; 50 intentos -> 1×200, 49×409 |
+| `evidence/p2_replica.txt` | Estado de `rs-plataforma`, mayoría e índices | `make replica` |
+| `evidence/p2_registro_smoke.txt` | Transiciones, 409/403/422, 50 asignaciones simultáneas sobre una tarea, eventos pendientes | `make smoke-registro` |
+| `evidence/p2_concurrencia_gateway.txt` | 50 contra 10 por el gateway (con locks de Valkey) | `make p2-gateway` |
+| `evidence/p2_write_concern.txt` | `w:1` frente a `w:majority` (driver, 1 y 8 hilos) | `make write-concern` |
+| `evidence/p8_mongo_fallas.txt` | Secundario, primario y sin mayoría; elección, RTO y RPO | `make p8-mongo` |
 
-`p2_registro_smoke.txt` valida la atomicidad a nivel de registro;
-`p2_concurrencia_gateway.txt`, la prueba completa por el gateway.
+Resultados: [informe](../../docs/informe.md), secciones 5 y 12.1.
 
 ## P8: fallas de MongoDB
 
@@ -302,22 +287,13 @@ estándar y Docker, con el Compose final levantado. Crea sus propios datos
 Después de cada caso se arrancan los nodos y se espera a 1 PRIMARY + 2
 SECONDARY y `/salud` operativo, para dejar un estado conocido.
 
-Resultado con SIGKILL (`evidence/p8_mongo_fallas.txt`, 14/14):
-
-| Caso | Observado |
-|---|---|
-| A | `/salud` degradado a los 12,5 s; 10/10 escrituras con 200; vuelta a operativo en 3,0 s |
-| B | Nuevo primario en ~10 s (`electionTimeoutMillis` 10 000). Último ciclo con 503 a 7,6 s, primer 200 a 9,7 s: **RTO de escritura entre 7,6 y 9,7 s** (resolución ~4 s, porque cada ciclo fallido espera los 3 s de selección de servidor). 25/25 tareas con 200 intactas |
-| C | 7 respuestas 503 y ninguna 200 sin mayoría; `/salud` 503 caído. Recuperación en 5,6 s. El reintento del envío dio 409: el primer 503 se había aplicado en el primario aislado y se conservó |
-| Final | **RPO 0** de escrituras confirmadas (26/26 intactas). 5 asignaciones con 503 de resultado indeterminado |
+Resultados, RTO y RPO: [informe](../../docs/informe.md), sección 12.1.
 
 - La caída es real: se desactiva la política de reinicio del contenedor
   (`docker update --restart=no`) y se le envía SIGKILL, sin apagado ordenado.
   Al restaurar se arranca y se devuelve `restart: unless-stopped`.
-- `P8_PARADA=stop` usa `docker compose stop` (apagado ordenado). En la primera
-  corrida, con `stop -t 0`, el primario alcanzó a ceder el rol antes de morir:
-  la elección tomó 1,3 s y no hubo escrituras fallidas, así que esa corrida no
-  sirve para medir el RTO de una caída.
+- `P8_PARADA=stop` usa `docker compose stop` (apagado ordenado): el primario
+  cede el rol antes de morir, así que no sirve para medir el RTO de una caída.
 - En C, antes de que el primario aislado se degrade (hasta
   `electionTimeoutMillis`, 10 s), una escritura puede aplicarse en él y responder
   503 por `wtimeout`. Al volver la mayoría puede conservarse (el reintento da
@@ -326,8 +302,4 @@ Resultado con SIGKILL (`evidence/p8_mongo_fallas.txt`, 14/14):
 
 ## Limitaciones
 
-- Un 503 por `WriteConcernError` (p. ej. sin mayoría) no garantiza que la
-  escritura no ocurrió: pudo aplicarse en el primario. Se estudiará en P8.
-- Registrar un lote hace `insert_one` del lote y `insert_many` de las tareas
-  sin transacción multidocumento: una caída a mitad puede dejar un lote parcial.
-- `liberar` no genera evento: el enunciado no la registra en el datalake.
+Ver [informe](../../docs/informe.md), sección 13.

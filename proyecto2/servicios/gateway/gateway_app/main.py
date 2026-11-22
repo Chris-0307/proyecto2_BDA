@@ -2,7 +2,7 @@
 
 Rutas de registro (proyectos, lotes, exportar), flujo de tareas (siguiente,
 borrador, enviar, liberar, revisión, recuperar) y /salud por capa.
-Pendiente: /analitica/{q1..q5} (Integrante 3).
+Pendiente: /analitica/{q1..q5} (Emmanuel).
 
 El gateway no accede a ninguna base de datos: solo habla HTTP con los
 servicios internos. Propaga X-Request-ID (lo genera si no llega).
