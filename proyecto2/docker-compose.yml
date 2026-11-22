@@ -1,0 +1,108 @@
+# Compose final del equipo (base).
+# Regla del enunciado: solo el gateway publica puerto al host (8000).
+# Hoy: MongoDB (3 nodos), Valkey, Sesión e Historial. Ningún puerto publicado.
+name: bda-proyecto2
+
+x-mongo: &mongo
+  image: mongo:8.0
+  command: ["mongod", "--replSet", "rs-plataforma", "--bind_ip_all",
+            "--wiredTigerCacheSizeGB", "0.25"]
+  healthcheck:
+    test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+    interval: 5s
+    timeout: 5s
+    retries: 12
+    start_period: 10s
+  restart: unless-stopped
+
+services:
+  # ---------- Registro: MongoDB en réplica (Jimmy) ----------
+  mongo-1:
+    <<: *mongo
+    container_name: bda-mongo-1
+    volumes:
+      - mongo1_datos:/data/db
+
+  mongo-2:
+    <<: *mongo
+    container_name: bda-mongo-2
+    volumes:
+      - mongo2_datos:/data/db
+
+  mongo-3:
+    <<: *mongo
+    container_name: bda-mongo-3
+    volumes:
+      - mongo3_datos:/data/db
+
+  mongo-init:
+    image: mongo:8.0
+    depends_on:
+      mongo-1: { condition: service_healthy }
+      mongo-2: { condition: service_healthy }
+      mongo-3: { condition: service_healthy }
+    volumes:
+      - ./servicios/registro/mongo:/scripts:ro
+    entrypoint: ["sh", "/scripts/inicializar.sh"]
+    restart: "no"
+
+  # ---------- Sesión e Historial (Christian) ----------
+  valkey:
+    image: valkey/valkey:8.1.11-alpine
+    command: ["valkey-server", "/etc/valkey/valkey.conf"]
+    volumes:
+      - valkey_datos:/data
+      - ./servicios/sesion/valkey.conf:/etc/valkey/valkey.conf:ro
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    restart: unless-stopped
+
+  sesion:
+    build:
+      context: ./servicios/sesion
+    depends_on:
+      valkey:
+        condition: service_healthy
+    environment:
+      VALKEY_URL: redis://valkey:6379/0
+    expose:
+      - "8001"
+    restart: unless-stopped
+
+  historial:
+    build:
+      context: ./servicios/historial
+    depends_on:
+      valkey:
+        condition: service_healthy
+    environment:
+      VALKEY_URL: redis://valkey:6379/0
+    expose:
+      - "8002"
+    restart: unless-stopped
+
+  historial-worker:
+    build:
+      context: ./servicios/historial
+    command: ["python", "-m", "app.worker"]
+    depends_on:
+      valkey:
+        condition: service_healthy
+    environment:
+      VALKEY_URL: redis://valkey:6379/0
+      DATALAKE_DIR: /datalake/eventos
+      HISTORIAL_TAMANO_LOTE: "100"
+      HISTORIAL_RECUPERACION_IDLE_MS: "30000"
+    volumes:
+      - ./datalake:/datalake
+    restart: unless-stopped
+
+volumes:
+  mongo1_datos:
+  mongo2_datos:
+  mongo3_datos:
+  valkey_datos:
