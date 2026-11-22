@@ -67,12 +67,12 @@ distribuido.
 
 Resultado (`evidence/p2_write_concern.txt`, 3 repeticiones alternadas):
 
-| Hilos | Operación | p50 `w:1` | p50 `majority` | Relación | ops/s `w:1` → `majority` |
+| Hilos | Operación | p50 `w:1` | p50 `majority` | Relación | ops/s `w:1` -> `majority` |
 |---|---|---|---|---|---|
-| 1 | `insert_one` | 0,52 ms | 2,66 ms | ×5,15 | 1552 → 346 |
-| 1 | `find_one_and_update` | 0,71 ms | 2,77 ms | ×3,91 | 1552 → 346 |
-| 8 | `insert_one` | 3,44 ms | 6,28 ms | ×1,83 | 2123 → 1229 |
-| 8 | `find_one_and_update` | 3,51 ms | 6,37 ms | ×1,82 | 2123 → 1229 |
+| 1 | `insert_one` | 0,52 ms | 2,66 ms | ×5,15 | 1552 -> 346 |
+| 1 | `find_one_and_update` | 0,71 ms | 2,77 ms | ×3,91 | 1552 -> 346 |
+| 8 | `insert_one` | 3,44 ms | 6,28 ms | ×1,83 | 2123 -> 1229 |
+| 8 | `find_one_and_update` | 3,51 ms | 6,37 ms | ×1,82 | 2123 -> 1229 |
 
 Con un hilo, la espera de confirmación de la mayoría domina cada escritura;
 con 8 hilos esas esperas se solapan y la diferencia relativa baja.
@@ -110,7 +110,7 @@ tras una elección (P8, caso C).
 }
 ```
 
-Geometrías admitidas por modalidad (otra combinación → 422):
+Geometrías admitidas por modalidad (otra combinación -> 422):
 
 | Modalidad | `tipo_tarea` |
 |---|---|
@@ -140,20 +140,20 @@ Clientes y anotadores no tienen ruta REST: se cargan desde `dataset/`.
 | `anotador_id=...[&estado=...]` | Tareas asignadas a ese anotador |
 | `eventos_pendientes=true` | Tareas con eventos aún no confirmados (reconciliación) |
 
-`limite` entre 1 y 200 (defecto 20). Sin ninguno de los tres modos → 422.
+`limite` entre 1 y 200 (defecto 20). Sin ninguno de los tres modos -> 422.
 
 ### `POST /tareas/{id}/transicion`
 
-Cuerpo con `accion` y los campos que esa acción exige (campos extra → 422):
+Cuerpo con `accion` y los campos que esa acción exige (campos extra -> 422):
 
-| Acción | Requiere | De → a | Evento |
+| Acción | Requiere | De -> a | Evento |
 |---|---|---|---|
-| `asignar` | `anotador_id`, `token` | `disponible` o `abierta` vencida → `abierta` | `tarea_abierta` |
-| `enviar` | `anotador_id`, `token`, `contenido` | `abierta` → `anotada` | `tarea_anotada` |
-| `liberar` | `anotador_id`, `token` | `abierta` → `disponible` | ninguno |
-| `iniciar_revision` | `revisor_id` | `anotada` → `en_revision` | `revision_iniciada` |
-| `aprobar` | `revisor_id` (el mismo que inició) | `en_revision` → `aprobada` | `revision_aprobada` |
-| `rechazar` | `revisor_id`, `motivo` | `en_revision` → `disponible` | `revision_rechazada` (estado `rechazada`) |
+| `asignar` | `anotador_id`, `token` | `disponible` o `abierta` vencida -> `abierta` | `tarea_abierta` |
+| `enviar` | `anotador_id`, `token`, `contenido` | `abierta` -> `anotada` | `tarea_anotada` |
+| `liberar` | `anotador_id`, `token` | `abierta` -> `disponible` | ninguno |
+| `iniciar_revision` | `revisor_id` | `anotada` -> `en_revision` | `revision_iniciada` |
+| `aprobar` | `revisor_id` (el mismo que inició) | `en_revision` -> `aprobada` | `revision_aprobada` |
+| `rechazar` | `revisor_id`, `motivo` | `en_revision` -> `disponible` | `revision_rechazada` (estado `rechazada`) |
 | `confirmar_evento` | `event_id` | sin cambio de estado | ninguno |
 
 Respuesta: `{"tarea": {...}, "evento": {...} | null}`.
@@ -237,7 +237,7 @@ tipos de evento pasan la validación de `POST /eventos` (campo `evento: publicad
 
 - `duracion_ms` solo viaja en `tarea_anotada` (tiempo entre tomar y enviar).
   Q3 debe leerlo de ese evento.
-- Q5 (toma → aprobación) se calcula con `tomada_en` y `aprobada_en` del evento
+- Q5 (toma -> aprobación) se calcula con `tomada_en` y `aprobada_en` del evento
   `revision_aprobada`.
 - Un rechazo queda en Parquet como `rechazada`, aunque en MongoDB la tarea
   vuelva a `disponible`.
@@ -281,7 +281,7 @@ actualización de `transiciones.py`.
 | `evidence/p2_write_concern.txt` | Latencia y rendimiento con `w:1` frente a `w:majority` (driver, 1 y 8 hilos) | Ver tabla en la sección `w:1` frente a `w:majority` |
 | `evidence/p8_mongo_fallas.txt` | P8: secundario, primario y sin mayoría; elección, RTO y RPO | 14/14; ver resultados en la sección P8 |
 | `evidence/p2_concurrencia_gateway.txt` | 50 contra 10 por el gateway (con locks de Valkey) | 9/9; 10×200, 40×204, cero dobles asignaciones |
-| `evidence/p2_registro_smoke.txt` | Flujo completo, 409/403/422, 50 asignaciones simultáneas, eventos pendientes | 30/30; 50 intentos → 1×200, 49×409 |
+| `evidence/p2_registro_smoke.txt` | Flujo completo, 409/403/422, 50 asignaciones simultáneas, eventos pendientes | 30/30; 50 intentos -> 1×200, 49×409 |
 
 `p2_registro_smoke.txt` valida la atomicidad a nivel de registro;
 `p2_concurrencia_gateway.txt`, la prueba completa por el gateway.
@@ -295,7 +295,7 @@ estándar y Docker, con el Compose final levantado. Crea sus propios datos
 | Caso | Acción | Qué se comprueba |
 |---|---|---|
 | A | Detener un secundario | `/salud` degradado (200); 10/10 ciclos `siguiente` + `enviar` responden 200 |
-| B | Detener el primario | Se elige otro primario (tiempo de elección); tiempo sin escrituras y RTO (parada → primer 200); todo lo que respondió 200 sigue una vez, con su dueño y estado; el antiguo primario vuelve como SECONDARY |
+| B | Detener el primario | Se elige otro primario (tiempo de elección); tiempo sin escrituras y RTO (parada -> primer 200); todo lo que respondió 200 sigue una vez, con su dueño y estado; el antiguo primario vuelve como SECONDARY |
 | C | Detener los dos secundarios | `/salud` caído (503); ninguna escritura responde 200; `enviar` da 503 sin reintento; tras restaurar, el envío pendiente se resuelve (200 o 409) |
 | Final | — | RPO de escrituras confirmadas: ninguna tarea con 200 se perdió; lista de operaciones con 503 (resultado indeterminado) |
 

@@ -56,7 +56,7 @@ proyecto2_BDA/
     ├── dataset/                      # cargar_demo.py (carga de demostración)
     ├── datalake/                     # Parquet publicado por el worker (no se versiona)
     ├── pruebas/                      # una carpeta por grupo de prueba del enunciado
-    │   ├── p1_gateway/               # smoke_gateway.py, smoke_flujo.py
+    │   ├── p1_gateway/               # smoke_gateway.py, smoke_flujo.py, p1_salud_aislamiento.py
     │   ├── p2_registro/              # smoke_registro.py, verificar_replica.sh, p2_concurrencia_gateway.py, write_concern.py
     │   ├── p3_sesion/                # test_sesion_*.py, p3_reinicio_aof.py
     │   ├── p4_historial/             # test_historial_*.py
@@ -114,6 +114,7 @@ siguen abajo.
 | `make salud` | `curl -i http://localhost:8000/salud` | — |
 | `make smoke-gateway` | Rutas básicas, códigos y salud por capa (requiere `make demo`) | `evidence/p1_gateway_smoke.txt` |
 | `make smoke-flujo` | Flujo completo: siguiente, borrador, recuperar, enviar, liberar, revisión, exportar | `evidence/p1_gateway_flujo.txt` |
+| `make p1-salud` | `/salud` con Sesión, Historial y Registro caídos; puertos publicados; reglas de aislamiento. Corre en el host | `evidence/p1_salud_aislamiento.txt` |
 
 **Fallas de MongoDB (P8)**
 
@@ -209,14 +210,14 @@ Seis rutas. Los clientes y anotadores se cargan con `dataset/` (sin ruta REST).
 
 Acciones de `transicion`:
 
-| Acción | De → a | Evento generado |
+| Acción | De -> a | Evento generado |
 |---|---|---|
-| `asignar` | `disponible` (o `abierta` vencida) → `abierta` | `tarea_abierta` |
-| `enviar` | `abierta` → `anotada` | `tarea_anotada` |
-| `liberar` | `abierta` → `disponible` | ninguno |
-| `iniciar_revision` | `anotada` → `en_revision` | `revision_iniciada` |
-| `aprobar` | `en_revision` → `aprobada` | `revision_aprobada` |
-| `rechazar` | `en_revision` → `disponible` | `revision_rechazada` (estado `rechazada`) |
+| `asignar` | `disponible` (o `abierta` vencida) -> `abierta` | `tarea_abierta` |
+| `enviar` | `abierta` -> `anotada` | `tarea_anotada` |
+| `liberar` | `abierta` -> `disponible` | ninguno |
+| `iniciar_revision` | `anotada` -> `en_revision` | `revision_iniciada` |
+| `aprobar` | `en_revision` -> `aprobada` | `revision_aprobada` |
+| `rechazar` | `en_revision` -> `disponible` | `revision_rechazada` (estado `rechazada`) |
 | `confirmar_evento` | no cambia el estado; retira un evento ya publicado | ninguno |
 
 Cada transición es una única operación atómica (`findOneAndUpdate` con
@@ -261,9 +262,9 @@ Detalle en [`servicios/gateway/README.md`](servicios/gateway/README.md).
 |---|---|
 | `POST /proyectos`, `POST /proyectos/{id}/lotes`, `GET /proyectos/{id}/exportar` | Implementado (reenvía al registro) |
 | `GET /salud` | Implementado: `operativo`/`degradado` (200) o `caido` (503, registro sin servicio), con estado por capa |
-| `POST /tareas/siguiente` | Implementado: lock en Sesión → asignación en Registro → evento. 204 sin tareas; 409 si el anotador ya tiene una activa |
+| `POST /tareas/siguiente` | Implementado: lock en Sesión -> asignación en Registro -> evento. 204 sin tareas; 409 si el anotador ya tiene una activa |
 | `PUT /tareas/{id}/borrador`, `POST /sesiones/recuperar` | Implementado (Sesión) |
-| `POST /tareas/{id}/enviar` | Implementado: lock vigente → Registro → evento. 409 token ajeno o segundo envío; 503 sin reintento |
+| `POST /tareas/{id}/enviar` | Implementado: lock vigente -> Registro -> evento. 409 token ajeno o segundo envío; 503 sin reintento |
 | `POST /tareas/{id}/liberar` | Implementado |
 | `POST /tareas/{id}/revision` | Implementado: aprobar o rechazar (rechazo exige `motivo`) |
 | `GET /analitica/{q1..q5}` | PENDIENTE |
@@ -328,19 +329,20 @@ archivo.
 | `p2_replica.txt` | `make replica` (`pruebas/p2_registro/verificar_replica.sh`) |
 | `p2_registro_smoke.txt` | `make smoke-registro` (`pruebas/p2_registro/smoke_registro.py`) |
 | `p1_gateway_flujo.txt` | `make smoke-flujo` (`pruebas/p1_gateway/smoke_flujo.py`) |
+| `p1_salud_aislamiento.txt` | `make p1-salud` (`pruebas/p1_gateway/p1_salud_aislamiento.py`) |
 | `p2_concurrencia_gateway.txt` | `make p2-gateway` (`pruebas/p2_registro/p2_concurrencia_gateway.py`) |
 | `p2_write_concern.txt` | `make write-concern` (`pruebas/p2_registro/write_concern.py`) |
 | `p8_mongo_fallas.txt` | `make p8-mongo` (`pruebas/p8_fallas/p8_mongo.py`) |
 
 | Prueba | Estado |
 |---|---|
-| P1 REST y despliegue | Gateway básico 14/14 (`evidence/p1_gateway_smoke.txt`). Flujo de tareas 26/26 (`evidence/p1_gateway_flujo.txt`). `/salud` degradado y caído por MongoDB: ver P8. Faltan `/salud` con Sesión/Historial caídos y evidencia de puertos y aislamiento |
-| P2 Registro y concurrencia (50 contra 10) | Réplica verificada (`evidence/p2_replica.txt`). Atomicidad a nivel de registro: 30/30, 50 asignaciones simultáneas → 1×200 y 49×409 (`evidence/p2_registro_smoke.txt`). Por el gateway: 9/9, 10×200 y 40×204, cero dobles asignaciones; `/tareas/siguiente` p50 1056 ms, p95 1091 ms, p99 1094 ms, n=50 (`evidence/p2_concurrencia_gateway.txt`). `w:1` frente a `w:majority`: con 1 hilo `majority` es ×3,9–5,2 más lento (346 frente a 1552 ops/s); con 8 hilos ×1,8 (1229 frente a 2123 ops/s), en una sola máquina (`evidence/p2_write_concern.txt`) |
+| P1 REST y despliegue | Gateway básico 14/14 (`evidence/p1_gateway_smoke.txt`). Flujo de tareas 26/26 (`evidence/p1_gateway_flujo.txt`). `/salud` degradado y caído por MongoDB: ver P8. `/salud` por capa, puertos y aislamiento 33/33 (`evidence/p1_salud_aislamiento.txt`): Sesión o Historial caídos -> 200 degradado; Registro caído -> 503 caído; solo el gateway publica (8000); ningún servicio tiene el cliente de una base ajena. Analítica y simulador: PENDIENTES |
+| P2 Registro y concurrencia (50 contra 10) | Réplica verificada (`evidence/p2_replica.txt`). Atomicidad a nivel de registro: 30/30, 50 asignaciones simultáneas -> 1×200 y 49×409 (`evidence/p2_registro_smoke.txt`). Por el gateway: 9/9, 10×200 y 40×204, cero dobles asignaciones; `/tareas/siguiente` p50 1056 ms, p95 1091 ms, p99 1094 ms, n=50 (`evidence/p2_concurrencia_gateway.txt`). `w:1` frente a `w:majority`: con 1 hilo `majority` es ×3,9–5,2 más lento (346 frente a 1552 ops/s); con 8 hilos ×1,8 (1229 frente a 2123 ops/s), en una sola máquina (`evidence/p2_write_concern.txt`) |
 | P3 Sesión (borrador, AOF, vencimiento) | Scripts listos; ejecución y evidencia pendientes |
 | P4 Historial (micro-lotes, reproceso, frescura) | Scripts listos; ejecución y evidencia pendientes |
 | P5 Analítica | PENDIENTE |
 | P6 Carga (10, 40 y 100 usuarios) | PENDIENTE |
-| P8 Fallas | MongoDB 14/14 con SIGKILL (`evidence/p8_mongo_fallas.txt`): secundario caído sigue escribiendo; primario caído → elección ~10 s, RTO de escritura entre 7,6 y 9,7 s; sin mayoría 0 respuestas 200; RPO 0 de escrituras confirmadas. Valkey (reinicio y sesión interrumpida): PENDIENTE, Integrante 2 |
+| P8 Fallas | MongoDB 14/14 con SIGKILL (`evidence/p8_mongo_fallas.txt`): secundario caído sigue escribiendo; primario caído -> elección ~10 s, RTO de escritura entre 7,6 y 9,7 s; sin mayoría 0 respuestas 200; RPO 0 de escrituras confirmadas. Valkey (reinicio y sesión interrumpida): PENDIENTE, Integrante 2 |
 
 **Prueba del registro** (flujo completo de transiciones, 409 por token o
 estado, 50 asignaciones concurrentes sobre una misma tarea, eventos

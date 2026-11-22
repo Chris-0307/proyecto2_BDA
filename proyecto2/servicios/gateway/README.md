@@ -50,7 +50,7 @@ detallado de cada cuerpo está en [`../registro/README.md`](../registro/README.m
 | `POST /sesiones/recuperar` | `anotador_id`, `proyecto_id`, `tarea_id`, `token` | `estado`, `borrador`, `version`, `ttl_ms` | 200, 409, 422, 503 |
 
 El `token` lo entrega `/tareas/siguiente` y se usa en todas las demás rutas
-de la tarea. Campos extra en el cuerpo → 422.
+de la tarea. Campos extra en el cuerpo -> 422.
 
 ### Qué hace cada ruta
 
@@ -71,13 +71,13 @@ tiene una tarea activa (debe recuperarla, enviarla o liberarla).
 
 **`enviar`**
 
-1. Latido en Sesión: el token debe ser el dueño del lock vigente → si no, 409.
-2. Registro: `abierta → anotada`, filtrando por token → 409 si ya no está
+1. Latido en Sesión: el token debe ser el dueño del lock vigente -> si no, 409.
+2. Registro: `abierta -> anotada`, filtrando por token -> 409 si ya no está
    abierta (segundo envío). **503 sin reintento** si MongoDB no responde; el
    borrador y el lock siguen en Valkey y se puede reenviar.
 3. Publica `tarea_anotada` y suelta el lock.
 
-**`liberar`**: registro `abierta → disponible` (filtra por token) y suelta el lock.
+**`liberar`**: registro `abierta -> disponible` (filtra por token) y suelta el lock.
 
 **`revision`**: `iniciar_revision` y luego `aprobar` o `rechazar` en el
 registro. El rechazo exige `motivo` (422 sin él) y devuelve la tarea a
@@ -110,10 +110,10 @@ y `confirmar_evento` es idempotente.
 
 ## Validación básica
 
-- Ids de ruta y el cursor `despues` deben ser UUID → si no, 422 sin llamar
+- Ids de ruta y el cursor `despues` deben ser UUID -> si no, 422 sin llamar
   a los servicios internos.
 - Los cuerpos del flujo se validan con Pydantic (`modelos.py`).
-- `limite` de exportar entre 1 y 1000 → si no, 422.
+- `limite` de exportar entre 1 y 1000 -> si no, 422.
 - La validación de fondo (taxonomía, geometría por modalidad, etc.) la hace
   el registro.
 
@@ -204,8 +204,8 @@ Esperado: todas las líneas en `[OK]`.
 Probar estados de `/salud` (base de P1):
 
 ```bash
-docker compose -f proyecto2/docker-compose.yml stop historial   # → degradado (200)
-docker compose -f proyecto2/docker-compose.yml stop registro    # → caido (503)
+docker compose -f proyecto2/docker-compose.yml stop historial   # -> degradado (200)
+docker compose -f proyecto2/docker-compose.yml stop registro    # -> caido (503)
 docker compose -f proyecto2/docker-compose.yml start historial registro
 ```
 
@@ -217,5 +217,22 @@ docker compose -f proyecto2/docker-compose.yml start historial registro
 | `evidence/p1_gateway_flujo.txt` | Flujo completo: siguiente, borrador, recuperar, enviar, liberar, revisión, exportar | 26/26 |
 | `evidence/p2_concurrencia_gateway.txt` | 50 contra 10 por el gateway, cero dobles asignaciones, latencias p50/p95/p99 | 9/9; 10×200, 40×204; p50 1056 ms, p95 1091 ms, p99 1094 ms (n=50) |
 
+| `evidence/p1_salud_aislamiento.txt` | `/salud` con Sesión, Historial y Registro caídos; puertos publicados; aislamiento | 33/33; detección en ~2 s por capa |
+
 `/salud` degradado (200) y caído (503) por fallas de MongoDB: `evidence/p8_mongo_fallas.txt`.
-PENDIENTE: `/salud` con Sesión o Historial caídos.
+
+### `p1_salud_aislamiento.py` (`make p1-salud`)
+
+Corre en el host con Python estándar y Docker. Restaura cada servicio después
+de detenerlo.
+
+| Bloque | Qué comprueba |
+|---|---|
+| `/salud` por capa | Sesión caída -> 200 `degradado`; Historial caído -> 200 `degradado`; Registro caído -> 503 `caido`. Solo la capa detenida figura caída, las rutas que no dependen de ella siguen respondiendo y todo vuelve a `operativo` |
+| Puertos | En `docker compose ps` solo `gateway` publica, y es el 8000; desde el host, 8001, 8002, 8003, 27017 y 6379 rechazan la conexión |
+| Aislamiento | Gateway sin `pymongo` ni `redis`; Registro sin `redis`; Sesión e Historial sin `pymongo`. Se revisa en tres niveles: imports del código, paquetes instalados en la imagen y variables de entorno del contenedor |
+
+Todos los servicios comparten la red de Compose: el aislamiento se garantiza
+por dependencias y configuración, no por segmentación de red. Si algo propio
+del host escucha en 27017 o 6379 (un MongoDB o Redis local), la comprobación de
+puertos fallará aunque Docker esté bien configurado.

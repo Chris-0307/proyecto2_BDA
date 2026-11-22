@@ -312,7 +312,7 @@ def escenario_b(d: Datos):
     else:
         rto = primer_exito_tras_fallo
         comprobar("las escrituras vuelven a responder 200 tras la elección", rto is not None,
-                  f"primer fallo {primer_fallo:.1f}s, RTO (parada → primer 200) "
+                  f"primer fallo {primer_fallo:.1f}s, RTO (parada -> primer 200) "
                   f"{rto:.1f}s" if rto is not None else "sin recuperar")
     total, malas = verificar_confirmadas()
     comprobar("todo lo que respondió 200 sigue en MongoDB una vez, con su dueño y estado",
@@ -386,7 +386,7 @@ def escenario_c(d: Datos):
     else:
         nota = f"código {c}"
     comprobar("tras restaurar, el envío pendiente se resuelve (200 o 409)", c in (200, 409), nota)
-    log(f"recuperación (arranque → sano): {time.monotonic() - arranque:.1f}s; "
+    log(f"recuperación (arranque -> sano): {time.monotonic() - arranque:.1f}s; "
         f"sin mayoría durante {arranque - parada:.1f}s")
 
 

@@ -11,7 +11,7 @@ s ?= registro mongo-init sesion historial historial-worker
 
 .DEFAULT_GOAL := help
 .PHONY: help up ps down reset logs \
-        replica aof demo smoke-registro registro smoke-gateway salud smoke-flujo p2-gateway p8-mongo write-concern \
+        replica aof demo smoke-registro registro smoke-gateway salud smoke-flujo p2-gateway p8-mongo write-concern p1-salud \
         i2-up i2-down i2-smoke i2-pytest p3-p4
 
 help: ## Lista los objetivos
@@ -63,6 +63,11 @@ smoke-flujo: ## Flujo completo de tareas por el gateway (deja evidencia)
 	@mkdir -p $(EVIDENCIA)
 	set -o pipefail; $(COMPOSE) run --rm registro python /pruebas/p1_gateway/smoke_flujo.py \
 	  | tee $(EVIDENCIA)/p1_gateway_flujo.txt
+
+p1-salud: ## P1: /salud con cada servicio caído, puertos y aislamiento (host, deja evidencia)
+	@mkdir -p $(EVIDENCIA)
+	set -o pipefail; python3 proyecto2/pruebas/p1_gateway/p1_salud_aislamiento.py \
+	  | tee $(EVIDENCIA)/p1_salud_aislamiento.txt
 
 p2-gateway: ## P2: 50 solicitudes simultáneas contra 10 tareas (deja evidencia)
 	@mkdir -p $(EVIDENCIA)
