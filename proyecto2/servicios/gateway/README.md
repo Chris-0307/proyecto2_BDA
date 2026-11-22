@@ -214,7 +214,8 @@ docker compose -f proyecto2/docker-compose.yml start historial registro
 | Archivo | Contenido | Resultado |
 |---|---|---|
 | `evidence/p1_gateway_smoke.txt` | Rutas básicas, códigos, `X-Request-ID`, salud por capa | 14/14 |
-| `evidence/p1_gateway_flujo.txt` | Flujo completo: siguiente, borrador, recuperar, enviar, liberar, revisión, exportar | PENDIENTE de ejecutar |
-| `evidence/p2_concurrencia_gateway.txt` | 50 contra 10 por el gateway, cero dobles asignaciones, latencias p50/p95/p99 | PENDIENTE de ejecutar |
+| `evidence/p1_gateway_flujo.txt` | Flujo completo: siguiente, borrador, recuperar, enviar, liberar, revisión, exportar | 26/26 |
+| `evidence/p2_concurrencia_gateway.txt` | 50 contra 10 por el gateway, cero dobles asignaciones, latencias p50/p95/p99 | 9/9; 10×200, 40×204; p50 1056 ms, p95 1091 ms, p99 1094 ms (n=50) |
 
-PENDIENTE: ensayos de `/salud` en estado degradado y caído.
+`/salud` degradado (200) y caído (503) por fallas de MongoDB: `evidence/p8_mongo_fallas.txt`.
+PENDIENTE: `/salud` con Sesión o Historial caídos.

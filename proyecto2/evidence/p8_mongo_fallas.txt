@@ -1,56 +1,59 @@
-Inicio UTC: 2026-11-22T06:38:43.083552+00:00
+Inicio UTC: 2026-11-22T06:50:05.470115+00:00
 Objetivo: P8 — fallas de MongoDB (secundario, primario, sin mayoría) vía gateway
 Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.39, CPU lógicos: 16
-Parada: abrupta (stop -t 0); gateway: http://localhost:8000
+Caída: SIGKILL sin reinicio automático; gateway: http://localhost:8000
 Configuración: rs-plataforma 3 nodos, w=majority, wtimeout 5 s, serverSelectionTimeout 3 s, retryWrites=false, electionTimeoutMillis 10000
-[OK] estado inicial: 1 PRIMARY + 2 SECONDARY y /salud operativo — {"mongo-1": "SECONDARY", "mongo-2": "SECONDARY", "mongo-3": "PRIMARY"}
+[OK] estado inicial: 1 PRIMARY + 2 SECONDARY y /salud operativo — {"mongo-1": "PRIMARY", "mongo-2": "SECONDARY", "mongo-3": "SECONDARY"}
 
 === A. Se detiene un secundario ===
-[    2.4s] docker compose stop mongo-1
-[OK] /salud pasa a degradado (200) con un nodo caído — 11.5s hasta detectarlo
+[    2.6s] caída (kill) de mongo-2
+[OK] /salud pasa a degradado (200) con un nodo caído — 12.5s hasta detectarlo
 [OK] con un secundario caído se sigue escribiendo (10/10 siguiente+enviar) — 10/10
-[   14.4s] docker compose start mongo-1
-[OK] el nodo vuelve como SECONDARY y /salud operativo — 0.9s
+[   15.7s] arranque de mongo-2
+[OK] el nodo vuelve como SECONDARY y /salud operativo — 3.0s
 
 === B. Se detiene el primario ===
-[   16.4s] primario actual: mongo-3; docker compose stop mongo-3
-[   17.3s] ciclo 1: {'siguiente': 200, 'enviar': 200}
-[   17.4s] ciclo 2: {'siguiente': 200, 'enviar': 200}
-[   17.4s] ciclo 3: {'siguiente': 200, 'enviar': 200}
-[   17.5s] ciclo 4: {'siguiente': 200, 'enviar': 200}
-[   17.5s] ciclo 5: {'siguiente': 200, 'enviar': 200}
-[OK] se elige otro primario — mongo-1 en 1.3s
-[OK] escrituras disponibles tras la elección — no hubo fallos visibles
+[   19.9s] primario actual: mongo-1; caída (kill) de mongo-1
+[   23.5s] ciclo 1: {'siguiente': 503}
+[   27.5s] ciclo 2: {'siguiente': 503}
+[   29.6s] ciclo 3: {'siguiente': 200, 'enviar': 200}
+[   29.7s] ciclo 4: {'siguiente': 200, 'enviar': 200}
+[   29.7s] ciclo 5: {'siguiente': 200, 'enviar': 200}
+[   29.8s] ciclo 6: {'siguiente': 200, 'enviar': 200}
+[   29.9s] ciclo 7: {'siguiente': 200, 'enviar': 200}
+[OK] se elige otro primario — mongo-3 en 10.1s
+[OK] las escrituras vuelven a responder 200 tras la elección — primer fallo 3.7s, RTO (parada → primer 200) 9.7s
 [OK] todo lo que respondió 200 sigue en MongoDB una vez, con su dueño y estado — 25 tareas verificadas, 0 distintas
-[   22.3s] docker compose start mongo-3
-[OK] el antiguo primario vuelve como SECONDARY — mongo-3=SECONDARY en 0.5s
+[   34.7s] arranque de mongo-1
+[OK] el antiguo primario vuelve como SECONDARY — mongo-1=SECONDARY en 3.4s
 
 === C. Sin mayoría: se detienen los dos secundarios ===
-[   24.2s] docker compose stop mongo-2 mongo-3
-[   30.2s] enviar sin mayoría -> 503
-[   32.7s] enviar sin mayoría -> 503
-[   36.0s] enviar sin mayoría -> 503
-[   39.2s] enviar sin mayoría -> 503
-[   42.3s] enviar sin mayoría -> 503
-[   45.5s] enviar sin mayoría -> 503
-[   48.7s] enviar sin mayoría -> 503
-[   51.9s] enviar sin mayoría -> 503
-[   61.9s] ciclos sin mayoría: [{'siguiente': 503}, {'siguiente': 503}, {'siguiente': 503}]
+[   40.2s] caída (kill) de mongo-1 mongo-2
+[   45.9s] enviar sin mayoría -> 503
+[   50.0s] enviar sin mayoría -> 503
+[   53.2s] enviar sin mayoría -> 503
+[   56.5s] enviar sin mayoría -> 503
+[   59.7s] enviar sin mayoría -> 503
+[   62.8s] enviar sin mayoría -> 503
+[   65.9s] enviar sin mayoría -> 503
+[   75.4s] ciclos sin mayoría: [{'siguiente': 503}, {'siguiente': 503}, {'siguiente': 503}]
 [OK] /salud responde 503 caído sin mayoría — (503, 'caido', 'caido')
 [OK] sin mayoría ninguna escritura responde 200 — enviar: [503]
-[OK] sin mayoría enviar responde 503 (sin reintento) — 8 respuestas 503
-[   61.9s] docker compose start mongo-2 mongo-3
-[OK] el conjunto se recupera con 1 PRIMARY + 2 SECONDARY — 3.0s desde el arranque
+[OK] sin mayoría enviar responde 503 (sin reintento) — 7 respuestas 503
+[   75.5s] arranque de mongo-1 mongo-2
+[OK] el conjunto se recupera con 1 PRIMARY + 2 SECONDARY — 5.6s desde el arranque
 [OK] tras restaurar, el envío pendiente se resuelve (200 o 409) — 409: el 503 sí se había aplicado en el primario (ver limitaciones de w:majority)
-[   65.3s] recuperación (arranque → sano): 3.4s; sin mayoría durante 37.7s
+[   81.7s] recuperación (arranque → sano): 6.2s; sin mayoría durante 35.3s
 
 === Verificación final ===
 [OK] RPO de escrituras confirmadas: ninguna tarea con 200 se perdió — 26 tareas verificadas; diferencias: []
-Operaciones con 503 (resultado indeterminado del lado del cliente): 3
-  {'escenario': 'C', 'op': 'siguiente', 'anotador': 'cd27ac11-c4a0-4e9a-a470-87c40399e91d'}
-  {'escenario': 'C', 'op': 'siguiente', 'anotador': 'd537efc1-a354-4c50-908b-f1488dcd2c7d'}
-  {'escenario': 'C', 'op': 'siguiente', 'anotador': 'fc70a02f-fbac-4858-8246-1760c425d70f'}
-Estado final del conjunto: {"mongo-1": "PRIMARY", "mongo-2": "SECONDARY", "mongo-3": "SECONDARY"}; /salud: (200, 'operativo', 'operativo')
+Operaciones con 503 (resultado indeterminado del lado del cliente): 5
+  {'escenario': 'B', 'op': 'siguiente', 'anotador': 'b897aabd-4773-41c6-8e24-766fab8cb7b7'}
+  {'escenario': 'B', 'op': 'siguiente', 'anotador': '1ab40866-2535-4c20-8465-bd3ff73cfab8'}
+  {'escenario': 'C', 'op': 'siguiente', 'anotador': 'fc67f684-c6b4-4734-b555-7096957c6a77'}
+  {'escenario': 'C', 'op': 'siguiente', 'anotador': '70c28c29-f6cc-44e8-b38c-880bd53efe62'}
+  {'escenario': 'C', 'op': 'siguiente', 'anotador': '2128068c-e1e1-4cd5-bc08-cb46fba012a0'}
+Estado final del conjunto: {"mongo-1": "SECONDARY", "mongo-2": "SECONDARY", "mongo-3": "PRIMARY"}; /salud: (200, 'operativo', 'operativo')
 
 Resultado: 14/14 comprobaciones correctas
-Fin UTC: 2026-11-22T06:39:51.975364+00:00
+Fin UTC: 2026-11-22T06:51:31.805985+00:00

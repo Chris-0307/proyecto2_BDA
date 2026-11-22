@@ -14,7 +14,7 @@ contenedores: registro operacional (MongoDB en réplica), sesiones y locks
 | Componente | Responsabilidad | Tecnología | Estado |
 |---|---|---|---|
 | Gateway | Único punto de entrada (puerto 8000), validación, enrutamiento, salud por capa | REST (FastAPI + httpx) | Implementado: registro, flujo de tareas, salud y reconciliador de eventos; analítica PENDIENTE |
-| Registro | Clientes, proyectos, lotes, tareas, asignaciones, revisiones, exportación | MongoDB, 3 nodos | Réplica e índices verificados (`evidence/p2_replica.txt`); smoke del registro 30/30 (`evidence/p2_registro_smoke.txt`) |
+| Registro | Clientes, proyectos, lotes, tareas, asignaciones, revisiones, exportación | MongoDB, 3 nodos | Réplica e índices verificados (`evidence/p2_replica.txt`); smoke del registro 30/30 (`evidence/p2_registro_smoke.txt`); fallas P8 14/14 (`evidence/p8_mongo_fallas.txt`) |
 | Sesión | Locks `SET NX PX` de 120 s, latidos, borradores, sesiones activas, recuperación | Valkey con AOF `everysec` | Implementado, sin ensayos ejecutados |
 | Historial | Recepción de eventos, micro-lotes, escritura del datalake | Valkey Streams + Parquet | Implementado, sin ensayos ejecutados |
 | Analítica | Consultas Q1–Q5 de solo lectura sobre Parquet | Apache Spark | PENDIENTE |
@@ -57,7 +57,7 @@ proyecto2_BDA/
     ├── datalake/                     # Parquet publicado por el worker (no se versiona)
     ├── pruebas/                      # una carpeta por grupo de prueba del enunciado
     │   ├── p1_gateway/               # smoke_gateway.py, smoke_flujo.py
-    │   ├── p2_registro/              # smoke_registro.py, verificar_replica.sh, p2_concurrencia_gateway.py
+    │   ├── p2_registro/              # smoke_registro.py, verificar_replica.sh, p2_concurrencia_gateway.py, write_concern.py
     │   ├── p3_sesion/                # test_sesion_*.py, p3_reinicio_aof.py
     │   ├── p4_historial/             # test_historial_*.py
     │   ├── p3_p4_integracion/        # test_p3_p4_integracion.py, smoke_integrante2.sh, ejecutar_evidencias_p3_p4.py
@@ -105,6 +105,7 @@ siguen abajo.
 | `make smoke-registro` | Transiciones, 409 y 50 asignaciones concurrentes | `evidence/p2_registro_smoke.txt` |
 | `make registro` | Todo seguido: `up` + `replica` + `demo` + `smoke-registro` | las dos anteriores |
 | `make p2-gateway` | 50 solicitudes simultáneas contra 10 tareas por el gateway; latencias p50/p95/p99 | `evidence/p2_concurrencia_gateway.txt` |
+| `make write-concern` | Latencia y rendimiento de las escrituras del registro con `w:1` frente a `w:majority` | `evidence/p2_write_concern.txt` |
 
 **Gateway (P1)**
 
@@ -118,7 +119,7 @@ siguen abajo.
 
 | Objetivo | Qué hace | Evidencia |
 |---|---|---|
-| `make p8-mongo` | Detiene un secundario, luego el primario, luego los dos secundarios; restaura después de cada caso. Corre en el host, ~3-5 min | `evidence/p8_mongo_fallas.txt` |
+| `make p8-mongo` | Tumba (SIGKILL) un secundario, luego el primario, luego los dos secundarios; restaura después de cada caso. Corre en el host, ~3-5 min | `evidence/p8_mongo_fallas.txt` |
 
 **Sesión e Historial (P3/P4, Integrante 2)**
 
@@ -328,17 +329,18 @@ archivo.
 | `p2_registro_smoke.txt` | `make smoke-registro` (`pruebas/p2_registro/smoke_registro.py`) |
 | `p1_gateway_flujo.txt` | `make smoke-flujo` (`pruebas/p1_gateway/smoke_flujo.py`) |
 | `p2_concurrencia_gateway.txt` | `make p2-gateway` (`pruebas/p2_registro/p2_concurrencia_gateway.py`) |
+| `p2_write_concern.txt` | `make write-concern` (`pruebas/p2_registro/write_concern.py`) |
 | `p8_mongo_fallas.txt` | `make p8-mongo` (`pruebas/p8_fallas/p8_mongo.py`) |
 
 | Prueba | Estado |
 |---|---|
-| P1 REST y despliegue | Gateway básico: 14/14 (`evidence/p1_gateway_smoke.txt`). Flujo de tareas: `smoke_flujo.py` escrito, ejecución pendiente. Faltan ensayos degradado/caído |
-| P2 Registro y concurrencia (50 contra 10) | Réplica verificada (`evidence/p2_replica.txt`). Atomicidad a nivel de registro: 30/30, 50 asignaciones simultáneas → 1×200 y 49×409 (`evidence/p2_registro_smoke.txt`). Prueba por el gateway: `p2_concurrencia_gateway.py` escrito (`make p2-gateway`), ejecución pendiente |
+| P1 REST y despliegue | Gateway básico 14/14 (`evidence/p1_gateway_smoke.txt`). Flujo de tareas 26/26 (`evidence/p1_gateway_flujo.txt`). `/salud` degradado y caído por MongoDB: ver P8. Faltan `/salud` con Sesión/Historial caídos y evidencia de puertos y aislamiento |
+| P2 Registro y concurrencia (50 contra 10) | Réplica verificada (`evidence/p2_replica.txt`). Atomicidad a nivel de registro: 30/30, 50 asignaciones simultáneas → 1×200 y 49×409 (`evidence/p2_registro_smoke.txt`). Por el gateway: 9/9, 10×200 y 40×204, cero dobles asignaciones; `/tareas/siguiente` p50 1056 ms, p95 1091 ms, p99 1094 ms, n=50 (`evidence/p2_concurrencia_gateway.txt`). `w:1` frente a `w:majority`: con 1 hilo `majority` es ×3,9–5,2 más lento (346 frente a 1552 ops/s); con 8 hilos ×1,8 (1229 frente a 2123 ops/s), en una sola máquina (`evidence/p2_write_concern.txt`) |
 | P3 Sesión (borrador, AOF, vencimiento) | Scripts listos; ejecución y evidencia pendientes |
 | P4 Historial (micro-lotes, reproceso, frescura) | Scripts listos; ejecución y evidencia pendientes |
 | P5 Analítica | PENDIENTE |
 | P6 Carga (10, 40 y 100 usuarios) | PENDIENTE |
-| P8 Fallas | MongoDB: `p8_mongo.py` escrito (`make p8-mongo`), ejecución pendiente. Valkey (reinicio y sesión interrumpida): PENDIENTE, Integrante 2 |
+| P8 Fallas | MongoDB 14/14 con SIGKILL (`evidence/p8_mongo_fallas.txt`): secundario caído sigue escribiendo; primario caído → elección ~10 s, RTO de escritura entre 7,6 y 9,7 s; sin mayoría 0 respuestas 200; RPO 0 de escrituras confirmadas. Valkey (reinicio y sesión interrumpida): PENDIENTE, Integrante 2 |
 
 **Prueba del registro** (flujo completo de transiciones, 409 por token o
 estado, 50 asignaciones concurrentes sobre una misma tarea, eventos
@@ -409,16 +411,20 @@ evidencia (plantilla en `docs/`).
   lo publica a Historial y lo confirma. Si Historial falla o el gateway cae entre
   ambos pasos, el evento queda pendiente y el reconciliador del gateway lo reenvía
   (cada `GATEWAY_RECONCILIAR_S`, 10 s por defecto). Mientras tanto, Spark no lo ve.
-- Un 503 del registro no garantiza que la escritura no ocurrió: un fallo de
-  `w: majority` puede dejar la operación aplicada en el primario. Se estudiará
-  en las pruebas de fallas (P8).
+- Un 503 del registro no garantiza que la escritura no ocurrió. En P8 (caso C,
+  dos corridas) el primer `enviar` sin mayoría respondió 503 pero quedó aplicado
+  en el primario aislado y se conservó al volver la mayoría (el reintento dio
+  409). Lo confirmado con 200 nunca se perdió.
+- Una asignación que responde 503 puede quedar `abierta` sin lock en Valkey;
+  vuelve a ofrecerse cuando vence su plazo (120 s).
 - AOF `everysec` puede perder aproximadamente el último segundo ante una caída
   abrupta; un reinicio ordenado no equivale a ese ensayo.
 - La publicación Parquet es atómica por archivo, no entre particiones.
 - Registrar un lote inserta las tareas sin transacción multidocumento: una caída
   a mitad puede dejar un lote parcial.
-- Hasta ejecutar los ensayos, **no hay mediciones disponibles** (latencias
-  p50/p95/p99, RTO, RPO, frescura).
+- Mediciones disponibles: P2 (latencia de `/tareas/siguiente`), `w:1` frente a
+  `w:majority` y P8 de MongoDB (elección, RTO, RPO). Aún **no hay mediciones**
+  de frescura, carga (P6), analítica (P5) ni fallas de Valkey.
 
 ## 12. Documentación adicional
 

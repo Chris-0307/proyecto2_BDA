@@ -1,0 +1,36 @@
+Inicio UTC: 2026-11-22T06:52:30.444999+00:00
+Objetivo: diferencia observada entre w:1 y w:"majority" (latencia y rendimiento)
+Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.41, CPU lógicos: 16
+Configuración: 500 ops por hilo y repetición, 3 repeticiones alternadas, hilos [1, 8]; 3 nodos en la misma máquina (Docker local)
+Conjunto: mongo-1:27017=SECONDARY, mongo-2:27017=SECONDARY, mongo-3:27017=PRIMARY
+  rep 1 hilos=1 w:1: 1542 ops/s
+  rep 1 hilos=1 w:majority: 357 ops/s
+  rep 1 hilos=8 w:1: 2158 ops/s
+  rep 1 hilos=8 w:majority: 1219 ops/s
+  rep 2 hilos=1 w:majority: 349 ops/s
+  rep 2 hilos=1 w:1: 1494 ops/s
+  rep 2 hilos=8 w:majority: 1236 ops/s
+  rep 2 hilos=8 w:1: 2096 ops/s
+  rep 3 hilos=1 w:1: 1627 ops/s
+  rep 3 hilos=1 w:majority: 332 ops/s
+  rep 3 hilos=8 w:1: 2117 ops/s
+  rep 3 hilos=8 w:majority: 1232 ops/s
+
+Latencia por operación (ms) y rendimiento
+hilos write concern operación                 n     p50     p95     p99   media    ops/s
+    1 w:1           insert_one             1500    0.52    0.73    0.86    0.53     1552
+    1 w:1           find_one_and_update    1500    0.71    0.98    1.17    0.73     1552
+    1 w:majority    insert_one             1500    2.66    3.93    4.72    2.84      346
+    1 w:majority    find_one_and_update    1500    2.77    4.09    5.22    2.93      346
+    8 w:1           insert_one            12000    3.44    6.80    8.75    3.68     2123
+    8 w:1           find_one_and_update   12000    3.51    6.76    8.54    3.73     2123
+    8 w:majority    insert_one            12000    6.28    9.29   10.96    6.40     1229
+    8 w:majority    find_one_and_update   12000    6.37    9.41   11.22    6.51     1229
+
+Relación majority / w:1 (mediana de latencia)
+  hilos=1 insert_one: x5.15
+  hilos=1 find_one_and_update: x3.91
+  hilos=8 insert_one: x1.83
+  hilos=8 find_one_and_update: x1.82
+
+Fin UTC: 2026-11-22T06:53:14.053587+00:00

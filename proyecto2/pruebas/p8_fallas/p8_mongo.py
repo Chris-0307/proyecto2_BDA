@@ -7,10 +7,11 @@ Tres escenarios, en orden, restaurando el entorno al final de cada uno:
   C. Se detienen los DOS SECUNDARIOS (sin mayoría): /salud caído y ninguna
      escritura responde 200. Tras restaurar se reintenta un envío pendiente.
 
-Las paradas son abruptas (`docker compose stop -t 0`: SIGKILL sin apagado
-ordenado) para simular una caída; con `stop` normal el primario haría un
-stepDown ordenado y la elección sería más rápida. `stop` (no `kill`) evita que
-la política `restart: unless-stopped` los reinicie sola.
+Por defecto la caída es real: se desactiva la política de reinicio del
+contenedor (`docker update --restart=no`) y se le envía SIGKILL, sin apagado
+ordenado ni stepDown. Al restaurar se arranca y se devuelve la política
+`unless-stopped`. Con P8_PARADA=stop se usa `docker compose stop` (apagado
+ordenado: el primario cede el rol antes de morir y la elección es casi inmediata).
 
 Se ejecuta en el HOST (WSL/Linux) con Python estándar y Docker, con el Compose
 final levantado. Los datos de prueba (cliente y anotadores nuevos) se insertan
@@ -35,7 +36,7 @@ from uuid import uuid4
 PROYECTO = Path(__file__).resolve().parents[2]
 COMPOSE = ["docker", "compose", "-f", str(PROYECTO / "docker-compose.yml")]
 GATEWAY = os.getenv("GATEWAY_URL", "http://localhost:8000")
-PARADA = ["-t", "0"] if os.getenv("P8_PARADA", "abrupta") == "abrupta" else []
+MODO = os.getenv("P8_PARADA", "kill")  # kill (caída real) | stop (apagado ordenado)
 NODOS = ["mongo-1", "mongo-2", "mongo-3"]
 URI_RS = ("mongodb://mongo-1:27017,mongo-2:27017,mongo-3:27017/plataforma"
           "?replicaSet=rs-plataforma&w=majority&readPreference=primaryPreferred")
@@ -91,6 +92,28 @@ def estado_rs() -> dict[str, str]:
         return {n.split(":")[0]: s for n, s, h in json.loads(out) if h == 1}
     except ValueError:
         return {}
+
+
+def contenedor(nodo: str) -> str:
+    return compose("ps", "-q", "-a", nodo)[1]
+
+
+def caer(*nodos: str) -> None:
+    """Caída del nodo: SIGKILL sin reinicio automático (o stop ordenado)."""
+    if MODO == "stop":
+        compose("stop", *nodos)
+        return
+    for n in nodos:
+        cid = contenedor(n)
+        sh(["docker", "update", "--restart=no", cid])
+        sh(["docker", "kill", "-s", "KILL", cid])
+
+
+def levantar(*nodos: str) -> None:
+    """Arranca los nodos y les devuelve la política restart: unless-stopped."""
+    compose("start", *nodos)
+    for n in nodos:
+        sh(["docker", "update", "--restart=unless-stopped", contenedor(n)])
 
 
 def primario() -> str | None:
@@ -221,9 +244,9 @@ def verificar_confirmadas() -> tuple[int, list]:
 def escenario_a(d: Datos):
     print("\n=== A. Se detiene un secundario ===", flush=True)
     sec = next(n for n, s in estado_rs().items() if s == "SECONDARY")
-    log(f"docker compose stop {sec}")
+    log(f"caída ({MODO}) de {sec}")
     inicio = time.monotonic()
-    compose("stop", *PARADA, sec)
+    caer(sec)
     detectado = esperar(lambda: salud()[1] == "degradado", 60, 1)
     comprobar("/salud pasa a degradado (200) con un nodo caído",
               detectado and salud()[0] == 200,
@@ -231,8 +254,8 @@ def escenario_a(d: Datos):
     ok = [ciclo(d, "A")[0] for _ in range(10)]
     comprobar("con un secundario caído se sigue escribiendo (10/10 siguiente+enviar)",
               all(ok), f"{sum(ok)}/10")
-    log(f"docker compose start {sec}")
-    compose("start", sec)
+    log(f"arranque de {sec}")
+    levantar(sec)
     rec = esperar_sano()
     comprobar("el nodo vuelve como SECONDARY y /salud operativo", rec is not None,
               f"{rec:.1f}s" if rec is not None else "sin recuperar")
@@ -243,7 +266,7 @@ def escenario_b(d: Datos):
     for _ in range(5):
         ciclo(d, "B-antes")
     viejo = primario()
-    log(f"primario actual: {viejo}; docker compose stop {viejo}")
+    log(f"primario actual: {viejo}; caída ({MODO}) de {viejo}")
     nuevo: dict = {}
     restantes = [n for n in NODOS if n != viejo]
 
@@ -260,7 +283,7 @@ def escenario_b(d: Datos):
             time.sleep(0.5)
 
     parada = time.monotonic()
-    compose("stop", *PARADA, viejo)
+    caer(viejo)
     hilo = threading.Thread(target=vigilar_eleccion, daemon=True)
     hilo.start()
 
@@ -276,6 +299,8 @@ def escenario_b(d: Datos):
         if ok and primer_fallo is not None and primer_exito_tras_fallo is None:
             primer_exito_tras_fallo = ahora
         seguidos = seguidos + 1 if ok else 0
+        if not ok:
+            time.sleep(0.5)  # resolución de ~0,5 s sin agotar los anotadores de prueba
         if seguidos >= 5 and (primer_fallo is None or primer_exito_tras_fallo is not None):
             break
     hilo.join(timeout=5)
@@ -292,8 +317,8 @@ def escenario_b(d: Datos):
     total, malas = verificar_confirmadas()
     comprobar("todo lo que respondió 200 sigue en MongoDB una vez, con su dueño y estado",
               not malas, f"{total} tareas verificadas, {len(malas)} distintas")
-    log(f"docker compose start {viejo}")
-    compose("start", viejo)
+    log(f"arranque de {viejo}")
+    levantar(viejo)
     rec = esperar_sano()
     roles = estado_rs()
     comprobar("el antiguo primario vuelve como SECONDARY", rec is not None and roles.get(viejo) == "SECONDARY",
@@ -312,9 +337,9 @@ def escenario_c(d: Datos):
     confirmadas[pendiente["tarea"]] = {"estado": "abierta", "anotador": a, "token": s["token"]}
 
     secs = [n for n, st in estado_rs().items() if st == "SECONDARY"]
-    log(f"docker compose stop {' '.join(secs)}")
+    log(f"caída ({MODO}) de {' '.join(secs)}")
     parada = time.monotonic()
-    compose("stop", *PARADA, *secs)
+    caer(*secs)
 
     codigos_envio = []
     fin = time.monotonic() + 25
@@ -341,9 +366,9 @@ def escenario_c(d: Datos):
     comprobar("sin mayoría enviar responde 503 (sin reintento)", 503 in codigos_envio,
               f"{codigos_envio.count(503)} respuestas 503")
 
-    log(f"docker compose start {' '.join(secs)}")
+    log(f"arranque de {' '.join(secs)}")
     arranque = time.monotonic()
-    compose("start", *secs)
+    levantar(*secs)
     rec = esperar_sano()
     comprobar("el conjunto se recupera con 1 PRIMARY + 2 SECONDARY", rec is not None,
               f"{rec:.1f}s desde el arranque" if rec is not None else "sin recuperar")
@@ -371,7 +396,8 @@ def main():
     print(f"Inicio UTC: {datetime.now(timezone.utc).isoformat()}")
     print("Objetivo: P8 — fallas de MongoDB (secundario, primario, sin mayoría) vía gateway")
     print(f"Máquina: {platform.platform()}, CPU lógicos: {os.cpu_count()}")
-    print(f"Parada: {'abrupta (stop -t 0)' if PARADA else 'ordenada (stop)'}; gateway: {GATEWAY}")
+    print(f"Caída: {'SIGKILL sin reinicio automático' if MODO != 'stop' else 'docker compose stop (ordenada)'}; "
+          f"gateway: {GATEWAY}")
     print("Configuración: rs-plataforma 3 nodos, w=majority, wtimeout 5 s, "
           "serverSelectionTimeout 3 s, retryWrites=false, electionTimeoutMillis 10000")
 
@@ -390,7 +416,7 @@ def main():
         escenario_c(d)
     finally:
         # Restaurar siempre un estado conocido.
-        compose("start", *NODOS)
+        levantar(*NODOS)
         esperar_sano()
 
     print("\n=== Verificación final ===", flush=True)

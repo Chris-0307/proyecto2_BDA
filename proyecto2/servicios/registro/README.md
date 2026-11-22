@@ -54,6 +54,33 @@ Errores que se traducen a 503: `ConnectionFailure` (incluye
 `ServerSelectionTimeoutError` y `NotPrimaryError`), `WriteConcernError` y
 `ExecutionTimeout`.
 
+### `w:1` frente a `w:majority`
+
+`pruebas/p2_registro/write_concern.py` (`make write-concern`) mide con el
+driver las dos escrituras del registro (`insert_one` y la transición
+`find_one_and_update`) con cada write concern, con 1 y 8 hilos, y reporta
+p50/p95/p99 y ops/s. Usa una base aparte (`bench_wc`) que borra al terminar.
+
+Los tres nodos corren en la misma máquina, así que la replicación no paga
+latencia de red real: la diferencia medida no se extrapola a un clúster
+distribuido.
+
+Resultado (`evidence/p2_write_concern.txt`, 3 repeticiones alternadas):
+
+| Hilos | Operación | p50 `w:1` | p50 `majority` | Relación | ops/s `w:1` → `majority` |
+|---|---|---|---|---|---|
+| 1 | `insert_one` | 0,52 ms | 2,66 ms | ×5,15 | 1552 → 346 |
+| 1 | `find_one_and_update` | 0,71 ms | 2,77 ms | ×3,91 | 1552 → 346 |
+| 8 | `insert_one` | 3,44 ms | 6,28 ms | ×1,83 | 2123 → 1229 |
+| 8 | `find_one_and_update` | 3,51 ms | 6,37 ms | ×1,82 | 2123 → 1229 |
+
+Con un hilo, la espera de confirmación de la mayoría domina cada escritura;
+con 8 hilos esas esperas se solapan y la diferencia relativa baja.
+
+Además de la latencia, `w:1` cambia la garantía: confirma una
+escritura que aún no está en la mayoría y que puede perderse en un rollback
+tras una elección (P8, caso C).
+
 ### Variables de entorno
 
 | Variable | Defecto |
@@ -251,11 +278,13 @@ actualización de `transiciones.py`.
 | Archivo | Contenido | Resultado |
 |---|---|---|
 | `evidence/p2_replica.txt` | Estado de `rs-plataforma`, mayoría e índices | 1 primario, 2 secundarios |
-| `evidence/p8_mongo_fallas.txt` | P8: secundario, primario y sin mayoría; elección, RTO y RPO | PENDIENTE de ejecutar |
+| `evidence/p2_write_concern.txt` | Latencia y rendimiento con `w:1` frente a `w:majority` (driver, 1 y 8 hilos) | Ver tabla en la sección `w:1` frente a `w:majority` |
+| `evidence/p8_mongo_fallas.txt` | P8: secundario, primario y sin mayoría; elección, RTO y RPO | 14/14; ver resultados en la sección P8 |
+| `evidence/p2_concurrencia_gateway.txt` | 50 contra 10 por el gateway (con locks de Valkey) | 9/9; 10×200, 40×204, cero dobles asignaciones |
 | `evidence/p2_registro_smoke.txt` | Flujo completo, 409/403/422, 50 asignaciones simultáneas, eventos pendientes | 30/30; 50 intentos → 1×200, 49×409 |
 
-El smoke valida la atomicidad **a nivel de registro**. P2 completo (50 contra
-10 a través del gateway, con locks de Valkey) sigue pendiente.
+`p2_registro_smoke.txt` valida la atomicidad a nivel de registro;
+`p2_concurrencia_gateway.txt`, la prueba completa por el gateway.
 
 ## P8: fallas de MongoDB
 
@@ -273,11 +302,22 @@ estándar y Docker, con el Compose final levantado. Crea sus propios datos
 Después de cada caso se arrancan los nodos y se espera a 1 PRIMARY + 2
 SECONDARY y `/salud` operativo, para dejar un estado conocido.
 
-- Las paradas son abruptas (`docker compose stop -t 0`) para simular una caída;
-  `P8_PARADA=ordenada` usa `stop` normal, donde el primario hace un stepDown
-  ordenado y la elección es más rápida.
-- Se usa `stop` y no `kill`: los nodos tienen `restart: unless-stopped` y un
-  contenedor detenido con `stop` no se reinicia solo.
+Resultado con SIGKILL (`evidence/p8_mongo_fallas.txt`, 14/14):
+
+| Caso | Observado |
+|---|---|
+| A | `/salud` degradado a los 12,5 s; 10/10 escrituras con 200; vuelta a operativo en 3,0 s |
+| B | Nuevo primario en ~10 s (`electionTimeoutMillis` 10 000). Último ciclo con 503 a 7,6 s, primer 200 a 9,7 s: **RTO de escritura entre 7,6 y 9,7 s** (resolución ~4 s, porque cada ciclo fallido espera los 3 s de selección de servidor). 25/25 tareas con 200 intactas |
+| C | 7 respuestas 503 y ninguna 200 sin mayoría; `/salud` 503 caído. Recuperación en 5,6 s. El reintento del envío dio 409: el primer 503 se había aplicado en el primario aislado y se conservó |
+| Final | **RPO 0** de escrituras confirmadas (26/26 intactas). 5 asignaciones con 503 de resultado indeterminado |
+
+- La caída es real: se desactiva la política de reinicio del contenedor
+  (`docker update --restart=no`) y se le envía SIGKILL, sin apagado ordenado.
+  Al restaurar se arranca y se devuelve `restart: unless-stopped`.
+- `P8_PARADA=stop` usa `docker compose stop` (apagado ordenado). En la primera
+  corrida, con `stop -t 0`, el primario alcanzó a ceder el rol antes de morir:
+  la elección tomó 1,3 s y no hubo escrituras fallidas, así que esa corrida no
+  sirve para medir el RTO de una caída.
 - En C, antes de que el primario aislado se degrade (hasta
   `electionTimeoutMillis`, 10 s), una escritura puede aplicarse en él y responder
   503 por `wtimeout`. Al volver la mayoría puede conservarse (el reintento da

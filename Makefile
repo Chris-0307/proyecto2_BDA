@@ -11,7 +11,7 @@ s ?= registro mongo-init sesion historial historial-worker
 
 .DEFAULT_GOAL := help
 .PHONY: help up ps down reset logs \
-        replica aof demo smoke-registro registro smoke-gateway salud smoke-flujo p2-gateway p8-mongo \
+        replica aof demo smoke-registro registro smoke-gateway salud smoke-flujo p2-gateway p8-mongo write-concern \
         i2-up i2-down i2-smoke i2-pytest p3-p4
 
 help: ## Lista los objetivos
@@ -68,6 +68,11 @@ p2-gateway: ## P2: 50 solicitudes simultáneas contra 10 tareas (deja evidencia)
 	@mkdir -p $(EVIDENCIA)
 	set -o pipefail; $(COMPOSE) run --rm registro python /pruebas/p2_registro/p2_concurrencia_gateway.py \
 	  | tee $(EVIDENCIA)/p2_concurrencia_gateway.txt
+
+write-concern: ## Latencia y rendimiento con w:1 frente a w:majority (deja evidencia)
+	@mkdir -p $(EVIDENCIA)
+	set -o pipefail; $(COMPOSE) run --rm registro python /pruebas/p2_registro/write_concern.py \
+	  | tee $(EVIDENCIA)/p2_write_concern.txt
 
 ## ---- Fallas (P8) ----
 p8-mongo: ## P8: caída de secundario, primario y mayoría de MongoDB (deja evidencia, ~3-5 min)
