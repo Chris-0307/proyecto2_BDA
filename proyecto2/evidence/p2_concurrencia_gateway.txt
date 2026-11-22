@@ -1,0 +1,19 @@
+Inicio UTC: 2026-11-22T06:13:55.255446+00:00
+Objetivo: P2, 50 solicitudes simultáneas contra 10 tareas por el gateway
+Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.41, CPU lógicos: 16
+[OK] lote de 10 tareas creado — código 201
+Códigos: {204: 40, 200: 10}
+[OK] exactamente 10 respuestas 200 — 10
+[OK] 40 respuestas 204 — 40
+[OK] ningún otro código — {204: 40, 200: 10}
+[OK] las tareas entregadas son todas distintas — 10 distintas
+[OK] MongoDB: 10 tareas abiertas — 10
+[OK] MongoDB: cada tarea tiene un dueño distinto
+[OK] MongoDB: cada tarea se asignó una sola vez (versión 2) — [2]
+[OK] el dueño en MongoDB coincide con quien recibió el 200
+
+Latencia /tareas/siguiente (ms), n=50: p50=1056.5 p95=1090.9 p99=1093.5 media=1006.2 máx=1093.5
+Tiempo total de la ráfaga: 1102.8 ms
+
+Resultado: 9/9 comprobaciones correctas
+Fin UTC: 2026-11-22T06:13:56.519880+00:00

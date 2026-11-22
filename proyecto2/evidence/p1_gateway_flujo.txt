@@ -1,0 +1,32 @@
+Inicio UTC: 2026-11-22T06:13:46.501892+00:00
+Objetivo: flujo de tareas por el gateway (Sesión + Registro + Historial)
+Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.41, CPU lógicos: 16
+[OK] siguiente en un proyecto sin tareas responde 204 — código 204
+[OK] siguiente responde 200 con la tarea de mayor prioridad — código 200
+[OK] la tarea queda abierta con el token entregado
+[OK] el evento tarea_abierta se publicó en Historial — publicado
+[OK] la respuesta no expone eventos_pendientes
+[OK] un anotador con tarea activa no recibe otra (409) — código 409
+[OK] guardar borrador responde 200 — código 200
+[OK] borrador con token ajeno responde 409 — código 409
+[OK] recuperar devuelve la sesión activa y el último borrador — código 200
+[OK] enviar con token ajeno responde 409 — código 409
+[OK] enviar responde 200 y la tarea queda anotada — código 200
+[OK] el evento tarea_anotada se publicó
+[OK] segundo envío responde 409 — código 409
+[OK] otro anotador recibe la siguiente tarea — código 200
+[OK] liberar responde 200 y la tarea vuelve a disponible — código 200
+[OK] tras liberar, la tarea vuelve a ofrecerse — código 200
+[OK] revisar con alguien que no es revisor responde 403 — código 403
+[OK] rechazar sin motivo responde 422 — código 422
+[OK] rechazar responde 200 y la tarea vuelve a disponible — código 200
+[OK] se publicaron revision_iniciada y revision_rechazada — ['publicado', 'publicado']
+[OK] la tarea rechazada vuelve a asignarse — código 200
+[OK] reenviar el retrabajo responde 200 — código 200
+[OK] aprobar responde 200 y estado aprobada — código 200
+[OK] aprobar otra vez responde 409 — código 409
+[OK] exportar devuelve la tarea aprobada — código 200
+[OK] ningún evento del proyecto quedó pendiente en el registro — []
+
+Resultado: 26/26 comprobaciones correctas
+Fin UTC: 2026-11-22T06:13:46.938810+00:00

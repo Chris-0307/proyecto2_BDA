@@ -11,7 +11,7 @@ s ?= registro mongo-init sesion historial historial-worker
 
 .DEFAULT_GOAL := help
 .PHONY: help up ps down reset logs \
-        replica aof demo smoke-registro registro smoke-gateway salud \
+        replica aof demo smoke-registro registro smoke-gateway salud smoke-flujo p2-gateway \
         i2-up i2-down i2-smoke i2-pytest p3-p4
 
 help: ## Lista los objetivos
@@ -58,6 +58,16 @@ smoke-gateway: ## Smoke del gateway básico (deja evidencia)
 	@mkdir -p $(EVIDENCIA)
 	set -o pipefail; $(COMPOSE) exec -T gateway python /pruebas/p1_gateway/smoke_gateway.py \
 	  | tee $(EVIDENCIA)/p1_gateway_smoke.txt
+
+smoke-flujo: ## Flujo completo de tareas por el gateway (deja evidencia)
+	@mkdir -p $(EVIDENCIA)
+	set -o pipefail; $(COMPOSE) run --rm registro python /pruebas/p1_gateway/smoke_flujo.py \
+	  | tee $(EVIDENCIA)/p1_gateway_flujo.txt
+
+p2-gateway: ## P2: 50 solicitudes simultáneas contra 10 tareas (deja evidencia)
+	@mkdir -p $(EVIDENCIA)
+	set -o pipefail; $(COMPOSE) run --rm registro python /pruebas/p2_registro/p2_concurrencia_gateway.py \
+	  | tee $(EVIDENCIA)/p2_concurrencia_gateway.txt
 
 ## ---- Valkey / Sesión / Historial (Integrante 2) ----
 aof: ## Verifica AOF de Valkey (esperado: yes / everysec)

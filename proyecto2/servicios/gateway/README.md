@@ -11,7 +11,7 @@ Python 3.12, FastAPI, httpx. Paquete `gateway_app`.
 | Paso | Rutas | Estado |
 |---|---|---|
 | 4 — básico | `POST /proyectos`, `POST /proyectos/{id}/lotes`, `GET /proyectos/{id}/exportar`, `GET /salud` | Implementado |
-| 5 — flujo de tareas | `POST /tareas/siguiente`, `PUT /tareas/{id}/borrador`, `POST /tareas/{id}/enviar`, `POST /tareas/{id}/liberar`, `POST /tareas/{id}/revision`, `POST /sesiones/recuperar` | PENDIENTE (coordina Sesión, Registro e Historial) |
+| 5 — flujo de tareas | `POST /tareas/siguiente`, `PUT /tareas/{id}/borrador`, `POST /tareas/{id}/enviar`, `POST /tareas/{id}/liberar`, `POST /tareas/{id}/revision`, `POST /sesiones/recuperar` | Implementado |
 | 6 — analítica | `GET /analitica/{q1..q5}?conjunto=` | PENDIENTE (Integrante 3) |
 
 ## Estructura
@@ -21,42 +21,113 @@ servicios/gateway/
 ├── Dockerfile
 ├── requirements.txt
 └── gateway_app/
-    ├── main.py      # rutas y /salud
+    ├── main.py      # rutas, /salud y reconciliador de eventos
+    ├── flujo.py     # orquestación Sesión + Registro + Historial
+    ├── modelos.py   # cuerpos de las rutas del flujo
     └── clientes.py  # httpx, reintentos seguros, traducción a 503
 ```
 
-## Rutas actuales
+## Rutas de registro
 
 | Método y ruta | Servicio interno | Códigos |
 |---|---|---|
 | `POST /proyectos` | `registro POST /proyectos` | 201, 404, 422, 503 |
 | `POST /proyectos/{id}/lotes` | `registro POST /proyectos/{id}/lotes` | 201, 404, 422, 503 |
 | `GET /proyectos/{id}/exportar?despues=&limite=` | `registro GET /proyectos/{id}/exportar` | 200, 404, 422, 503 |
-| `GET /salud` | `/salud` de registro, sesión e historial | 200, 503 |
 
 El cuerpo y el código del servicio interno se devuelven tal cual. El esquema
 detallado de cada cuerpo está en [`../registro/README.md`](../registro/README.md).
 
-### Validación básica
+## Flujo de tareas
 
-- Ids de ruta (`proyecto_id`) y el cursor `despues` deben ser UUID → si no, 422
-  sin llamar al registro.
-- El cuerpo debe ser un objeto JSON → si no, 422.
+| Método y ruta | Cuerpo | Respuesta | Códigos |
+|---|---|---|---|
+| `POST /tareas/siguiente` | `anotador_id`, `proyecto_id` | `tarea`, `token`, `ttl_ms`, `borrador`, `evento` | 200, 204, 404, 409, 422, 503 |
+| `PUT /tareas/{id}/borrador` | `anotador_id`, `proyecto_id`, `token`, `contenido` | `estado`, `version`, `ttl_ms` | 200, 409, 422, 503 |
+| `POST /tareas/{id}/enviar` | `anotador_id`, `proyecto_id`, `token`, `contenido` | `tarea`, `evento` | 200, 409, 422, 503 |
+| `POST /tareas/{id}/liberar` | `anotador_id`, `proyecto_id`, `token` | `tarea` | 200, 409, 422, 503 |
+| `POST /tareas/{id}/revision` | `revisor_id`, `decision` (`aprobar`/`rechazar`), `motivo` | `tarea`, `eventos` | 200, 403, 404, 409, 422, 503 |
+| `POST /sesiones/recuperar` | `anotador_id`, `proyecto_id`, `tarea_id`, `token` | `estado`, `borrador`, `version`, `ttl_ms` | 200, 409, 422, 503 |
+
+El `token` lo entrega `/tareas/siguiente` y se usa en todas las demás rutas
+de la tarea. Campos extra en el cuerpo → 422.
+
+### Qué hace cada ruta
+
+**`siguiente`**
+
+1. Pide al registro las candidatas del proyecto (disponibles por prioridad y
+   abiertas vencidas).
+2. Por cada candidata intenta el lock en Sesión (`SET NX PX`, 120 s). Si otro
+   lo tiene, pasa a la siguiente.
+3. Con el lock, asigna en el registro (`findOneAndUpdate` atómico). Si el
+   registro responde 409, suelta el lock y prueba la siguiente; si falla de
+   otra forma, suelta el lock y propaga el error.
+4. Publica `tarea_abierta` en Historial e incluye el borrador recuperable del
+   mismo anotador, si existe.
+
+Responde **204** si ninguna candidata quedó libre y **409** si el anotador ya
+tiene una tarea activa (debe recuperarla, enviarla o liberarla).
+
+**`enviar`**
+
+1. Latido en Sesión: el token debe ser el dueño del lock vigente → si no, 409.
+2. Registro: `abierta → anotada`, filtrando por token → 409 si ya no está
+   abierta (segundo envío). **503 sin reintento** si MongoDB no responde; el
+   borrador y el lock siguen en Valkey y se puede reenviar.
+3. Publica `tarea_anotada` y suelta el lock.
+
+**`liberar`**: registro `abierta → disponible` (filtra por token) y suelta el lock.
+
+**`revision`**: `iniciar_revision` y luego `aprobar` o `rechazar` en el
+registro. El rechazo exige `motivo` (422 sin él) y devuelve la tarea a
+`disponible`. Un 409 en `iniciar_revision` no corta el flujo: la tarea puede
+estar ya `en_revision` por el mismo revisor, y la decisión lo valida.
+
+**`borrador`** y **`recuperar`** se reenvían a Sesión. `recuperar` responde
+`activa` (lock vigente, se renueva) o `requiere_reasignacion` (lock vencido;
+el borrador es de solo lectura y el anotador debe pedir `/tareas/siguiente`,
+que le devolverá el borrador si vuelve a obtener la tarea).
+
+### Publicación de eventos
+
+Los eventos se publican en Historial **solo después** de que MongoDB confirmó
+la transición. El campo `evento` (o `eventos` en revisión) informa el resultado:
+
+| Valor | Significado |
+|---|---|
+| `publicado` | Historial lo aceptó y el registro lo retiró de `eventos_pendientes` |
+| `publicado_sin_confirmar` | Historial lo aceptó, pero sigue en pendientes |
+| `pendiente` | Historial no lo aceptó; queda en `eventos_pendientes` del registro |
+
+Un fallo de Historial **no cambia** la respuesta al cliente: MongoDB ya
+confirmó.
+
+**Reconciliador:** una tarea de fondo del gateway consulta cada
+`GATEWAY_RECONCILIAR_S` segundos (10 por defecto) los eventos pendientes del
+registro y los reenvía. Es seguro repetir: Historial deduplica por `event_id`
+y `confirmar_evento` es idempotente.
+
+## Validación básica
+
+- Ids de ruta y el cursor `despues` deben ser UUID → si no, 422 sin llamar
+  a los servicios internos.
+- Los cuerpos del flujo se validan con Pydantic (`modelos.py`).
 - `limite` de exportar entre 1 y 1000 → si no, 422.
 - La validación de fondo (taxonomía, geometría por modalidad, etc.) la hace
   el registro.
 
-### Identificador de petición
+## Identificador de petición
 
 Si la petición trae `X-Request-ID`, se propaga a los servicios internos y se
 devuelve en la respuesta. Si no trae, el gateway genera un UUID.
 
-### Reintentos seguros
+## Reintentos seguros
 
 | Método | Reintento | Motivo |
 |---|---|---|
 | `GET` | 1, solo ante error de conexión o timeout | Lectura idempotente |
-| `POST` / `PUT` | ninguno | Repetir podría duplicar un proyecto o un lote; el enunciado pide 503 sin reintento |
+| `POST` / `PUT` | ninguno | Repetir podría duplicar un proyecto, un lote o una transición; el enunciado pide 503 sin reintento |
 
 Un servicio interno que no responde (conexión, timeout) se traduce a **503**.
 
@@ -98,29 +169,34 @@ directamente.
 | `HISTORIAL_URL` | `http://historial:8002` |
 | `GATEWAY_TIMEOUT_S` | `10` |
 | `GATEWAY_TIMEOUT_SALUD_S` | `3` |
+| `GATEWAY_RECONCILIAR_S` | `10` (0 lo desactiva) |
 
 ## Ejecución
 
 Desde la raíz del repositorio:
 
 ```bash
-make up            # o: docker compose -f proyecto2/docker-compose.yml up -d --build
-make demo          # el smoke usa el cliente de la demostración
-make salud         # curl -i http://localhost:8000/salud
-make smoke-gateway # smoke con evidencia en evidence/
+make up              # o: docker compose -f proyecto2/docker-compose.yml up -d --build
+make demo            # smoke-gateway usa el cliente de la demostración
+make salud           # curl -i http://localhost:8000/salud
+make smoke-gateway   # rutas básicas
+make smoke-flujo     # flujo completo de tareas
+make p2-gateway      # 50 solicitudes simultáneas contra 10 tareas
 ```
+
+`smoke-flujo` y `p2-gateway` corren en el contenedor del registro solo para
+crear sus datos de prueba con pymongo (cliente y anotadores nuevos en cada
+corrida); todas las operaciones del flujo pasan por el gateway.
 
 Sin `make`:
 
 ```bash
 docker compose -f proyecto2/docker-compose.yml exec -T gateway python /pruebas/p1_gateway/smoke_gateway.py \
   | tee proyecto2/evidence/p1_gateway_smoke.txt
-```
-
-Desde el host (prueba el puerto publicado):
-
-```bash
-GATEWAY_URL=http://localhost:8000 python3 proyecto2/pruebas/p1_gateway/smoke_gateway.py
+docker compose -f proyecto2/docker-compose.yml run --rm registro python /pruebas/p1_gateway/smoke_flujo.py \
+  | tee proyecto2/evidence/p1_gateway_flujo.txt
+docker compose -f proyecto2/docker-compose.yml run --rm registro python /pruebas/p2_registro/p2_concurrencia_gateway.py \
+  | tee proyecto2/evidence/p2_concurrencia_gateway.txt
 ```
 
 Esperado: todas las líneas en `[OK]`.
@@ -138,5 +214,7 @@ docker compose -f proyecto2/docker-compose.yml start historial registro
 | Archivo | Contenido | Resultado |
 |---|---|---|
 | `evidence/p1_gateway_smoke.txt` | Rutas básicas, códigos, `X-Request-ID`, salud por capa | 14/14 |
+| `evidence/p1_gateway_flujo.txt` | Flujo completo: siguiente, borrador, recuperar, enviar, liberar, revisión, exportar | PENDIENTE de ejecutar |
+| `evidence/p2_concurrencia_gateway.txt` | 50 contra 10 por el gateway, cero dobles asignaciones, latencias p50/p95/p99 | PENDIENTE de ejecutar |
 
 PENDIENTE: ensayos de `/salud` en estado degradado y caído.

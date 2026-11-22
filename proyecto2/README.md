@@ -13,7 +13,7 @@ contenedores: registro operacional (MongoDB en réplica), sesiones y locks
 
 | Componente | Responsabilidad | Tecnología | Estado |
 |---|---|---|---|
-| Gateway | Único punto de entrada (puerto 8000), validación, enrutamiento, salud por capa | REST (FastAPI + httpx) | Básico implementado (proyectos, lotes, exportar, salud); flujo de tareas y analítica PENDIENTES |
+| Gateway | Único punto de entrada (puerto 8000), validación, enrutamiento, salud por capa | REST (FastAPI + httpx) | Implementado: registro, flujo de tareas, salud y reconciliador de eventos; analítica PENDIENTE |
 | Registro | Clientes, proyectos, lotes, tareas, asignaciones, revisiones, exportación | MongoDB, 3 nodos | Réplica e índices verificados (`evidence/p2_replica.txt`); smoke del registro 30/30 (`evidence/p2_registro_smoke.txt`) |
 | Sesión | Locks `SET NX PX` de 120 s, latidos, borradores, sesiones activas, recuperación | Valkey con AOF `everysec` | Implementado, sin ensayos ejecutados |
 | Historial | Recepción de eventos, micro-lotes, escritura del datalake | Valkey Streams + Parquet | Implementado, sin ensayos ejecutados |
@@ -42,7 +42,7 @@ proyecto2_BDA/
     ├── servicios/
     │   ├── gateway/                  # API pública, puerto 8000
     │   │   ├── Dockerfile, requirements.txt, README.md
-    │   │   └── gateway_app/          # main.py, clientes.py
+    │   │   └── gateway_app/          # main.py, flujo.py, modelos.py, clientes.py
     │   ├── registro/                 # API sobre MongoDB, puerto interno 8003
     │   │   ├── Dockerfile, requirements.txt, README.md
     │   │   ├── registro_app/         # main.py, db.py, modelos.py, transiciones.py
@@ -56,8 +56,8 @@ proyecto2_BDA/
     ├── dataset/                      # cargar_demo.py (carga de demostración)
     ├── datalake/                     # Parquet publicado por el worker (no se versiona)
     ├── pruebas/                      # una carpeta por grupo de prueba del enunciado
-    │   ├── p1_gateway/               # smoke_gateway.py
-    │   ├── p2_registro/              # smoke_registro.py, verificar_replica.sh
+    │   ├── p1_gateway/               # smoke_gateway.py, smoke_flujo.py
+    │   ├── p2_registro/              # smoke_registro.py, verificar_replica.sh, p2_concurrencia_gateway.py
     │   ├── p3_sesion/                # test_sesion_*.py, p3_reinicio_aof.py
     │   ├── p4_historial/             # test_historial_*.py
     │   └── p3_p4_integracion/        # test_p3_p4_integracion.py, smoke_integrante2.sh, ejecutar_evidencias_p3_p4.py
@@ -103,6 +103,7 @@ siguen abajo.
 | `make demo` | Carga de demostración (cliente, anotadores, proyecto, lote) | — |
 | `make smoke-registro` | Transiciones, 409 y 50 asignaciones concurrentes | `evidence/p2_registro_smoke.txt` |
 | `make registro` | Todo seguido: `up` + `replica` + `demo` + `smoke-registro` | las dos anteriores |
+| `make p2-gateway` | 50 solicitudes simultáneas contra 10 tareas por el gateway; latencias p50/p95/p99 | `evidence/p2_concurrencia_gateway.txt` |
 
 **Gateway (P1)**
 
@@ -110,6 +111,7 @@ siguen abajo.
 |---|---|---|
 | `make salud` | `curl -i http://localhost:8000/salud` | — |
 | `make smoke-gateway` | Rutas básicas, códigos y salud por capa (requiere `make demo`) | `evidence/p1_gateway_smoke.txt` |
+| `make smoke-flujo` | Flujo completo: siguiente, borrador, recuperar, enviar, liberar, revisión, exportar | `evidence/p1_gateway_flujo.txt` |
 
 **Sesión e Historial (P3/P4, Integrante 2)**
 
@@ -126,7 +128,9 @@ siguen abajo.
 ```bash
 make up
 make registro        # réplica + demo + smoke del registro
-make smoke-gateway
+make smoke-gateway   # rutas básicas del gateway
+make smoke-flujo     # flujo completo de tareas
+make p2-gateway      # 50 contra 10
 ```
 
 ```bash
@@ -211,7 +215,7 @@ filtro por estado, token o revisor). La versión sube en cada transición
 válida. Un filtro que no coincide responde 409 (o 404 si la tarea no existe).
 El evento de historial se arma dentro de la misma operación y queda en
 `eventos_pendientes` hasta que el gateway lo publique y llame a
-`confirmar_evento`.
+`confirmar_evento` (o lo reenvíe el reconciliador del gateway).
 
 ### Sesión (`sesion:8001`)
 
@@ -248,11 +252,17 @@ Detalle en [`servicios/gateway/README.md`](servicios/gateway/README.md).
 |---|---|
 | `POST /proyectos`, `POST /proyectos/{id}/lotes`, `GET /proyectos/{id}/exportar` | Implementado (reenvía al registro) |
 | `GET /salud` | Implementado: `operativo`/`degradado` (200) o `caido` (503, registro sin servicio), con estado por capa |
-| `POST /tareas/siguiente`, `PUT /tareas/{id}/borrador`, `POST /tareas/{id}/enviar`, `POST /tareas/{id}/liberar`, `POST /tareas/{id}/revision`, `POST /sesiones/recuperar` | PENDIENTE |
+| `POST /tareas/siguiente` | Implementado: lock en Sesión → asignación en Registro → evento. 204 sin tareas; 409 si el anotador ya tiene una activa |
+| `PUT /tareas/{id}/borrador`, `POST /sesiones/recuperar` | Implementado (Sesión) |
+| `POST /tareas/{id}/enviar` | Implementado: lock vigente → Registro → evento. 409 token ajeno o segundo envío; 503 sin reintento |
+| `POST /tareas/{id}/liberar` | Implementado |
+| `POST /tareas/{id}/revision` | Implementado: aprobar o rechazar (rechazo exige `motivo`) |
 | `GET /analitica/{q1..q5}` | PENDIENTE |
 
 Propaga `X-Request-ID`. Solo reintenta `GET` ante fallo de conexión; `POST`/`PUT`
-nunca se reintentan y un servicio caído responde 503.
+nunca se reintentan y un servicio caído responde 503. Los eventos se publican
+en Historial solo después de que MongoDB confirma; si Historial falla, quedan
+en `eventos_pendientes` y un reconciliador del gateway los reenvía cada 10 s.
 
 ## 6. Datalake Parquet
 
@@ -308,11 +318,13 @@ archivo.
 | `p1_gateway_smoke.txt` | `make smoke-gateway` (`pruebas/p1_gateway/smoke_gateway.py`) |
 | `p2_replica.txt` | `make replica` (`pruebas/p2_registro/verificar_replica.sh`) |
 | `p2_registro_smoke.txt` | `make smoke-registro` (`pruebas/p2_registro/smoke_registro.py`) |
+| `p1_gateway_flujo.txt` | `make smoke-flujo` (`pruebas/p1_gateway/smoke_flujo.py`) |
+| `p2_concurrencia_gateway.txt` | `make p2-gateway` (`pruebas/p2_registro/p2_concurrencia_gateway.py`) |
 
 | Prueba | Estado |
 |---|---|
-| P1 REST y despliegue | Gateway básico: 14/14 (`evidence/p1_gateway_smoke.txt`). Faltan rutas de tareas y ensayos degradado/caído |
-| P2 Registro y concurrencia (50 contra 10) | Réplica verificada (`evidence/p2_replica.txt`). Atomicidad a nivel de registro: 30/30, 50 asignaciones simultáneas → 1×200 y 49×409 (`evidence/p2_registro_smoke.txt`). La prueba completa requiere el gateway |
+| P1 REST y despliegue | Gateway básico: 14/14 (`evidence/p1_gateway_smoke.txt`). Flujo de tareas: `smoke_flujo.py` escrito, ejecución pendiente. Faltan ensayos degradado/caído |
+| P2 Registro y concurrencia (50 contra 10) | Réplica verificada (`evidence/p2_replica.txt`). Atomicidad a nivel de registro: 30/30, 50 asignaciones simultáneas → 1×200 y 49×409 (`evidence/p2_registro_smoke.txt`). Prueba por el gateway: `p2_concurrencia_gateway.py` escrito (`make p2-gateway`), ejecución pendiente |
 | P3 Sesión (borrador, AOF, vencimiento) | Scripts listos; ejecución y evidencia pendientes |
 | P4 Historial (micro-lotes, reproceso, frescura) | Scripts listos; ejecución y evidencia pendientes |
 | P5 Analítica | PENDIENTE |
@@ -385,8 +397,9 @@ evidencia (plantilla en `docs/`).
 
 - No hay transacción única entre MongoDB y Valkey. El evento se guarda en la
   tarea (`eventos_pendientes`) dentro de la misma operación atómica; el gateway
-  lo publica a Historial y lo confirma. Si el gateway cae entre ambos pasos, el
-  evento queda pendiente y debe reconciliarse (`GET /tareas?eventos_pendientes=true`).
+  lo publica a Historial y lo confirma. Si Historial falla o el gateway cae entre
+  ambos pasos, el evento queda pendiente y el reconciliador del gateway lo reenvía
+  (cada `GATEWAY_RECONCILIAR_S`, 10 s por defecto). Mientras tanto, Spark no lo ve.
 - Un 503 del registro no garantiza que la escritura no ocurrió: un fallo de
   `w: majority` puede dejar la operación aplicada en el primario. Se estudiará
   en las pruebas de fallas (P8).

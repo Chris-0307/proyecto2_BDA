@@ -183,9 +183,10 @@ No hay transacción entre MongoDB y Valkey. El flujo previsto con el gateway:
 2. El gateway publica el `evento` de la respuesta en `POST /eventos` de Historial.
 3. Con 200/202 de Historial, llama a `confirmar_evento` con ese `event_id`.
 
-`confirmar_evento` es idempotente. Si el gateway cae entre 1 y 3, el evento se
-recupera con `GET /tareas?eventos_pendientes=true` y se reenvía; Historial
-deduplica por `event_id`.
+`confirmar_evento` es idempotente. Si Historial falla o el gateway cae entre 1
+y 3, el evento queda en pendientes; el reconciliador del gateway lo recupera con
+`GET /tareas?eventos_pendientes=true` y lo reenvía. Historial deduplica por
+`event_id`.
 
 ## Contratos con otros integrantes
 
@@ -202,8 +203,8 @@ de Historial (`extra=forbid`). Campos comunes: `event_id`, `tipo_evento`,
 | `revision_aprobada` | `anotador_id`, `equipo_id`, `tomada_en`, `revisor_id`, `aprobada_en` |
 | `revision_rechazada` | `anotador_id`, `equipo_id`, `tomada_en`, `revisor_id`, `motivo_rechazo` |
 
-**PENDIENTE:** antes de integrar el gateway, enviar un evento real tomado de la
-respuesta del registro a `POST /eventos` y confirmar que no da 422.
+`pruebas/p1_gateway/smoke_flujo.py` (`make smoke-flujo`) comprueba que los cinco
+tipos de evento pasan la validación de `POST /eventos` (campo `evento: publicado`).
 
 **Integrante 3 (Analítica).**
 
