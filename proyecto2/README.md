@@ -13,7 +13,7 @@ contenedores: registro operacional (MongoDB en réplica), sesiones y locks
 
 | Componente | Responsabilidad | Tecnología | Estado |
 |---|---|---|---|
-| Gateway | Único punto de entrada (puerto 8000), validación, enrutamiento, salud por capa | REST | PENDIENTE |
+| Gateway | Único punto de entrada (puerto 8000), validación, enrutamiento, salud por capa | REST (FastAPI + httpx) | Básico implementado (proyectos, lotes, exportar, salud); flujo de tareas y analítica PENDIENTES |
 | Registro | Clientes, proyectos, lotes, tareas, asignaciones, revisiones, exportación | MongoDB, 3 nodos | Réplica e índices verificados (`evidence/p2_replica_20261122T014246Z.txt`); smoke del registro 30/30 (`evidence/p2_registro_smoke_20261122T015847Z.txt`) |
 | Sesión | Locks `SET NX PX` de 120 s, latidos, borradores, sesiones activas, recuperación | Valkey con AOF `everysec` | Implementado, sin ensayos ejecutados |
 | Historial | Recepción de eventos, micro-lotes, escritura del datalake | Valkey Streams + Parquet | Implementado, sin ensayos ejecutados |
@@ -22,7 +22,7 @@ contenedores: registro operacional (MongoDB en réplica), sesiones y locks
 
 **Reglas de aislamiento:**
 
-- Solo el gateway publicará un puerto al host (8000). Hoy ningún servicio publica puertos.
+- Solo el gateway publica un puerto al host (8000).
 - Registro no consulta Valkey.
 - Sesión no decide el estado definitivo de una tarea ni accede a MongoDB.
 - Analítica lee únicamente el lago Parquet.
@@ -32,9 +32,10 @@ contenedores: registro operacional (MongoDB en réplica), sesiones y locks
 
 ```text
 proyecto2/
-├── docker-compose.yml        # Compose final: MongoDB, Valkey, Sesión, Historial, Registro
+├── docker-compose.yml        # Compose final: MongoDB, Valkey, Sesión, Historial, Registro, Gateway
 ├── compose.integrante2.yml   # entorno aislado de Sesión + Historial (solo pruebas)
 ├── servicios/
+│   ├── gateway/              # API pública (gateway_app), puerto 8000
 │   ├── registro/             # API del registro (registro_app) y scripts de MongoDB
 │   │   └── mongo/            # init-replica.js, configurar-registro.js, inicializar.sh
 │   ├── sesion/               # API de sesiones, locks, borradores, valkey.conf
@@ -46,8 +47,7 @@ proyecto2/
 └── docs/                     # contratos, guías de operación e informe base
 ```
 
-Carpetas previstas, aún no creadas: `servicios/gateway/`,
-`servicios/analitica/` y `simulador/`.
+Carpetas previstas, aún no creadas: `servicios/analitica/` y `simulador/`.
 
 ## 3. Requisitos previos
 
@@ -60,13 +60,36 @@ Carpetas previstas, aún no creadas: `servicios/gateway/`,
 
 Ejecute siempre desde la **raíz del repositorio**.
 
+### Atajos con `make`
+
+El `Makefile` de la raíz envuelve los comandos de esta guía. `make` sin
+argumentos lista los objetivos.
+
+| Objetivo | Equivale a |
+|---|---|
+| `make up` / `ps` / `down` | `up -d --build` / `ps` / `down` del Compose final |
+| `make reset` | `down -v` + `up` (pide confirmación; **borra datos**) |
+| `make logs s=registro` | Logs recientes de uno o más servicios |
+| `make replica` | `verificar_replica.sh` |
+| `make demo` | Carga de demostración del registro |
+| `make smoke-registro` | `smoke_registro.py` con evidencia en `evidence/` |
+| `make registro` | `up` + `replica` + `demo` + `smoke-registro` |
+| `make salud` / `make smoke-gateway` | `curl` a `/salud` / `smoke_gateway.py` con evidencia |
+| `make aof` | `CONFIG GET appendonly` y `appendfsync` en Valkey |
+| `make i2-up` / `i2-down` / `i2-smoke` | Entorno aislado de Sesión + Historial |
+| `make i2-pytest` | Suite pytest de Sesión e Historial en Docker |
+| `make p3-p4` | `ejecutar_evidencias_p3_p4.py` |
+
+Requiere `make` (en WSL: `sudo apt install make`). Los comandos completos
+siguen abajo.
+
 ```bash
 docker compose -f proyecto2/docker-compose.yml up -d --build
 docker compose -f proyecto2/docker-compose.yml ps
 ```
 
 Estado esperado: los tres `mongo`, `valkey`, `sesion`, `historial`,
-`historial-worker` y `registro` en `running`; `mongo-init` en `Exited (0)`.
+`historial-worker`, `registro` y `gateway` en `running` (solo `gateway` con `0.0.0.0:8000->8000`); `mongo-init` en `Exited (0)`.
 
 `mongo-init` es un servicio de un solo uso e **idempotente**: inicializa el
 conjunto `rs-plataforma` (si no existe), fija `w: majority` por defecto y crea
@@ -171,11 +194,19 @@ cada micro-lote en `.staging`, lo publica con `os.replace` en
 `eventos/mes=AAAA-MM/` y solo entonces confirma con `XACK`. Los mensajes
 pendientes se reclaman con `XAUTOCLAIM`.
 
-### Gateway (PENDIENTE)
+### Gateway (`gateway:8000`, publicado al host)
 
-Rutas definidas por el enunciado (sección 7): proyectos, lotes,
-`POST /tareas/siguiente`, borrador, enviar, liberar, revisión,
-`POST /sesiones/recuperar`, `GET /analitica/{q1..q5}`, exportar y `GET /salud`.
+Detalle en [`servicios/gateway/README.md`](servicios/gateway/README.md).
+
+| Método y ruta | Estado |
+|---|---|
+| `POST /proyectos`, `POST /proyectos/{id}/lotes`, `GET /proyectos/{id}/exportar` | Implementado (reenvía al registro) |
+| `GET /salud` | Implementado: `operativo`/`degradado` (200) o `caido` (503, registro sin servicio), con estado por capa |
+| `POST /tareas/siguiente`, `PUT /tareas/{id}/borrador`, `POST /tareas/{id}/enviar`, `POST /tareas/{id}/liberar`, `POST /tareas/{id}/revision`, `POST /sesiones/recuperar` | PENDIENTE |
+| `GET /analitica/{q1..q5}` | PENDIENTE |
+
+Propaga `X-Request-ID`. Solo reintenta `GET` ante fallo de conexión; `POST`/`PUT`
+nunca se reintentan y un servicio caído responde 503.
 
 ## 6. Datalake Parquet
 
@@ -223,7 +254,7 @@ Las pruebas escriben su evidencia en `evidence/`. Un test `SKIPPED` significa
 
 | Prueba | Estado |
 |---|---|
-| P1 REST y despliegue | PENDIENTE (requiere gateway) |
+| P1 REST y despliegue | Gateway básico: `smoke_gateway.py` escrito (`make smoke-gateway`), ejecución pendiente. Faltan rutas de tareas y ensayos degradado/caído |
 | P2 Registro y concurrencia (50 contra 10) | Réplica verificada (`evidence/p2_replica_20261122T014246Z.txt`). Atomicidad a nivel de registro: 30/30, 50 asignaciones simultáneas → 1×200 y 49×409 (`evidence/p2_registro_smoke_20261122T015847Z.txt`). La prueba completa requiere el gateway |
 | P3 Sesión (borrador, AOF, vencimiento) | Scripts listos; ejecución y evidencia pendientes |
 | P4 Historial (micro-lotes, reproceso, frescura) | Scripts listos; ejecución y evidencia pendientes |

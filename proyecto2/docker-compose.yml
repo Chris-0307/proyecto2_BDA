@@ -1,6 +1,6 @@
 # Compose final del equipo (base).
 # Regla del enunciado: solo el gateway publica puerto al host (8000).
-# Hoy: MongoDB (3 nodos), Valkey, Sesión e Historial. Ningún puerto publicado.
+# Hoy: MongoDB (3 nodos), Valkey, Sesión, Historial, Registro y Gateway (8000).
 name: bda-proyecto2
 
 x-mongo: &mongo
@@ -115,6 +115,24 @@ services:
       - "8003"
     volumes:
       - ./dataset:/dataset:ro
+      - ./pruebas:/pruebas:ro
+    restart: unless-stopped
+
+  # ---------- Gateway: único puerto publicado al host (Jimmy) ----------
+  gateway:
+    build:
+      context: ./servicios/gateway
+    depends_on:
+      - registro
+      - sesion
+      - historial
+    environment:
+      REGISTRO_URL: http://registro:8003
+      SESION_URL: http://sesion:8001
+      HISTORIAL_URL: http://historial:8002
+    ports:
+      - "8000:8000"
+    volumes:
       - ./pruebas:/pruebas:ro
     restart: unless-stopped
 

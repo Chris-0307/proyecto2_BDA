@@ -1,0 +1,21 @@
+Inicio UTC: 2026-11-22T05:21:30.084626+00:00
+Objetivo: gateway básico (proyectos, lotes, exportar, salud por capa)
+Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.41, CPU lógicos: 16
+Gateway: http://gateway:8000
+[OK] salud responde 200 y operativo — 200 operativo
+[OK] salud informa las capas registro, sesion e historial — registro,sesion,historial
+[OK] crear proyecto por el gateway responde 201 — código 201
+[OK] el gateway devuelve el X-Request-ID recibido
+[OK] sin X-Request-ID el gateway genera uno
+[OK] cliente inexistente responde 404 (código del registro) — código 404
+[OK] cuerpo incompleto responde 422 — código 422
+[OK] registrar lote de 5 tareas responde 201 — código 201
+[OK] id de proyecto que no es UUID responde 422 — código 422
+[OK] lote en proyecto inexistente responde 404 — código 404
+[OK] exportar responde 200 con items y siguiente — código 200
+[OK] exportar de un proyecto sin aprobadas está vacío
+[OK] exportar proyecto inexistente responde 404 — código 404
+[OK] exportar con limite fuera de rango responde 422 — código 422
+
+Resultado: 14/14 comprobaciones correctas
+Fin UTC: 2026-11-22T05:21:30.228393+00:00
