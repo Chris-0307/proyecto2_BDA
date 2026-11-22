@@ -1,0 +1,36 @@
+Inicio UTC: 2026-11-22T01:58:49.880026+00:00
+Objetivo: flujo del registro y atomicidad con 50 intentos simultáneos
+Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.41, CPU lógicos: 16
+[OK] salud operativa — operativo
+[OK] crear proyecto responde 201 — código 201
+[OK] registrar lote de 12 tareas responde 201
+[OK] geometría incompatible con la modalidad responde 422
+[OK] las 12 tareas son candidatas — 12
+[OK] candidatas ordenadas por prioridad descendente
+[OK] 50 asignaciones simultáneas: exactamente 1 gana (200) — 200=1
+[OK] las demás responden 409 — 409=49, otros=[]
+[OK] la tarea quedó abierta con versión 2 y el token del ganador
+[OK] la respuesta incluye el evento tarea_abierta con estado abierta
+[OK] enviar con token ajeno responde 409
+[OK] enviar con el token correcto responde 200 y estado anotada
+[OK] el evento tarea_anotada trae duracion_ms
+[OK] segundo envío de una tarea ya enviada responde 409
+[OK] iniciar revisión con alguien que no es revisor responde 403
+[OK] iniciar revisión responde 200 y estado en_revision
+[OK] rechazar sin código de motivo responde 422
+[OK] rechazar: en MongoDB la tarea vuelve a disponible
+[OK] rechazar: la fila de historial queda como rechazada con su motivo
+[OK] la tarea rechazada vuelve a ofrecerse como candidata
+[OK] reasignar tras el rechazo responde 200
+[OK] reenviar el retrabajo responde 200
+[OK] aprobar responde 200 y estado aprobada
+[OK] aprobar dos veces responde 409
+[OK] exportar devuelve la tarea aprobada
+[OK] la tarea acumula 8 eventos pendientes (todas las transiciones con evento) — 8
+[OK] los event_id son distintos
+[OK] ultimo_evento_id es el del último evento
+[OK] confirmar un evento ya retirado es idempotente (200)
+[OK] tras confirmar, la tarea ya no tiene eventos pendientes
+
+Resultado: 30/30 comprobaciones correctas
+Fin UTC: 2026-11-22T01:58:50.238465+00:00

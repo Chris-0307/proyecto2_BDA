@@ -1,0 +1,1 @@
+"""Servicio interno de registro operacional (MongoDB)."""

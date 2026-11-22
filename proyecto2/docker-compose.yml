@@ -101,6 +101,23 @@ services:
       - ./datalake:/datalake
     restart: unless-stopped
 
+  # ---------- Registro: API sobre MongoDB (Jimmy) ----------
+  registro:
+    build:
+      context: ./servicios/registro
+    depends_on:
+      mongo-init:
+        condition: service_completed_successfully
+    environment:
+      MONGO_URI: mongodb://mongo-1:27017,mongo-2:27017,mongo-3:27017/plataforma?replicaSet=rs-plataforma&w=majority
+      ASIGNACION_PLAZO_S: "120"
+    expose:
+      - "8003"
+    volumes:
+      - ./dataset:/dataset:ro
+      - ./pruebas:/pruebas:ro
+    restart: unless-stopped
+
 volumes:
   mongo1_datos:
   mongo2_datos:
