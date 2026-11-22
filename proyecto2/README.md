@@ -60,7 +60,8 @@ proyecto2_BDA/
     │   ├── p2_registro/              # smoke_registro.py, verificar_replica.sh, p2_concurrencia_gateway.py
     │   ├── p3_sesion/                # test_sesion_*.py, p3_reinicio_aof.py
     │   ├── p4_historial/             # test_historial_*.py
-    │   └── p3_p4_integracion/        # test_p3_p4_integracion.py, smoke_integrante2.sh, ejecutar_evidencias_p3_p4.py
+    │   ├── p3_p4_integracion/        # test_p3_p4_integracion.py, smoke_integrante2.sh, ejecutar_evidencias_p3_p4.py
+    │   └── p8_fallas/                # p8_mongo.py (fallas de MongoDB)
     ├── evidence/                     # salidas de las pruebas (ver sección 9)
     └── docs/                         # contratos, guías de operación e informe base del Integrante 2
 ```
@@ -113,6 +114,12 @@ siguen abajo.
 | `make smoke-gateway` | Rutas básicas, códigos y salud por capa (requiere `make demo`) | `evidence/p1_gateway_smoke.txt` |
 | `make smoke-flujo` | Flujo completo: siguiente, borrador, recuperar, enviar, liberar, revisión, exportar | `evidence/p1_gateway_flujo.txt` |
 
+**Fallas de MongoDB (P8)**
+
+| Objetivo | Qué hace | Evidencia |
+|---|---|---|
+| `make p8-mongo` | Detiene un secundario, luego el primario, luego los dos secundarios; restaura después de cada caso. Corre en el host, ~3-5 min | `evidence/p8_mongo_fallas.txt` |
+
 **Sesión e Historial (P3/P4, Integrante 2)**
 
 | Objetivo | Qué hace |
@@ -131,6 +138,7 @@ make registro        # réplica + demo + smoke del registro
 make smoke-gateway   # rutas básicas del gateway
 make smoke-flujo     # flujo completo de tareas
 make p2-gateway      # 50 contra 10
+make p8-mongo        # fallas de MongoDB
 ```
 
 ```bash
@@ -320,6 +328,7 @@ archivo.
 | `p2_registro_smoke.txt` | `make smoke-registro` (`pruebas/p2_registro/smoke_registro.py`) |
 | `p1_gateway_flujo.txt` | `make smoke-flujo` (`pruebas/p1_gateway/smoke_flujo.py`) |
 | `p2_concurrencia_gateway.txt` | `make p2-gateway` (`pruebas/p2_registro/p2_concurrencia_gateway.py`) |
+| `p8_mongo_fallas.txt` | `make p8-mongo` (`pruebas/p8_fallas/p8_mongo.py`) |
 
 | Prueba | Estado |
 |---|---|
@@ -329,7 +338,7 @@ archivo.
 | P4 Historial (micro-lotes, reproceso, frescura) | Scripts listos; ejecución y evidencia pendientes |
 | P5 Analítica | PENDIENTE |
 | P6 Carga (10, 40 y 100 usuarios) | PENDIENTE |
-| P8 Fallas | PENDIENTE. Los nodos de MongoDB usan `restart: unless-stopped`: use `docker stop` (no `docker kill`, que los reinicia) |
+| P8 Fallas | MongoDB: `p8_mongo.py` escrito (`make p8-mongo`), ejecución pendiente. Valkey (reinicio y sesión interrumpida): PENDIENTE, Integrante 2 |
 
 **Prueba del registro** (flujo completo de transiciones, 409 por token o
 estado, 50 asignaciones concurrentes sobre una misma tarea, eventos

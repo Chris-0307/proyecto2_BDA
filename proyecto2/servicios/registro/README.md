@@ -251,17 +251,38 @@ actualización de `transiciones.py`.
 | Archivo | Contenido | Resultado |
 |---|---|---|
 | `evidence/p2_replica.txt` | Estado de `rs-plataforma`, mayoría e índices | 1 primario, 2 secundarios |
+| `evidence/p8_mongo_fallas.txt` | P8: secundario, primario y sin mayoría; elección, RTO y RPO | PENDIENTE de ejecutar |
 | `evidence/p2_registro_smoke.txt` | Flujo completo, 409/403/422, 50 asignaciones simultáneas, eventos pendientes | 30/30; 50 intentos → 1×200, 49×409 |
 
 El smoke valida la atomicidad **a nivel de registro**. P2 completo (50 contra
 10 a través del gateway, con locks de Valkey) sigue pendiente.
 
-## Notas para P8 (fallas de MongoDB)
+## P8: fallas de MongoDB
 
-- Los nodos tienen `restart: unless-stopped`. `docker stop` los deja caídos;
-  `docker kill` provoca un reinicio automático. Para las pruebas use
-  `docker stop`, o desactive la política antes de la prueba.
-- Con un nodo caído `/salud` debe dar `degradado` (200); con dos, `caido` (503).
+`pruebas/p8_fallas/p8_mongo.py` (`make p8-mongo`) corre en el host con Python
+estándar y Docker, con el Compose final levantado. Crea sus propios datos
+(cliente, 300 anotadores y 300 tareas) y hace todo el tráfico por el gateway.
+
+| Caso | Acción | Qué se comprueba |
+|---|---|---|
+| A | Detener un secundario | `/salud` degradado (200); 10/10 ciclos `siguiente` + `enviar` responden 200 |
+| B | Detener el primario | Se elige otro primario (tiempo de elección); tiempo sin escrituras y RTO (parada → primer 200); todo lo que respondió 200 sigue una vez, con su dueño y estado; el antiguo primario vuelve como SECONDARY |
+| C | Detener los dos secundarios | `/salud` caído (503); ninguna escritura responde 200; `enviar` da 503 sin reintento; tras restaurar, el envío pendiente se resuelve (200 o 409) |
+| Final | — | RPO de escrituras confirmadas: ninguna tarea con 200 se perdió; lista de operaciones con 503 (resultado indeterminado) |
+
+Después de cada caso se arrancan los nodos y se espera a 1 PRIMARY + 2
+SECONDARY y `/salud` operativo, para dejar un estado conocido.
+
+- Las paradas son abruptas (`docker compose stop -t 0`) para simular una caída;
+  `P8_PARADA=ordenada` usa `stop` normal, donde el primario hace un stepDown
+  ordenado y la elección es más rápida.
+- Se usa `stop` y no `kill`: los nodos tienen `restart: unless-stopped` y un
+  contenedor detenido con `stop` no se reinicia solo.
+- En C, antes de que el primario aislado se degrade (hasta
+  `electionTimeoutMillis`, 10 s), una escritura puede aplicarse en él y responder
+  503 por `wtimeout`. Al volver la mayoría puede conservarse (el reintento da
+  409) o revertirse con un rollback (el reintento da 200). El script informa cuál
+  ocurrió.
 
 ## Limitaciones
 

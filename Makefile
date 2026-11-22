@@ -11,7 +11,7 @@ s ?= registro mongo-init sesion historial historial-worker
 
 .DEFAULT_GOAL := help
 .PHONY: help up ps down reset logs \
-        replica aof demo smoke-registro registro smoke-gateway salud smoke-flujo p2-gateway \
+        replica aof demo smoke-registro registro smoke-gateway salud smoke-flujo p2-gateway p8-mongo \
         i2-up i2-down i2-smoke i2-pytest p3-p4
 
 help: ## Lista los objetivos
@@ -68,6 +68,12 @@ p2-gateway: ## P2: 50 solicitudes simultáneas contra 10 tareas (deja evidencia)
 	@mkdir -p $(EVIDENCIA)
 	set -o pipefail; $(COMPOSE) run --rm registro python /pruebas/p2_registro/p2_concurrencia_gateway.py \
 	  | tee $(EVIDENCIA)/p2_concurrencia_gateway.txt
+
+## ---- Fallas (P8) ----
+p8-mongo: ## P8: caída de secundario, primario y mayoría de MongoDB (deja evidencia, ~3-5 min)
+	@mkdir -p $(EVIDENCIA)
+	set -o pipefail; python3 proyecto2/pruebas/p8_fallas/p8_mongo.py \
+	  | tee $(EVIDENCIA)/p8_mongo_fallas.txt
 
 ## ---- Valkey / Sesión / Historial (Integrante 2) ----
 aof: ## Verifica AOF de Valkey (esperado: yes / everysec)
