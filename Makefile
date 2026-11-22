@@ -11,7 +11,7 @@ s ?= registro mongo-init sesion historial historial-worker
 
 .DEFAULT_GOAL := help
 .PHONY: help up ps down reset logs \
-        replica aof demo smoke-registro registro smoke-gateway salud smoke-flujo p2-gateway p8-mongo write-concern p1-salud \
+        replica aof demo smoke-registro registro smoke-gateway salud smoke-flujo p2-gateway p8-mongo write-concern p1-salud endpoints \
         i2-up i2-down i2-smoke i2-pytest p3-p4
 
 help: ## Lista los objetivos
@@ -78,6 +78,14 @@ write-concern: ## Latencia y rendimiento con w:1 frente a w:majority (deja evide
 	@mkdir -p $(EVIDENCIA)
 	set -o pipefail; $(COMPOSE) run --rm registro python /pruebas/p2_registro/write_concern.py \
 	  | tee $(EVIDENCIA)/p2_write_concern.txt
+
+endpoints: ## Exporta el OpenAPI de cada servicio a proyecto2/endpoints/openapi/
+	@mkdir -p proyecto2/endpoints/openapi
+	@for par in gateway:gateway_app.main registro:registro_app.main sesion:app.main historial:app.main; do \
+	  s=$${par%%:*}; m=$${par#*:}; \
+	  $(COMPOSE) exec -T $$s python -c "import json; from $$m import app; print(json.dumps(app.openapi(), ensure_ascii=False, indent=2))" \
+	    > proyecto2/endpoints/openapi/$$s.json && echo "OK proyecto2/endpoints/openapi/$$s.json"; \
+	done
 
 ## ---- Fallas (P8) ----
 p8-mongo: ## P8: caída de secundario, primario y mayoría de MongoDB (deja evidencia, ~3-5 min)

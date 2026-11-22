@@ -1,0 +1,571 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Servicio de Sesion",
+    "description": "Gestion temporal de sesiones y locks con Valkey",
+    "version": "0.4.0"
+  },
+  "paths": {
+    "/salud": {
+      "get": {
+        "summary": "Consultar Salud",
+        "description": "Informa si la dependencia Valkey esta disponible.",
+        "operationId": "consultar_salud_salud_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sesiones/iniciar": {
+      "post": {
+        "summary": "Iniciar Sesion",
+        "description": "Adquiere el lock exclusivo y registra la sesion en Valkey.",
+        "operationId": "iniciar_sesion_sesiones_iniciar_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InicioSesion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoSesion"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sesiones/latido": {
+      "post": {
+        "summary": "Renovar Sesion",
+        "description": "Renueva el candado si el token y la sesion son validos.",
+        "operationId": "renovar_sesion_sesiones_latido_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosSesion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoSesion"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sesiones/finalizar": {
+      "post": {
+        "summary": "Finalizar Sesion",
+        "description": "Libera el lock si pertenece al anotador y token recibidos.",
+        "operationId": "finalizar_sesion_sesiones_finalizar_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosSesion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoSesion"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tareas/{tarea_id}/borrador": {
+      "put": {
+        "summary": "Guardar Borrador",
+        "description": "Guarda el borrador si el lock coincide y renueva los 120 segundos.\n\nEl gateway debe comprobar el estado de la tarea en Registro. Aqui solo\nse valida la propiedad de la sesion temporal, sin consultar MongoDB.",
+        "operationId": "guardar_borrador_tareas__tarea_id__borrador_put",
+        "parameters": [
+          {
+            "name": "tarea_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tarea Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarBorrador"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoBorrador"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sesiones/recuperar": {
+      "post": {
+        "summary": "Recuperar Sesion",
+        "description": "Recupera la sesion interrumpida y, si existe, su ultimo borrador.\n\nCon lock valido se renueva y se devuelve la sesion activa. Sin lock,\nel borrador es de solo lectura: el gateway debe consultar Registro\nantes de permitir una nueva asignacion de la tarea.",
+        "operationId": "recuperar_sesion_sesiones_recuperar_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosSesion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoRecuperacion"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DatosSesion": {
+        "properties": {
+          "anotador_id": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Anotador Id"
+          },
+          "tarea_id": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Tarea Id"
+          },
+          "proyecto_id": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Proyecto Id"
+          },
+          "token": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "anotador_id",
+          "tarea_id",
+          "proyecto_id",
+          "token"
+        ],
+        "title": "DatosSesion",
+        "description": "Identificadores recibidos del gateway para una sesion."
+      },
+      "GuardarBorrador": {
+        "properties": {
+          "anotador_id": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Anotador Id"
+          },
+          "tarea_id": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Tarea Id"
+          },
+          "proyecto_id": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Proyecto Id"
+          },
+          "token": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Token"
+          },
+          "contenido": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Contenido",
+            "description": "Datos parciales de la anotacion; admite geometria y etiquetas."
+          }
+        },
+        "type": "object",
+        "required": [
+          "anotador_id",
+          "tarea_id",
+          "proyecto_id",
+          "token",
+          "contenido"
+        ],
+        "title": "GuardarBorrador",
+        "description": "El gateway envia el contenido y la identidad de la sesion activa."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "InicioSesion": {
+        "properties": {
+          "anotador_id": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Anotador Id"
+          },
+          "tarea_id": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Tarea Id"
+          },
+          "proyecto_id": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Proyecto Id"
+          },
+          "token": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Token"
+          },
+          "etapa": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Etapa",
+            "default": "anotacion"
+          }
+        },
+        "type": "object",
+        "required": [
+          "anotador_id",
+          "tarea_id",
+          "proyecto_id",
+          "token"
+        ],
+        "title": "InicioSesion",
+        "description": "Solicitud de apertura, con etapa inicial de anotacion."
+      },
+      "ResultadoBorrador": {
+        "properties": {
+          "estado": {
+            "type": "string",
+            "const": "guardado",
+            "title": "Estado",
+            "default": "guardado"
+          },
+          "tarea_id": {
+            "type": "string",
+            "title": "Tarea Id"
+          },
+          "anotador_id": {
+            "type": "string",
+            "title": "Anotador Id"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "actualizado_en_ms": {
+            "type": "integer",
+            "title": "Actualizado En Ms"
+          },
+          "ttl_ms": {
+            "type": "integer",
+            "title": "Ttl Ms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tarea_id",
+          "anotador_id",
+          "version",
+          "actualizado_en_ms",
+          "ttl_ms"
+        ],
+        "title": "ResultadoBorrador",
+        "description": "Resultado de una actualizacion exitosa del ultimo borrador."
+      },
+      "ResultadoRecuperacion": {
+        "properties": {
+          "estado": {
+            "type": "string",
+            "enum": [
+              "activa",
+              "requiere_reasignacion"
+            ],
+            "title": "Estado"
+          },
+          "tarea_id": {
+            "type": "string",
+            "title": "Tarea Id"
+          },
+          "anotador_id": {
+            "type": "string",
+            "title": "Anotador Id"
+          },
+          "proyecto_id": {
+            "type": "string",
+            "title": "Proyecto Id"
+          },
+          "etapa": {
+            "type": "string",
+            "title": "Etapa"
+          },
+          "ttl_ms": {
+            "type": "integer",
+            "title": "Ttl Ms"
+          },
+          "borrador": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Borrador"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          },
+          "actualizado_en_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actualizado En Ms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "estado",
+          "tarea_id",
+          "anotador_id",
+          "proyecto_id",
+          "etapa",
+          "ttl_ms"
+        ],
+        "title": "ResultadoRecuperacion",
+        "description": "Contenido recuperado y estado real del lock en el momento de consulta."
+      },
+      "ResultadoSesion": {
+        "properties": {
+          "estado": {
+            "type": "string",
+            "enum": [
+              "activa",
+              "renovada",
+              "finalizada"
+            ],
+            "title": "Estado"
+          },
+          "tarea_id": {
+            "type": "string",
+            "title": "Tarea Id"
+          },
+          "anotador_id": {
+            "type": "string",
+            "title": "Anotador Id"
+          },
+          "ttl_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ttl Ms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "estado",
+          "tarea_id",
+          "anotador_id"
+        ],
+        "title": "ResultadoSesion"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

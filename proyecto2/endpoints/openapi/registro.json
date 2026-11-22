@@ -1,0 +1,640 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Servicio de Registro",
+    "description": "Estado vigente de proyectos, lotes y tareas (MongoDB en réplica)",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/proyectos": {
+      "post": {
+        "summary": "Crear Proyecto",
+        "operationId": "crear_proyecto_proyectos_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NuevoProyecto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/proyectos/{proyecto_id}/lotes": {
+      "post": {
+        "summary": "Registrar Lote",
+        "operationId": "registrar_lote_proyectos__proyecto_id__lotes_post",
+        "parameters": [
+          {
+            "name": "proyecto_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proyecto Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NuevoLote"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tareas": {
+      "get": {
+        "summary": "Listar Tareas",
+        "description": "Tres consultas, mutuamente excluyentes:\n\n- `eventos_pendientes=true`: tareas con eventos sin confirmar (reconciliación).\n- `anotador_id=...[&estado=...]`: tareas asignadas a un anotador.\n- `proyecto_id=...&candidatas=true`: tareas ofrecibles de un proyecto, por\n  prioridad: primero las disponibles y después las abiertas con plazo vencido.",
+        "operationId": "listar_tareas_tareas_get",
+        "parameters": [
+          {
+            "name": "proyecto_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Proyecto Id"
+            }
+          },
+          {
+            "name": "candidatas",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Candidatas"
+            }
+          },
+          {
+            "name": "anotador_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Anotador Id"
+            }
+          },
+          {
+            "name": "estado",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Estado"
+            }
+          },
+          {
+            "name": "eventos_pendientes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Eventos Pendientes"
+            }
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limite"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tareas/{tarea_id}/transicion": {
+      "post": {
+        "summary": "Transicion",
+        "description": "Aplica UNA acción de forma atómica.\n\n404: la tarea (o el anotador/revisor) no existe. 403: el actor no es revisor.\n409: la tarea no estaba en el estado esperado o el token/revisor no coincide.\n503: MongoDB no responde. Ojo: un 503 por fallo de w=majority puede haber\naplicado la escritura en el primario (ver README, limitaciones).",
+        "operationId": "transicion_tareas__tarea_id__transicion_post",
+        "parameters": [
+          {
+            "name": "tarea_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tarea Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Transicion"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/proyectos/{proyecto_id}/exportar": {
+      "get": {
+        "summary": "Exportar",
+        "description": "Tareas aprobadas, paginadas por _id. `siguiente` es el cursor de la próxima página.",
+        "operationId": "exportar_proyectos__proyecto_id__exportar_get",
+        "parameters": [
+          {
+            "name": "proyecto_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proyecto Id"
+            }
+          },
+          {
+            "name": "despues",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Despues"
+            }
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limite"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/salud": {
+      "get": {
+        "summary": "Salud",
+        "description": "operativo (3 sanos), degradado (hay mayoría pero falta un nodo) o caído.",
+        "operationId": "salud_salud_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ArchivoRef": {
+        "properties": {
+          "uri": {
+            "type": "string",
+            "maxLength": 2048,
+            "minLength": 1,
+            "title": "Uri"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{64}$",
+            "title": "Sha256"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Bytes"
+          },
+          "mime": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Mime"
+          },
+          "meta": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "uri",
+          "sha256",
+          "bytes",
+          "mime"
+        ],
+        "title": "ArchivoRef"
+      },
+      "Etiqueta": {
+        "properties": {
+          "etiqueta": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Etiqueta"
+          },
+          "instruccion": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Instruccion"
+          }
+        },
+        "type": "object",
+        "required": [
+          "etiqueta",
+          "instruccion"
+        ],
+        "title": "Etiqueta"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "NuevaTarea": {
+        "properties": {
+          "modalidad": {
+            "type": "string",
+            "enum": [
+              "texto",
+              "imagen",
+              "video",
+              "lidar"
+            ],
+            "title": "Modalidad"
+          },
+          "tipo_tarea": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Tipo Tarea"
+          },
+          "prioridad": {
+            "type": "integer",
+            "title": "Prioridad",
+            "default": 0
+          },
+          "archivo": {
+            "$ref": "#/components/schemas/ArchivoRef"
+          }
+        },
+        "type": "object",
+        "required": [
+          "modalidad",
+          "tipo_tarea",
+          "archivo"
+        ],
+        "title": "NuevaTarea"
+      },
+      "NuevoLote": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Nombre"
+          },
+          "tareas": {
+            "items": {
+              "$ref": "#/components/schemas/NuevaTarea"
+            },
+            "type": "array",
+            "maxItems": 5000,
+            "minItems": 1,
+            "title": "Tareas"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre",
+          "tareas"
+        ],
+        "title": "NuevoLote"
+      },
+      "NuevoProyecto": {
+        "properties": {
+          "cliente_id": {
+            "type": "string",
+            "title": "Cliente Id"
+          },
+          "nombre": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Nombre"
+          },
+          "taxonomia": {
+            "items": {
+              "$ref": "#/components/schemas/Etiqueta"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Taxonomia"
+          },
+          "sla_horas": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Sla Horas",
+            "default": 48
+          }
+        },
+        "type": "object",
+        "required": [
+          "cliente_id",
+          "nombre",
+          "taxonomia"
+        ],
+        "title": "NuevoProyecto"
+      },
+      "Transicion": {
+        "properties": {
+          "accion": {
+            "type": "string",
+            "enum": [
+              "asignar",
+              "enviar",
+              "liberar",
+              "iniciar_revision",
+              "aprobar",
+              "rechazar",
+              "confirmar_evento"
+            ],
+            "title": "Accion"
+          },
+          "anotador_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anotador Id"
+          },
+          "revisor_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revisor Id"
+          },
+          "token": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 256,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Token"
+          },
+          "contenido": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contenido"
+          },
+          "motivo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Motivo"
+          },
+          "event_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "accion"
+        ],
+        "title": "Transicion"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

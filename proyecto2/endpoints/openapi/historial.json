@@ -1,0 +1,354 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Servicio de Historial",
+    "description": "Recepcion idempotente de eventos mediante Valkey Streams",
+    "version": "0.2.0"
+  },
+  "paths": {
+    "/salud": {
+      "get": {
+        "summary": "Salud",
+        "description": "Verifica la conexion del servicio con Valkey.",
+        "operationId": "salud_salud_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/eventos": {
+      "post": {
+        "summary": "Recibir Evento",
+        "description": "Encola una transicion confirmada por MongoDB (gateway/registro).\n\n202: evento nuevo en Valkey Stream.\n200: reintento del mismo evento (sin duplicar).\n409: event_id reutilizado con diferente contenido.\n503: Valkey no disponible.\n422: evento invalido, manejado por FastAPI/Pydantic.",
+        "operationId": "recibir_evento_eventos_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventoNegocio"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventoRecibido"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "EventoNegocio": {
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Event Id"
+          },
+          "tipo_evento": {
+            "type": "string",
+            "enum": [
+              "tarea_abierta",
+              "tarea_anotada",
+              "revision_iniciada",
+              "revision_aprobada",
+              "revision_rechazada"
+            ],
+            "title": "Tipo Evento"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "abierta",
+              "anotada",
+              "en_revision",
+              "aprobada",
+              "rechazada"
+            ],
+            "title": "Estado"
+          },
+          "ocurrido_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Ocurrido En"
+          },
+          "tarea_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Tarea Id"
+          },
+          "proyecto_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Proyecto Id"
+          },
+          "cliente_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Cliente Id"
+          },
+          "batch_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Batch Id"
+          },
+          "anotador_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anotador Id"
+          },
+          "revisor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revisor Id"
+          },
+          "equipo_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Equipo Id"
+          },
+          "modalidad": {
+            "type": "string",
+            "enum": [
+              "texto",
+              "imagen",
+              "video",
+              "lidar"
+            ],
+            "title": "Modalidad"
+          },
+          "tipo_tarea": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Tipo Tarea"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Version"
+          },
+          "tomada_en": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tomada En"
+          },
+          "aprobada_en": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aprobada En"
+          },
+          "duracion_ms": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duracion Ms"
+          },
+          "sla_horas": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sla Horas"
+          },
+          "motivo_rechazo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Motivo Rechazo"
+          },
+          "datos_extra": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Datos Extra"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "event_id",
+          "tipo_evento",
+          "estado",
+          "ocurrido_en",
+          "tarea_id",
+          "proyecto_id",
+          "cliente_id",
+          "modalidad",
+          "tipo_tarea",
+          "version"
+        ],
+        "title": "EventoNegocio",
+        "description": "Contrato preliminar acordable con Registro y Analitica.\n\nSe incluyen las dimensiones necesarias para las consultas historicas.\nLos valores concretos deben provenir de Registro, no de este servicio."
+      },
+      "EventoRecibido": {
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Event Id"
+          },
+          "stream_id": {
+            "type": "string",
+            "title": "Stream Id"
+          },
+          "resultado": {
+            "type": "string",
+            "enum": [
+              "encolado",
+              "repetido"
+            ],
+            "title": "Resultado"
+          }
+        },
+        "type": "object",
+        "required": [
+          "event_id",
+          "stream_id",
+          "resultado"
+        ],
+        "title": "EventoRecibido",
+        "description": "Resultado de la recepcion en la cola Valkey."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

@@ -1,0 +1,691 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Gateway — Plataforma de anotación",
+    "description": "Punto único de entrada al backend",
+    "version": "0.2.0"
+  },
+  "paths": {
+    "/proyectos": {
+      "post": {
+        "summary": "Crear Proyecto",
+        "operationId": "crear_proyecto_proyectos_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "type": "object",
+                "title": "Cuerpo"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/proyectos/{proyecto_id}/lotes": {
+      "post": {
+        "summary": "Registrar Lote",
+        "operationId": "registrar_lote_proyectos__proyecto_id__lotes_post",
+        "parameters": [
+          {
+            "name": "proyecto_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proyecto Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "title": "Cuerpo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/proyectos/{proyecto_id}/exportar": {
+      "get": {
+        "summary": "Exportar",
+        "operationId": "exportar_proyectos__proyecto_id__exportar_get",
+        "parameters": [
+          {
+            "name": "proyecto_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proyecto Id"
+            }
+          },
+          {
+            "name": "despues",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Despues"
+            }
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limite"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tareas/siguiente": {
+      "post": {
+        "summary": "Tarea Siguiente",
+        "description": "Lock + asignación. 200 con tarea, token y borrador; 204 si no hay tareas.",
+        "operationId": "tarea_siguiente_tareas_siguiente_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitudSiguiente"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tareas/{tarea_id}/borrador": {
+      "put": {
+        "summary": "Guardar Borrador",
+        "description": "Guarda el borrador en Valkey y renueva el lock. No toca MongoDB.",
+        "operationId": "guardar_borrador_tareas__tarea_id__borrador_put",
+        "parameters": [
+          {
+            "name": "tarea_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tarea Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Borrador"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tareas/{tarea_id}/enviar": {
+      "post": {
+        "summary": "Enviar",
+        "description": "200 si MongoDB confirma; 409 token ajeno o tarea no abierta; 503 sin reintento.",
+        "operationId": "enviar_tareas__tarea_id__enviar_post",
+        "parameters": [
+          {
+            "name": "tarea_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tarea Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Envio"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tareas/{tarea_id}/liberar": {
+      "post": {
+        "summary": "Liberar",
+        "description": "Devuelve la tarea a la cola y suelta el lock.",
+        "operationId": "liberar_tareas__tarea_id__liberar_post",
+        "parameters": [
+          {
+            "name": "tarea_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tarea Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosSesion"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tareas/{tarea_id}/revision": {
+      "post": {
+        "summary": "Revision",
+        "description": "Aprueba o rechaza; el rechazo exige motivo y devuelve la tarea a la cola.",
+        "operationId": "revision_tareas__tarea_id__revision_post",
+        "parameters": [
+          {
+            "name": "tarea_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tarea Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Revision"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sesiones/recuperar": {
+      "post": {
+        "summary": "Recuperar",
+        "description": "Sesión y último borrador. `requiere_reasignacion`: pedir /tareas/siguiente.",
+        "operationId": "recuperar_sesiones_recuperar_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Recuperacion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/salud": {
+      "get": {
+        "summary": "Salud",
+        "description": "Salud por capa a partir de los mensajes que el monitor guarda en Valkey.\n\n- caido (503): el registro (fuente de verdad) no está disponible.\n- degradado (200): el registro responde, pero alguna capa falla o MongoDB\n  perdió un nodo.\n- operativo (200): todas las capas operativas.\n\n`fuente`: `valkey` (mensajes del monitor) o `directo` (Valkey no responde o\naún no hay mensajes; se consulta cada capa). El gateway responde siempre.",
+        "operationId": "salud_salud_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Borrador": {
+        "properties": {
+          "anotador_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Anotador Id"
+          },
+          "proyecto_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Proyecto Id"
+          },
+          "token": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Token"
+          },
+          "contenido": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Contenido"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "anotador_id",
+          "proyecto_id",
+          "token",
+          "contenido"
+        ],
+        "title": "Borrador"
+      },
+      "DatosSesion": {
+        "properties": {
+          "anotador_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Anotador Id"
+          },
+          "proyecto_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Proyecto Id"
+          },
+          "token": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Token"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "anotador_id",
+          "proyecto_id",
+          "token"
+        ],
+        "title": "DatosSesion",
+        "description": "Identidad de la sesión: la entrega /tareas/siguiente."
+      },
+      "Envio": {
+        "properties": {
+          "anotador_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Anotador Id"
+          },
+          "proyecto_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Proyecto Id"
+          },
+          "token": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Token"
+          },
+          "contenido": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Contenido"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "anotador_id",
+          "proyecto_id",
+          "token",
+          "contenido"
+        ],
+        "title": "Envio"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Recuperacion": {
+        "properties": {
+          "anotador_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Anotador Id"
+          },
+          "proyecto_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Proyecto Id"
+          },
+          "token": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Token"
+          },
+          "tarea_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Tarea Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "anotador_id",
+          "proyecto_id",
+          "token",
+          "tarea_id"
+        ],
+        "title": "Recuperacion"
+      },
+      "Revision": {
+        "properties": {
+          "revisor_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Revisor Id"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "aprobar",
+              "rechazar"
+            ],
+            "title": "Decision"
+          },
+          "motivo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Motivo"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "revisor_id",
+          "decision"
+        ],
+        "title": "Revision"
+      },
+      "SolicitudSiguiente": {
+        "properties": {
+          "anotador_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Anotador Id"
+          },
+          "proyecto_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Proyecto Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "anotador_id",
+          "proyecto_id"
+        ],
+        "title": "SolicitudSiguiente"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

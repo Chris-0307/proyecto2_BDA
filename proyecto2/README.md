@@ -54,7 +54,7 @@ proyecto2_BDA/
     │   ├── p4_historial/             # test_historial_*.py
     │   ├── p3_p4_integracion/        # test_p3_p4_integracion.py, smoke_integrante2.sh, ejecutar_evidencias_p3_p4.py
     │   └── p8_fallas/                # p8_mongo.py (fallas de MongoDB)
-    ├── endpoints/                    # README con las rutas, cuerpos y códigos de cada servicio
+    ├── endpoints/                    # README de rutas, cuerpos y códigos; openapi/*.json (make endpoints)
     ├── evidence/                     # salidas de las pruebas (ver sección 9)
     └── docs/                         # informe.md (informe del proyecto), contratos y guías de Sesión e Historial
 ```
@@ -107,6 +107,7 @@ siguen abajo.
 |---|---|---|
 | `make salud` | `curl -i http://localhost:8000/salud` | — |
 | `make smoke-gateway` | Rutas básicas, códigos y salud por capa (requiere `make demo`) | `evidence/p1_gateway_smoke.txt` |
+| `make endpoints` | Exporta el OpenAPI de cada servicio a `endpoints/openapi/` | — |
 | `make smoke-flujo` | Flujo completo: siguiente, borrador, recuperar, enviar, liberar, revisión, exportar | `evidence/p1_gateway_flujo.txt` |
 | `make p1-salud` | `/salud` con Sesión, Historial, Registro y Valkey caídos; mensajes de salud en Valkey; puertos publicados; reglas de aislamiento. Corre en el host | `evidence/p1_salud_aislamiento.txt` |
 

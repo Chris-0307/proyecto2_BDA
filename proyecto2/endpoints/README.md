@@ -17,6 +17,27 @@ servicio está en su README.
 Los servicios internos respetan el máximo de seis rutas por servicio. El
 simulador y cualquier cliente externo solo hablan con el gateway.
 
+## Documentación generada por FastAPI
+
+Todos los servicios están hechos con FastAPI, que genera a partir del código la
+especificación OpenAPI y una página interactiva para probar las rutas. Es la
+referencia exacta de cuerpos y esquemas; este README es el resumen.
+
+| Servicio | Página interactiva | Especificación |
+|---|---|---|
+| Gateway | <http://localhost:8000/docs> | <http://localhost:8000/openapi.json> |
+| Registro, Sesión, Historial | No publicados al host | Ver abajo |
+
+Para tener la especificación de los cuatro servicios como archivos (los
+internos no publican puerto), con el Compose levantado y desde la raíz del repo:
+
+```bash
+make endpoints
+```
+
+Escribe `endpoints/openapi/{gateway,registro,sesion,historial}.json`. Vuelva a
+correrlo si cambia alguna ruta.
+
 ## Gateway (`http://localhost:8000`)
 
 Todas las respuestas incluyen `X-Request-ID` (el recibido o uno generado), que
