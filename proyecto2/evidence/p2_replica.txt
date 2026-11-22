@@ -1,26 +1,26 @@
-Inicio UTC: 2026-11-22T01:42:46Z
+Inicio UTC: 2026-11-22T05:52:23Z
 Objetivo: estado del conjunto rs-plataforma, mayoría e índices
 Mongo: db version v8.0.38
 
-set=rs-plataforma term=1
+set=rs-plataforma term=2
 [
   {
     name: 'mongo-1:27017',
-    state: 'PRIMARY',
+    state: 'SECONDARY',
     health: 1,
-    syncSource: ''
+    syncSource: 'mongo-3:27017'
   },
   {
     name: 'mongo-2:27017',
     state: 'SECONDARY',
     health: 1,
-    syncSource: 'mongo-1:27017'
+    syncSource: 'mongo-3:27017'
   },
   {
     name: 'mongo-3:27017',
-    state: 'SECONDARY',
+    state: 'PRIMARY',
     health: 1,
-    syncSource: 'mongo-1:27017'
+    syncSource: ''
   }
 ]
 electionTimeoutMillis=10000
@@ -60,5 +60,5 @@ electionTimeoutMillis=10000
 == anotadores ==
   _id_ {"_id":1}
 
-Fin UTC: 2026-11-22T01:42:47Z
-Evidencia: /mnt/c/Users/jimmy/GitHub/proyecto2_BDA/proyecto2/evidence/p2_replica_20261122T014246Z.txt
+Fin UTC: 2026-11-22T05:52:24Z
+Evidencia: /mnt/c/Users/jimmy/GitHub/proyecto2_BDA/proyecto2/evidence/p2_replica.txt

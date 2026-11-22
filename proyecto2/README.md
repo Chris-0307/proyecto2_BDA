@@ -80,26 +80,54 @@ Ejecute siempre desde la **raíz del repositorio**.
 
 ### Atajos con `make`
 
-El `Makefile` de la raíz envuelve los comandos de esta guía. `make` sin
-argumentos lista los objetivos.
-
-| Objetivo | Equivale a |
-|---|---|
-| `make up` / `ps` / `down` | `up -d --build` / `ps` / `down` del Compose final |
-| `make reset` | `down -v` + `up` (pide confirmación; **borra datos**) |
-| `make logs s=registro` | Logs recientes de uno o más servicios |
-| `make replica` | `verificar_replica.sh` |
-| `make demo` | Carga de demostración del registro |
-| `make smoke-registro` | `smoke_registro.py` con evidencia en `evidence/` |
-| `make registro` | `up` + `replica` + `demo` + `smoke-registro` |
-| `make salud` / `make smoke-gateway` | `curl` a `/salud` / `smoke_gateway.py` con evidencia |
-| `make aof` | `CONFIG GET appendonly` y `appendfsync` en Valkey |
-| `make i2-up` / `i2-down` / `i2-smoke` | Entorno aislado de Sesión + Historial |
-| `make i2-pytest` | Suite pytest de Sesión e Historial en Docker |
-| `make p3-p4` | `ejecutar_evidencias_p3_p4.py` |
-
+El `Makefile` de la raíz envuelve los comandos de esta guía. Se ejecuta
+desde la raíz del repositorio; `make` sin argumentos lista los objetivos.
 Requiere `make` (en WSL: `sudo apt install make`). Los comandos completos
 siguen abajo.
+
+**Sistema completo**
+
+| Objetivo | Qué hace |
+|---|---|
+| `make up` | Construye y levanta el Compose final |
+| `make ps` | Estado de los contenedores |
+| `make logs s=registro` | Logs recientes de uno o más servicios |
+| `make down` | Detiene el sistema (conserva volúmenes) |
+| `make reset` | `down -v` + `up`; pide confirmación y **borra los datos** |
+
+**Registro y MongoDB (P2)**
+
+| Objetivo | Qué hace | Evidencia |
+|---|---|---|
+| `make replica` | Verifica réplica, mayoría e índices | `evidence/p2_replica.txt` |
+| `make demo` | Carga de demostración (cliente, anotadores, proyecto, lote) | — |
+| `make smoke-registro` | Transiciones, 409 y 50 asignaciones concurrentes | `evidence/p2_registro_smoke.txt` |
+| `make registro` | Todo seguido: `up` + `replica` + `demo` + `smoke-registro` | las dos anteriores |
+
+**Gateway (P1)**
+
+| Objetivo | Qué hace | Evidencia |
+|---|---|---|
+| `make salud` | `curl -i http://localhost:8000/salud` | — |
+| `make smoke-gateway` | Rutas básicas, códigos y salud por capa (requiere `make demo`) | `evidence/p1_gateway_smoke.txt` |
+
+**Sesión e Historial (P3/P4, Integrante 2)**
+
+| Objetivo | Qué hace |
+|---|---|
+| `make aof` | `CONFIG GET appendonly` y `appendfsync` en Valkey |
+| `make i2-up` / `make i2-down` | Levanta / detiene el entorno aislado de Sesión + Historial |
+| `make i2-smoke` | `smoke_integrante2.sh` sobre el entorno aislado |
+| `make i2-pytest` | Suite pytest de Sesión e Historial en Docker |
+| `make p3-p4` | `ejecutar_evidencias_p3_p4.py` (suite con evidencia) |
+
+**Flujo típico desde cero**
+
+```bash
+make up
+make registro        # réplica + demo + smoke del registro
+make smoke-gateway
+```
 
 ```bash
 docker compose -f proyecto2/docker-compose.yml up -d --build

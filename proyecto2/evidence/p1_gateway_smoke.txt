@@ -1,4 +1,4 @@
-Inicio UTC: 2026-11-22T05:21:30.084626+00:00
+Inicio UTC: 2026-11-22T05:52:54.551738+00:00
 Objetivo: gateway básico (proyectos, lotes, exportar, salud por capa)
 Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.41, CPU lógicos: 16
 Gateway: http://gateway:8000
@@ -18,4 +18,4 @@ Gateway: http://gateway:8000
 [OK] exportar con limite fuera de rango responde 422 — código 422
 
 Resultado: 14/14 comprobaciones correctas
-Fin UTC: 2026-11-22T05:21:30.228393+00:00
+Fin UTC: 2026-11-22T05:52:54.617837+00:00

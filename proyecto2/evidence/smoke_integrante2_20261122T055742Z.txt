@@ -1,0 +1,150 @@
+Prueba iniciada (UTC): 2026-11-22T05:57:42Z
+Log: /mnt/c/Users/jimmy/GitHub/proyecto2_BDA/proyecto2/evidence/smoke_integrante2_20261122T055742Z.txt
+Objetivo: validar P3 (borrador AOF) y P4 (recepcion a Parquet), entorno aislado.
+Configuracion: proyecto Compose bda-integrante2, cuatro servicios internos.
+
+[1/5] Levantar el entorno de integración
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.69kB done
+#1 DONE 0.0s
+
+#2 [historial-worker internal] load build definition from Dockerfile
+#2 transferring dockerfile: 407B 0.0s done
+#2 DONE 0.0s
+
+#3 [sesion internal] load build definition from Dockerfile
+#3 transferring dockerfile: 616B 0.0s done
+#3 DONE 0.0s
+
+#4 [historial-worker internal] load metadata for docker.io/library/python:3.12-slim
+#4 DONE 0.5s
+
+#5 [sesion internal] load .dockerignore
+#5 transferring context: 2B done
+#5 DONE 0.0s
+
+#6 [historial-worker internal] load .dockerignore
+#6 transferring context: 2B 0.0s done
+#6 DONE 0.0s
+
+#7 [historial-worker 1/5] FROM docker.io/library/python:3.12-slim@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b
+#7 resolve docker.io/library/python:3.12-slim@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b 0.0s done
+#7 DONE 0.0s
+
+#8 [sesion internal] load build context
+#8 transferring context: 268B 0.0s done
+#8 DONE 0.0s
+
+#9 [sesion 3/5] COPY requirements.txt .
+#9 CACHED
+
+#10 [sesion 4/5] RUN pip install --no-cache-dir -r requirements.txt
+#10 CACHED
+
+#11 [sesion 5/5] COPY app/ ./app/
+#11 CACHED
+
+#12 [historial internal] load build context
+#12 transferring context: 268B 0.0s done
+#12 DONE 0.1s
+
+#13 [historial-worker 3/5] COPY requirements.txt .
+#13 CACHED
+
+#14 [historial-worker 2/5] WORKDIR /app
+#14 CACHED
+
+#15 [historial-worker 4/5] RUN pip install --no-cache-dir -r requirements.txt
+#15 CACHED
+
+#16 [historial-worker 5/5] COPY app/ ./app/
+#16 CACHED
+
+#17 [historial] exporting to image
+#17 exporting layers done
+#17 exporting manifest sha256:e7f12d5b64facfc11798288bb379d9e05f5375ffea56356ff3897dc4f7b43df5 done
+#17 exporting config sha256:71d839481be11b34458538603c9d6513faa3ff2baf01ffd039f7f31300e29352 0.0s done
+#17 exporting attestation manifest sha256:f2e28a5d7ac00c8cec4fc06400b143e21056d7b00fd5d0d94a6dc9332b9320ae 0.1s done
+#17 exporting manifest list sha256:021c6fcfb18a38640ab58b1eb0ba7a8bf24bd2bf6e2a98c30d9bedaafe97a3d0
+#17 exporting manifest list sha256:021c6fcfb18a38640ab58b1eb0ba7a8bf24bd2bf6e2a98c30d9bedaafe97a3d0 0.0s done
+#17 naming to docker.io/library/bda-integrante2-historial:latest 0.0s done
+#17 unpacking to docker.io/library/bda-integrante2-historial:latest 0.0s done
+#17 DONE 0.2s
+
+#18 [sesion] exporting to image
+#18 exporting layers done
+#18 exporting manifest sha256:caefdc162cb05706f9256dcf47fb99f569d3e4744432cb9dc798467bb1e4b609 done
+#18 exporting config sha256:a3003177b785f2224e974311afd4970579562825b0476cd7bd2bee4e1e1a7dc0 done
+#18 exporting attestation manifest sha256:5afda8ec36e4f3933a091d6de90eb78c7d4a02fa29e296a02c8ab7057451d209 0.0s done
+#18 exporting manifest list sha256:108199aa9a8de771967f777c18ebb664bc6deef507430009fbc9a1d6186c4d34 0.0s done
+#18 naming to docker.io/library/bda-integrante2-sesion:latest 0.0s done
+#18 unpacking to docker.io/library/bda-integrante2-sesion:latest 0.0s done
+#18 DONE 0.2s
+
+#19 [historial-worker] exporting to image
+#19 exporting layers done
+#19 exporting manifest sha256:43f4db8b163006235130c53c495e972cada70e9f1e002786b088e5d0636caf2e done
+#19 exporting config sha256:b901feb29e48f33a9c0de13993fd95a6a63f3e46e25698f033243e283a8271fd 0.0s done
+#19 exporting attestation manifest sha256:c02b157882a2daf6a1defb75905e010d6f68d7947289a511277482a09dafb502 0.1s done
+#19 exporting manifest list sha256:9817b7b01937d83dc2c9e7db226516e2c02bfc048b77f713ecf6317a046a327f 0.0s done
+#19 naming to docker.io/library/bda-integrante2-historial-worker:latest 0.0s done
+#19 unpacking to docker.io/library/bda-integrante2-historial-worker:latest 0.0s done
+#19 DONE 0.2s
+
+#20 [sesion] resolving provenance for metadata file
+#20 DONE 0.1s
+
+#21 [historial] resolving provenance for metadata file
+#21 DONE 0.1s
+
+#22 [historial-worker] resolving provenance for metadata file
+#22 DONE 0.0s
+ bda-integrante2-historial  Built
+ bda-integrante2-historial-worker  Built
+ bda-integrante2-sesion  Built
+ Container bda-integrante2-valkey-1  Running
+ Container bda-integrante2-historial-1  Recreate
+ Container bda-integrante2-historial-worker-1  Recreate
+ Container bda-integrante2-sesion-1  Recreate
+ Container bda-integrante2-historial-1  Recreated
+ Container bda-integrante2-sesion-1  Recreated
+ Container bda-integrante2-historial-worker-1  Recreated
+ Container bda-integrante2-valkey-1  Waiting
+ Container bda-integrante2-valkey-1  Waiting
+ Container bda-integrante2-valkey-1  Waiting
+ Container bda-integrante2-valkey-1  Healthy
+ Container bda-integrante2-historial-worker-1  Starting
+ Container bda-integrante2-valkey-1  Healthy
+ Container bda-integrante2-sesion-1  Starting
+ Container bda-integrante2-valkey-1  Healthy
+ Container bda-integrante2-historial-1  Starting
+ Container bda-integrante2-sesion-1  Started
+ Container bda-integrante2-historial-worker-1  Started
+ Container bda-integrante2-historial-1  Started
+NAME                                 IMAGE                              COMMAND                  SERVICE            CREATED          STATUS                   PORTS
+bda-integrante2-historial-1          bda-integrante2-historial          "uvicorn app.main:ap…"   historial          12 seconds ago   Up Less than a second    8002/tcp
+bda-integrante2-historial-worker-1   bda-integrante2-historial-worker   "python -m app.worker"   historial-worker   12 seconds ago   Up Less than a second    8002/tcp
+bda-integrante2-sesion-1             bda-integrante2-sesion             "uvicorn app.main:ap…"   sesion             12 seconds ago   Up Less than a second    8001/tcp
+bda-integrante2-valkey-1             valkey/valkey:8.1.11-alpine        "tini -- docker-entr…"   valkey             4 minutes ago    Up 4 minutes (healthy)   6379/tcp
+
+[2/5] Valkey AOF y servicios disponibles
+Configuracion AOF: appendonly=yes; appendfsync=everysec
+Servicio sesion: disponible
+Servicio historial: disponible
+
+[3/5] P3: crear sesión y borrador a través de la API interna
+P3: borrador creado correctamente. ID de tarea: 27aa3f93-2de5-4f6d-8d3b-51687007ae05
+ Container bda-integrante2-valkey-1  Restarting
+ Container bda-integrante2-valkey-1  Started
+P3: borrador recuperado tras reinicio; estado = activa
+
+[4/5] P4: evento a través de Historial
+P4: evento encolado 1795327082602-0
+
+[5/5] P4: esperar archivo Parquet visible al worker
+P4: archivo publicado: /datalake/eventos/mes=2026-11/lote-0f2771d73404e9021f691987.parquet event_id: ef60e8fe-cc67-4f72-8b7e-9ad7922a1c97
+
+Resultado del smoke aislado: COMPLETADO.
+No sustituye pruebas con gateway/MongoDB/Spark ni mediciones oficiales de P3/P4.
+Finalizado (UTC): 2026-11-22T05:58:05Z
+Evidencia: /mnt/c/Users/jimmy/GitHub/proyecto2_BDA/proyecto2/evidence/smoke_integrante2_20261122T055742Z.txt

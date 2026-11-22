@@ -1,4 +1,4 @@
-Inicio UTC: 2026-11-22T05:41:30.456414+00:00
+Inicio UTC: 2026-11-22T05:52:29.666919+00:00
 Objetivo: flujo del registro y atomicidad con 50 intentos simultáneos
 Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.41, CPU lógicos: 16
 [OK] salud operativa — operativo
@@ -33,4 +33,4 @@ Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.41, CPU lóg
 [OK] tras confirmar, la tarea ya no tiene eventos pendientes
 
 Resultado: 30/30 comprobaciones correctas
-Fin UTC: 2026-11-22T05:41:30.720990+00:00
+Fin UTC: 2026-11-22T05:52:29.976668+00:00
