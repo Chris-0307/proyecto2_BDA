@@ -139,6 +139,17 @@ services:
       - ./pruebas:/pruebas:ro
     restart: unless-stopped
 
+  # ---------- Analítica Spark: lectura solo sobre Parquet (sin publicar puerto) ----------
+  analitica:
+    build:
+      context: ./servicios/analitica
+    environment:
+      DATALAKE_EVENTOS: /datalake/eventos
+      SPARK_WORKERS: "1"
+    volumes:
+      - ./datalake:/datalake:ro
+    restart: unless-stopped
+
 volumes:
   mongo1_datos:
   mongo2_datos:
