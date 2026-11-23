@@ -1,0 +1,209 @@
+=== P6 Carga HTTP — Inicio UTC: 2026-11-23T04:56:51.236301+00:00 ===
+Contexto: {"proyecto_id": "bc4091d0-f3d7-4f7f-992a-e23371d3e3f6", "anotadores": "8c2e6a66-cd62-5e6a-a8bb-745a156c882b,a7a32793-90f6-5b47-a022-f7a6a5cac9f4,9b2f0922-c0ce-5921-89ee-2e9ad13d9841,58cfc664-1f89-50a9-af02-e3083172b413,59cc8ce2-4762-40bb-8acb-1e753b2c9b3e,81b52465-c5b9-4a48-821a-840007e84499,dfcdf2b8-3225-58b6-a997-fff7d5537ed6,d590b64f-41fa-5271-bd64-77b94741f864,2888451a-eb65-539f-90c4-c9980eb6e319,e9135abc-ce68-5d07-8cfc-dbbdb7a8863e", "revisores": "d8a908c9-dff5-598d-b70f-87fbfc1ba55f,568fc53e-09e2-5c6f-9b81-57ea415eb197,39bd3d8f-fdd0-4e75-bf35-65e76a91aa62"}
+
+--- Nivel de carga: 10 usuarios (8.0s) ---
+{
+  "inicio_utc": "2026-11-23T04:56:51.522864+00:00",
+  "fin_utc": "2026-11-23T04:57:00.085933+00:00",
+  "base_url": "http://localhost:8000",
+  "proyecto_id": "bc4091d0-f3d7-4f7f-992a-e23371d3e3f6",
+  "usuarios": 10,
+  "duracion_s": 8.0,
+  "semilla": 20261132,
+  "resultados": {
+    "acciones": {
+      "exportar_ok": 31,
+      "tarea_tomada": 30,
+      "borrador_guardado": 36,
+      "tarea_liberada": 5,
+      "tarea_enviada": 25,
+      "tarea_aprobada": 12,
+      "tarea_rechazada": 6
+    },
+    "codigos_http": {
+      "GET /proyectos/{id}/exportar:200": 31,
+      "GET /analitica/{q}:404": 31,
+      "POST /tareas/siguiente:200": 30,
+      "PUT /tareas/{id}/borrador:200": 36,
+      "POST /tareas/{id}/liberar:200": 5,
+      "POST /tareas/{id}/enviar:200": 25,
+      "POST /tareas/{id}/revision:200": 18
+    },
+    "latencias_ms": {
+      "GET /proyectos/{id}/exportar": {
+        "muestras": 31,
+        "prom_ms": 23.67,
+        "p95_ms": 71.02
+      },
+      "GET /analitica/{q}": {
+        "muestras": 31,
+        "prom_ms": 8.41,
+        "p95_ms": 33.89
+      },
+      "POST /tareas/siguiente": {
+        "muestras": 30,
+        "prom_ms": 174.5,
+        "p95_ms": 291.63
+      },
+      "PUT /tareas/{id}/borrador": {
+        "muestras": 36,
+        "prom_ms": 31.17,
+        "p95_ms": 77.6
+      },
+      "POST /tareas/{id}/liberar": {
+        "muestras": 5,
+        "prom_ms": 53.49,
+        "p95_ms": 105.51
+      },
+      "POST /tareas/{id}/enviar": {
+        "muestras": 25,
+        "prom_ms": 116.57,
+        "p95_ms": 216.67
+      },
+      "POST /tareas/{id}/revision": {
+        "muestras": 18,
+        "prom_ms": 143.99,
+        "p95_ms": 262.47
+      }
+    }
+  }
+}
+
+--- Nivel de carga: 40 usuarios (8.0s) ---
+{
+  "inicio_utc": "2026-11-23T04:57:00.353462+00:00",
+  "fin_utc": "2026-11-23T04:57:09.038410+00:00",
+  "base_url": "http://localhost:8000",
+  "proyecto_id": "bc4091d0-f3d7-4f7f-992a-e23371d3e3f6",
+  "usuarios": 40,
+  "duracion_s": 8.0,
+  "semilla": 20261162,
+  "resultados": {
+    "acciones": {
+      "exportar_ok": 98,
+      "tarea_tomada": 19,
+      "borrador_guardado": 22,
+      "tarea_enviada": 18,
+      "tarea_aprobada": 11,
+      "tarea_rechazada": 1,
+      "tarea_liberada": 1
+    },
+    "codigos_http": {
+      "GET /proyectos/{id}/exportar:200": 98,
+      "GET /analitica/{q}:404": 98,
+      "POST /tareas/siguiente:409": 342,
+      "POST /tareas/siguiente:200": 19,
+      "PUT /tareas/{id}/borrador:200": 22,
+      "POST /tareas/{id}/enviar:200": 18,
+      "POST /tareas/{id}/revision:200": 12,
+      "POST /tareas/{id}/liberar:200": 1
+    },
+    "latencias_ms": {
+      "GET /proyectos/{id}/exportar": {
+        "muestras": 98,
+        "prom_ms": 127.25,
+        "p95_ms": 429.05
+      },
+      "GET /analitica/{q}": {
+        "muestras": 98,
+        "prom_ms": 42.71,
+        "p95_ms": 91.26
+      },
+      "POST /tareas/siguiente": {
+        "muestras": 361,
+        "prom_ms": 212.35,
+        "p95_ms": 778.58
+      },
+      "PUT /tareas/{id}/borrador": {
+        "muestras": 22,
+        "prom_ms": 144.39,
+        "p95_ms": 324.45
+      },
+      "POST /tareas/{id}/enviar": {
+        "muestras": 18,
+        "prom_ms": 358.81,
+        "p95_ms": 683.09
+      },
+      "POST /tareas/{id}/revision": {
+        "muestras": 12,
+        "prom_ms": 614.45,
+        "p95_ms": 944.63
+      },
+      "POST /tareas/{id}/liberar": {
+        "muestras": 1,
+        "prom_ms": 218.63,
+        "p95_ms": 218.63
+      }
+    }
+  }
+}
+
+--- Nivel de carga: 100 usuarios (8.0s) ---
+{
+  "inicio_utc": "2026-11-23T04:57:09.337614+00:00",
+  "fin_utc": "2026-11-23T04:57:18.175289+00:00",
+  "base_url": "http://localhost:8000",
+  "proyecto_id": "bc4091d0-f3d7-4f7f-992a-e23371d3e3f6",
+  "usuarios": 100,
+  "duracion_s": 8.0,
+  "semilla": 20261222,
+  "resultados": {
+    "acciones": {
+      "exportar_ok": 155,
+      "tarea_tomada": 11,
+      "borrador_guardado": 10,
+      "tarea_enviada": 10,
+      "tarea_aprobada": 3,
+      "tarea_liberada": 1
+    },
+    "codigos_http": {
+      "GET /proyectos/{id}/exportar:200": 155,
+      "GET /analitica/{q}:404": 155,
+      "POST /tareas/siguiente:409": 422,
+      "POST /tareas/siguiente:200": 11,
+      "PUT /tareas/{id}/borrador:200": 10,
+      "POST /tareas/{id}/enviar:200": 10,
+      "POST /tareas/{id}/revision:200": 3,
+      "POST /tareas/{id}/liberar:200": 1
+    },
+    "latencias_ms": {
+      "GET /proyectos/{id}/exportar": {
+        "muestras": 155,
+        "prom_ms": 428.69,
+        "p95_ms": 747.91
+      },
+      "GET /analitica/{q}": {
+        "muestras": 155,
+        "prom_ms": 129.14,
+        "p95_ms": 182.95
+      },
+      "POST /tareas/siguiente": {
+        "muestras": 433,
+        "prom_ms": 829.17,
+        "p95_ms": 1508.72
+      },
+      "PUT /tareas/{id}/borrador": {
+        "muestras": 10,
+        "prom_ms": 475.03,
+        "p95_ms": 598.71
+      },
+      "POST /tareas/{id}/enviar": {
+        "muestras": 10,
+        "prom_ms": 1152.32,
+        "p95_ms": 1878.75
+      },
+      "POST /tareas/{id}/revision": {
+        "muestras": 3,
+        "prom_ms": 1949.9,
+        "p95_ms": 2117.04
+      },
+      "POST /tareas/{id}/liberar": {
+        "muestras": 1,
+        "prom_ms": 123.42,
+        "p95_ms": 123.42
+      }
+    }
+  }
+}
+
+=== Fin UTC: 2026-11-23T04:57:18.220016+00:00 ===
