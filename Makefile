@@ -13,6 +13,10 @@ s ?= registro mongo-init sesion historial historial-worker
 .PHONY: help up ps down reset logs \
         replica aof demo smoke-registro registro smoke-gateway salud smoke-flujo p2-gateway p8-mongo write-concern p1-salud endpoints \
         i2-up i2-down i2-smoke i2-pytest p3-p4
+.PHONY: help up ps down reset logs \
+        replica aof demo smoke-registro registro smoke-gateway salud smoke-flujo p2-gateway p8-mongo write-concern p1-salud endpoints \
+        i2-up i2-down i2-smoke i2-pytest p3-p4 \
+        datos simulador p5 p6
 
 help: ## Lista los objetivos
 	@grep -hE '^[a-zA-Z0-9_-]+:.*## ' $(MAKEFILE_LIST) | \
@@ -116,3 +120,20 @@ i2-pytest: ## Suite pytest de Sesión e Historial en Docker
 
 p3-p4: ## Suite P3/P4 con registro de evidencia
 	python3 proyecto2/pruebas/p3_p4_integracion/ejecutar_evidencias_p3_p4.py
+## ---- Datos, analítica Spark, simulador y carga (Emmanuel) ----
+datos: ## Genera dataset en MongoDB y datalake Parquet (semilla fija)
+	$(COMPOSE) run --rm registro python /dataset/generar_dataset.py --solo-mongo
+	$(COMPOSE) run --rm analitica python /dataset/generar_dataset.py --solo-parquet
+
+simulador: ## Ejecuta el simulador HTTP contra el gateway
+	python3 proyecto2/simulador/simulador_http.py
+
+p5: ## P5: analítica Spark Q1-Q5 y planes explain (deja evidencia)
+	@mkdir -p $(EVIDENCIA)
+	set -o pipefail; python3 proyecto2/pruebas/p5_analitica/run_p5.py \
+	  | tee $(EVIDENCIA)/p5_analitica.txt
+
+p6: ## P6: carga HTTP 10, 40 y 100 usuarios contra el gateway (deja evidencia)
+	@mkdir -p $(EVIDENCIA)
+	set -o pipefail; python3 proyecto2/pruebas/p6_carga/run_p6.py \
+	  | tee $(EVIDENCIA)/p6_carga.txt
