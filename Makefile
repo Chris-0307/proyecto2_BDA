@@ -13,7 +13,7 @@ s ?= registro mongo-init sesion historial historial-worker
 .PHONY: help up ps down reset logs \
         replica aof demo smoke-registro registro smoke-gateway salud smoke-flujo \
         p2-gateway p8-mongo write-concern p1-salud endpoints \
-        i2-up i2-down i2-smoke i2-pytest p3-p4 p3 \
+        i2-up i2-down i2-smoke i2-pytest p3-p4 p3 p4 \
         datos simulador p5 p6
 
 help: ## Lista los objetivos
@@ -121,6 +121,9 @@ p3-p4: ## Suite P3/P4 con registro de evidencia
 
 p3: ## P3: sesiones, recuperacion, AOF y vencimiento de locks
 	python3 proyecto2/pruebas/p3_sesion/p3_gateway_sesion.py
+
+p4: ## P4: materializacion, reprocesamiento, deduplicacion y frescura Parquet
+	python3 proyecto2/pruebas/p4_historial/p4_gateway_parquet.py
 
 	
 ## ---- Datos, analítica Spark, simulador y carga (Emmanuel) ----
