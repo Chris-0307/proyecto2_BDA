@@ -73,8 +73,8 @@ flowchart TB
 | Registro | Estado vigente de proyectos, lotes y tareas; transiciones atómicas; exportación | FastAPI + MongoDB (3 nodos) | Jimmy |
 | Sesión | Locks de 120 s, sesiones, latidos y borradores | FastAPI + Valkey | Christian |
 | Historial | Recepción idempotente de eventos y escritura de Parquet | FastAPI + Valkey Streams + Parquet | Christian |
-| Analítica | Q1–Q5 sobre Parquet | Spark | Emmanuel (PENDIENTE) |
-| Simulador | Anotadores, revisores y consumidores vía HTTP | Cliente HTTP | Emmanuel (PENDIENTE) |
+| Analítica | Q1–Q5 sobre Parquet | Spark | Emmanuel|
+| Simulador | Anotadores, revisores y consumidores vía HTTP | Cliente HTTP | Emmanuel|
 
 **Reglas de aislamiento y su evidencia** (`p1_salud_aislamiento.txt`, 42/42):
 
