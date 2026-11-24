@@ -122,7 +122,7 @@ columnar particionado por mes en lugar de consultar el registro operacional.
 
 - **Lectura columnar y particionada sobre Parquet:** el servicio `analitica` lee únicamente archivos `*.parquet` publicados en `datalake/eventos/mes=AAAA-MM/` en modo de solo lectura (`ro`), filtrando por rango temporal (`ocurrido_en`) sin consultar MongoDB ni Historial (existen además particiones residuales de pruebas en `2026-01` y `2026-11` junto a `.staging/`).
 - **Deduplicación y agregación sobre consumo *al menos una vez*:** dado que los micro-lotes del datalake pueden contener eventos repetidos, Spark ejecuta `dropDuplicates(["event_id"])` antes de calcular las agregaciones Q1–Q5.
-- **Costo de inicialización frente al volumen:** levantar la JVM de Spark y planificar la lectura de 145 archivos Parquet introduce un costo inicial alto en la primera consulta (49 983,28 ms en Q1 con `spark_workers=1`), que disminuye en ejecuciones posteriores una vez calentada la sesión (26 306,30 ms en Q1 con `w=1`; 19 014,61 ms en la 2.ª ejecución con `w=2`). Para volúmenes históricos grandes (cientos de miles a millones de eventos) el procesamiento columnar compensa ese arranque; para consultas puntuales de baja latencia no es adecuado.
+- **Costo de inicialización frente al volumen:** levantar la JVM de Spark y planificar la lectura de 145 archivos Parquet introduce un costo inicial alto en la primera consulta (53 362,02 ms en Q1 con `spark_workers=1`), que disminuye en ejecuciones posteriores una vez calentada la sesión (24 282,85 ms en Q1 con `w=1`; 18 637,70 ms en la 2.ª ejecución con `w=2`). Para volúmenes históricos grandes (cientos de miles a millones de eventos) el procesamiento columnar compensa ese arranque; para consultas puntuales de baja latencia no es adecuado.
 ---
 
 ## 3. API REST y contratos
@@ -514,10 +514,10 @@ Servicio interno `analitica` (`proyecto2/servicios/analitica/`, puerto interno `
 | Consulta | Pregunta de negocio (enunciado) | Definición / implementación | Resultado validado (`p5_analitica.txt`) |
 |---|---|---|---|
 | Q1 | Tareas aprobadas por día y modalidad, últimos 90 días | Deduplicación por `event_id`, filtro `tipo_evento == 'revision_aprobada'` en ventana de 90 días, agrupación por fecha (`ocurrido_en`) y `modalidad` | 60 filas retornadas (`total_filas: 60`) |
-| Q2 | Aprobadas / revisadas, por equipo y mes | Deduplicación por `event_id`, conteo de `revision_aprobada` sobre total de revisiones (`revision_aprobada` + `revision_rechazada`) agrupado por `equipo_id` y mes | 50 filas retornadas (`total_filas: 50`) |
+| Q2 | Aprobadas / revisadas, por equipo y mes | Deduplicación por `event_id`, agrupado por `modalidad` y `equipo_id` con conteo aproximado de `tarea_id` y total de eventos | 120 filas retornadas (`total_filas: 120`) |
 | Q3 | Duración media y p95, por modalidad y tipo de tarea | Deduplicación por `event_id`, filtro `tipo_evento == 'tarea_anotada'`, cálculo de promedio y percentil 95 de `duracion_ms` por `modalidad` y `tipo_tarea` | 4 filas retornadas (`total_filas: 4`, una por modalidad/geometría) |
-| Q4 | Rechazadas / revisadas, por cliente y proyecto | Deduplicación por `event_id`, razón entre eventos `revision_rechazada` y total de revisiones agrupada por `cliente_id` y `proyecto_id` | 50 filas retornadas (`total_filas: 50`) |
-| Q5 | Toma -> aprobación: p50 y p95 por cliente y % fuera de SLA | Deduplicación por `event_id`, filtro `tipo_evento == 'revision_aprobada'`, diferencia `(aprobada_en - tomada_en)` en horas comparada contra `sla_horas` por `cliente_id` | 50 filas retornadas (`total_filas: 50`) |
+| Q4 | Rechazadas / revisadas, por cliente y proyecto | Deduplicación por `event_id`, eventos `revision_aprobada` y `revision_rechazada`; proporción de rechazadas sobre revisadas por `cliente_id` y `proyecto_id` | 180 filas retornadas (`total_filas: 180`, una por proyecto) |
+| Q5 | Toma -> aprobación: p50 y p95 por cliente y % fuera de SLA | Deduplicación por `event_id`, filtro `tipo_evento == 'revision_aprobada'`; p50 y p95 de `(aprobada_en - tomada_en)` en horas y porcentaje con `horas > sla_horas`, por `cliente_id` | 60 filas retornadas (`total_filas: 60`, una por cliente) |
 
 - **Validación con datos conocidos o casos controlados:** las cinco consultas ejecutan `dropDuplicates(["event_id"])` antes de filtrar/agregar y devuelven conteos consistentes con el modelo generado (por ejemplo, Q3 devuelve exactamente 4 combinaciones modalidad/geometría y Q1 devuelve 60 filas diarias/modalidad). No se ejecutó una suite unitaria aislada con micro-datasets sintéticos de respuesta fija; la validación se realizó sobre los 145 archivos Parquet del conjunto principal (`p5_analitica.txt`).
 - **Plan de ejecución de Q1 (`explain` en `p5_analitica.txt`):**
@@ -525,17 +525,17 @@ Servicio interno `analitica` (`proyecto2/servicios/analitica/`, puerto interno `
   - Para deduplicar por `event_id`, Spark aplica un `SortAggregate` parcial local (`partial_first`), seguido de intercambio por red/memoria `Exchange hashpartitioning(event_id, 2)`, reordenamiento `Sort [event_id ASC]` y `SortAggregate` final antes del agrupamiento por día y modalidad.
 - **Plan de ejecución de Q3 (`explain` en `p5_analitica.txt`):**
   - Presenta la misma etapa inicial de lectura columnar (`FileScan parquet` con `Batched: true` y `PushedFilters` en `ocurrido_en`) seguida de `Sort [event_id ASC]` -> `SortAggregate` parcial -> `Exchange hashpartitioning(event_id, 2)` -> `Sort` -> `SortAggregate` final para garantizar unicidad por `event_id` previo al cálculo de promedio y percentil de `duracion_ms`.
-- **Tiempos (`p5_analitica.txt`, 145 archivos Parquet, ventana `2026-11-24T14:46:18Z` a `14:55:46Z`):**
+- **Tiempos (`p5_analitica.txt`, 145 archivos Parquet, ventana `2026-11-24T21:58:56Z` a `22:07:25Z`):**
 
 | Consulta | `w=1` — 1.ª ejec. (ms) | `w=1` — 2.ª ejec. (ms) | `w=2` — 1.ª ejec. (ms) | `w=2` — 2.ª ejec. (ms) | Filas |
 |---|---|---|---|---|---|
-| Q1 | 49 983,28 (srv: 49 931,09) | 26 306,30 (srv: 26 269,08) | 36 581,73 (srv: 36 545,67) | 19 014,61 (srv: 18 975,37) | 60 |
-| Q2 | 30 808,82 (srv: 30 769,60) | 27 590,02 (srv: 27 542,32) | 22 561,81 (srv: 22 526,08) | 17 648,50 (srv: 17 613,61) | 50 |
-| Q3 | 29 216,83 (srv: 29 187,00) | 24 234,60 (srv: 24 209,42) | 26 816,29 (srv: 26 771,82) | 19 772,64 (srv: 19 732,55) | 4 |
-| Q4 | 25 263,61 (srv: 25 232,41) | 25 731,37 (srv: 25 696,55) | 29 058,31 (srv: 29 001,38) | 24 513,09 (srv: 24 473,30) | 50 |
-| Q5 | 25 278,40 (srv: 25 244,44) | 26 165,91 (srv: 26 135,00) | 25 488,87 (srv: 25 443,02) | 15 335,64 (srv: 15 309,98) | 50 |
+| Q1 | 53 362,02 (srv: 53 315,37) | 24 282,85 (srv: 24 258,99) | 37 851,87 (srv: 37 480,12) | 18 637,70 (srv: 18 402,61) | 60 |
+| Q2 | 29 364,12 (srv: 29 296,77) | 26 617,58 (srv: 26 505,75) | 18 657,03 (srv: 18 555,07) | 15 988,97 (srv: 15 520,10) | 120 |
+| Q3 | 28 206,96 (srv: 28 029,89) | 23 760,64 (srv: 23 451,22) | 17 581,89 (srv: 17 436,97) | 16 120,31 (srv: 15 852,12) | 4 |
+| Q4 | 25 008,40 (srv: 24 251,22) | 27 282,06 (srv: 26 499,47) | 16 362,99 (srv: 16 296,08) | 16 065,22 (srv: 16 022,95) | 180 |
+| Q5 | 25 851,09 (srv: 25 399,97) | 23 368,76 (srv: 23 297,77) | 16 377,97 (srv: 16 308,51) | 15 583,54 (srv: 15 486,18) | 60 |
 
-  - *Comparativa 1 frente a 2 trabajadores y conjunto ampliado:* tras parametrizar `SPARK_WORKERS` y recrear `analitica`, `/salud` reportó `"spark_workers": 1` en la primera ronda y `"spark_workers": 2` en la segunda (`local[2]` dentro del mismo contenedor en WSL2, no un clúster multi-nodo). En las segundas ejecuciones los tiempos pasan de 24,23–27,59 s (`w=1`) a 15,34–24,51 s (`w=2`), manteniéndose el efecto de calentamiento de JVM/caché entre la 1.ª y la 2.ª ejecución. El conjunto ampliado `eventos_grande` (~10M filas) no está generado y se declara **no disponible**.
+  - *Comparativa 1 frente a 2 trabajadores y conjunto ampliado:* tras parametrizar `SPARK_WORKERS` y recrear `analitica`, `/salud` reportó `"spark_workers": 1` en la primera ronda y `"spark_workers": 2` en la segunda (`local[2]` dentro del mismo contenedor en WSL2, no un clúster multi-nodo). En las segundas ejecuciones los tiempos pasan de 23,37–27,28 s (`w=1`) a 15,58–18,64 s (`w=2`), manteniéndose el efecto de calentamiento de JVM/caché entre la 1.ª y la 2.ª ejecución. El conjunto ampliado `eventos_grande` (~10M filas) no está generado y se declara **no disponible**.
 - **Limitaciones de Spark en el entorno utilizado:**
   - Ejecución local dentro de un contenedor en WSL2 (`local[1]` y `local[2]`), sin distribución multi-nodo real.
   - La deduplicación global `dropDuplicates(["event_id"])` sobre 145 archivos exige un `Sort` + `Exchange` completo de todas las columnas antes de agregar, lo que domina el costo de CPU/memoria en cada consulta.
@@ -755,7 +755,7 @@ restauración a un estado conocido y registro de las acciones de recuperación.
 **Analítica, datos y carga (Emmanuel)**
 
 - **Dos hilos locales en un contenedor (`local[1]` y `local[2]`):** la comparación entre `spark_workers=1` y `spark_workers=2` se realizó en un único contenedor sobre WSL2 (`local[2]`), sin clúster distribuido real, y el conjunto ampliado `eventos_grande` (~10M filas) no está generado (`no disponible`).
-- **Deduplicación global y poda de particiones:** `dropDuplicates(["event_id"])` obliga a un `Sort` y `Exchange` sobre todas las columnas de los 145 archivos antes de agregar, y los filtros sobre `ocurrido_en` no podaron particiones por `mes` (`PartitionFilters: []`), produciendo latencias de ~13,6 a ~50,0 s según consulta, trabajador y calentamiento.
+- **Deduplicación global y poda de particiones:** `dropDuplicates(["event_id"])` obliga a un `Sort` y `Exchange` sobre todas las columnas de los 145 archivos antes de agregar, y los filtros sobre `ocurrido_en` no podaron particiones por `mes` (`PartitionFilters: []`), produciendo latencias de ~15,6 a ~53,4 s según consulta, trabajador y calentamiento.
 - **Agotamiento de tareas y saturación en P6:** el **Proyecto 084** partió con `420` tareas disponibles (`377` al inicio de la rep. 1 de 10 usuarios) y se agotó a `0` en la repetición 1 de 40 usuarios, provocando `1513` respuestas `504` en `POST /tareas/siguiente` durante ese agotamiento, `204` masivos al quedar `0` tareas disponibles y `504` (~`120 s`) en `GET /analitica/{q}` a partir de la repetición 2 de 10 usuarios.
 
 ---
