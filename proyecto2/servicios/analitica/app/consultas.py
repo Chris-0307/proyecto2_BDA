@@ -40,7 +40,6 @@ def ejecutar_q2(df: DataFrame) -> list[dict]:
             F.count("*").alias("total_eventos"),
         )
         .orderBy(F.desc("total_eventos"))
-        .limit(50)
     )
     return [row.asDict() for row in res.collect()]
 
@@ -62,49 +61,48 @@ def ejecutar_q3(df: DataFrame) -> list[dict]:
 
 
 def ejecutar_q4(df: DataFrame) -> list[dict]:
-    """Q4: Conteo de rechazos (revision_rechazada / estado == 'rechazada')."""
+    """Q4: Proporción de rechazos sobre revisadas por cliente y proyecto."""
+    rev = df.filter(F.col("tipo_evento").isin("revision_aprobada", "revision_rechazada"))
     res = (
-        df.filter(
-            (F.col("tipo_evento") == "revision_rechazada")
-            | (F.col("estado") == "rechazada")
+        rev.groupBy("cliente_id", "proyecto_id")
+        .agg(
+            F.count("*").alias("total_revisadas"),
+            F.sum(F.when(F.col("tipo_evento") == "revision_rechazada", 1).otherwise(0)).alias("rechazadas"),
         )
-        .groupBy("proyecto_id", "motivo_rechazo")
-        .agg(F.count("*").alias("total_rechazos"))
-        .orderBy(F.desc("total_rechazos"))
-        .limit(50)
+        .withColumn(
+            "proporcion_rechazo",
+            F.round(F.col("rechazadas") / F.col("total_revisadas"), 4),
+        )
+        .orderBy("cliente_id", "proyecto_id")
     )
     return [row.asDict() for row in res.collect()]
 
 
 def ejecutar_q5(df: DataFrame) -> list[dict]:
-    """Q5: Cumplimiento de SLA usando tomada_en y aprobada_en en revision_aprobada."""
-    aprobadas = (
+    """Q5: p50, p95 de toma -> aprobación por cliente y % fuera de SLA."""
+    ap = (
         df.filter(
             (F.col("tipo_evento") == "revision_aprobada")
             & F.col("tomada_en").isNotNull()
             & F.col("aprobada_en").isNotNull()
         )
         .withColumn(
-            "horas_resolucion",
+            "horas",
             (F.col("aprobada_en").cast("double") - F.col("tomada_en").cast("double")) / 3600.0,
-        )
-        .withColumn(
-            "cumple_sla",
-            F.when(
-                F.col("sla_horas").isNotNull(),
-                F.col("horas_resolucion") <= F.col("sla_horas"),
-            ).otherwise(None),
         )
     )
     res = (
-        aprobadas.groupBy("proyecto_id", "sla_horas")
+        ap.groupBy("cliente_id")
         .agg(
             F.count("*").alias("tareas_aprobadas"),
-            F.avg("horas_resolucion").alias("promedio_horas"),
-            F.sum(F.when(F.col("cumple_sla") == True, 1).otherwise(0)).alias("dentro_sla"),
+            F.expr("percentile_approx(horas, 0.5)").alias("p50_horas"),
+            F.expr("percentile_approx(horas, 0.95)").alias("p95_horas"),
+            F.round(
+                100.0 * F.avg(F.when(F.col("horas") > F.col("sla_horas"), 1.0).otherwise(0.0)),
+                2,
+            ).alias("pct_fuera_sla"),
         )
-        .orderBy(F.desc("tareas_aprobadas"))
-        .limit(50)
+        .orderBy("cliente_id")
     )
     return [row.asDict() for row in res.collect()]
 
