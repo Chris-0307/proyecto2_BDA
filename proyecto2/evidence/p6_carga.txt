@@ -1,209 +1,4218 @@
-=== P6 Carga HTTP — Inicio UTC: 2026-11-23T04:56:51.236301+00:00 ===
-Contexto: {"proyecto_id": "bc4091d0-f3d7-4f7f-992a-e23371d3e3f6", "anotadores": "8c2e6a66-cd62-5e6a-a8bb-745a156c882b,a7a32793-90f6-5b47-a022-f7a6a5cac9f4,9b2f0922-c0ce-5921-89ee-2e9ad13d9841,58cfc664-1f89-50a9-af02-e3083172b413,59cc8ce2-4762-40bb-8acb-1e753b2c9b3e,81b52465-c5b9-4a48-821a-840007e84499,dfcdf2b8-3225-58b6-a997-fff7d5537ed6,d590b64f-41fa-5271-bd64-77b94741f864,2888451a-eb65-539f-90c4-c9980eb6e319,e9135abc-ce68-5d07-8cfc-dbbdb7a8863e", "revisores": "d8a908c9-dff5-598d-b70f-87fbfc1ba55f,568fc53e-09e2-5c6f-9b81-57ea415eb197,39bd3d8f-fdd0-4e75-bf35-65e76a91aa62"}
+=== P6 Carga HTTP — Inicio UTC: 2026-11-24T16:07:48.137547+00:00 ===
+Contexto inicial: {"proyecto_id": "600d1c8a-fc7b-5126-81a0-8775bd5adb36", "proyecto_nombre": "Proyecto 084", "tareas_disponibles": 420, "anotadores": "8c2e6a66-cd62-5e6a-a8bb-745a156c882b,a7a32793-90f6-5b47-a022-f7a6a5cac9f4,9b2f0922-c0ce-5921-89ee-2e9ad13d9841,58cfc664-1f89-50a9-af02-e3083172b413,59cc8ce2-4762-40bb-8acb-1e753b2c9b3e,81b52465-c5b9-4a48-821a-840007e84499,dfcdf2b8-3225-58b6-a997-fff7d5537ed6,d590b64f-41fa-5271-bd64-77b94741f864,2888451a-eb65-539f-90c4-c9980eb6e319,e9135abc-ce68-5d07-8cfc-dbbdb7a8863e", "revisores": "d8a908c9-dff5-598d-b70f-87fbfc1ba55f,568fc53e-09e2-5c6f-9b81-57ea415eb197,39bd3d8f-fdd0-4e75-bf35-65e76a91aa62"}
+AVISO: el proyecto tiene 420 tareas en 'disponible' (se recomiendan ~4000 para evitar agotamiento en 100 usuarios).
 
---- Nivel de carga: 10 usuarios (8.0s) ---
+--- Nivel de carga: 10 usuarios (warmup=30.0s, 3x90.0s) ---
+Calentamiento 30.0s completado para 10 usuarios.
 {
-  "inicio_utc": "2026-11-23T04:56:51.522864+00:00",
-  "fin_utc": "2026-11-23T04:57:00.085933+00:00",
-  "base_url": "http://localhost:8000",
-  "proyecto_id": "bc4091d0-f3d7-4f7f-992a-e23371d3e3f6",
   "usuarios": 10,
-  "duracion_s": 8.0,
-  "semilla": 20261132,
-  "resultados": {
-    "acciones": {
-      "exportar_ok": 31,
-      "tarea_tomada": 30,
-      "borrador_guardado": 36,
-      "tarea_liberada": 5,
-      "tarea_enviada": 25,
-      "tarea_aprobada": 12,
-      "tarea_rechazada": 6
+  "corridas": [
+    {
+      "inicio_utc": "2026-11-24T16:09:42.523059+00:00",
+      "fin_utc": "2026-11-24T16:11:26.904609+00:00",
+      "base_url": "http://localhost:8000",
+      "proyecto_id": "600d1c8a-fc7b-5126-81a0-8775bd5adb36",
+      "usuarios": 10,
+      "duracion_s": 90.0,
+      "semilla": 20262123,
+      "resultados": {
+        "acciones": {
+          "exportar_ok": 2,
+          "tarea_tomada": 170,
+          "borrador_guardado": 248,
+          "tarea_enviada": 138,
+          "tarea_rechazada": 23,
+          "tarea_aprobada": 109,
+          "tarea_liberada": 32,
+          "analitica_ok": 2
+        },
+        "codigos_http": {
+          "GET /proyectos/{id}/exportar:200": 2,
+          "POST /tareas/siguiente:200": 170,
+          "PUT /tareas/{id}/borrador:200": 248,
+          "POST /tareas/{id}/enviar:200": 138,
+          "POST /tareas/{id}/revision:200": 132,
+          "POST /tareas/{id}/liberar:200": 32,
+          "GET /analitica/{q}:200": 2
+        },
+        "latencias_ms": {
+          "GET /proyectos/{id}/exportar": {
+            "muestras": 2,
+            "prom_ms": 232.38,
+            "p50_ms": 223.85,
+            "p95_ms": 240.91,
+            "p99_ms": 240.91
+          },
+          "POST /tareas/siguiente": {
+            "muestras": 170,
+            "prom_ms": 211.97,
+            "p50_ms": 172.12,
+            "p95_ms": 480.58,
+            "p99_ms": 642.39
+          },
+          "PUT /tareas/{id}/borrador": {
+            "muestras": 248,
+            "prom_ms": 41.27,
+            "p50_ms": 30.05,
+            "p95_ms": 97.35,
+            "p99_ms": 171.0
+          },
+          "POST /tareas/{id}/enviar": {
+            "muestras": 138,
+            "prom_ms": 168.3,
+            "p50_ms": 131.26,
+            "p95_ms": 354.39,
+            "p99_ms": 585.76
+          },
+          "POST /tareas/{id}/revision": {
+            "muestras": 132,
+            "prom_ms": 236.37,
+            "p50_ms": 204.47,
+            "p95_ms": 406.48,
+            "p99_ms": 626.49
+          },
+          "POST /tareas/{id}/liberar": {
+            "muestras": 32,
+            "prom_ms": 63.32,
+            "p50_ms": 52.62,
+            "p95_ms": 131.77,
+            "p99_ms": 148.97
+          }
+        },
+        "analitica": {
+          "muestras": 2,
+          "prom_ms": 103597.96,
+          "p50_ms": 103562.92,
+          "p95_ms": 103633.0,
+          "p99_ms": 103633.0,
+          "codigos_http": {
+            "200": 2
+          }
+        },
+        "muestras_409_siguiente": []
+      },
+      "docker_stats_15s": [
+        {
+          "ts_utc": "2026-11-24T16:09:41.768146+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "39.85%",
+              "mem": "1.266GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "0.34%",
+              "mem": "49.1MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "23.04%",
+              "mem": "44.87MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.39%",
+              "mem": "38.88MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.35%",
+              "mem": "38.35MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.16%",
+              "mem": "57.05MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "2.57%",
+              "mem": "312.4MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "2.17%",
+              "mem": "328.6MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.64%",
+              "mem": "10.39MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "115.22%",
+              "mem": "452.5MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:09:59.469263+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "94.14%",
+              "mem": "1.294GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "19.78%",
+              "mem": "49.55MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "27.94%",
+              "mem": "44.52MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "6.49%",
+              "mem": "39.14MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "4.26%",
+              "mem": "38.19MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "3.57%",
+              "mem": "57.56MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "92.45%",
+              "mem": "312.3MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "16.01%",
+              "mem": "328.7MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "11.21%",
+              "mem": "10.55MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "21.29%",
+              "mem": "298.8MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:10:17.142864+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "20.34%",
+              "mem": "1.314GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "50.07%",
+              "mem": "49.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "22.47%",
+              "mem": "45.21MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "15.48%",
+              "mem": "39.47MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "11.12%",
+              "mem": "38.96MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "9.74%",
+              "mem": "59.19MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "26.76%",
+              "mem": "312.8MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "25.94%",
+              "mem": "329MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "6.13%",
+              "mem": "10.87MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "79.85%",
+              "mem": "408MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:10:34.682157+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "13.94%",
+              "mem": "1.319GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "32.42%",
+              "mem": "49.8MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "15.37%",
+              "mem": "44.71MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "10.93%",
+              "mem": "40.5MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "5.90%",
+              "mem": "38.02MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "5.82%",
+              "mem": "59.55MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "28.89%",
+              "mem": "315.7MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "22.50%",
+              "mem": "332.3MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "4.63%",
+              "mem": "10.75MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "30.32%",
+              "mem": "299.2MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:10:52.120563+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "192.28%",
+              "mem": "1.34GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "25.24%",
+              "mem": "49.04MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "11.13%",
+              "mem": "44.7MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "7.50%",
+              "mem": "39.59MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "10.07%",
+              "mem": "38.05MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "4.16%",
+              "mem": "61.13MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "41.02%",
+              "mem": "405.9MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "86.35%",
+              "mem": "331.8MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "3.43%",
+              "mem": "11.18MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "145.63%",
+              "mem": "457.8MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:11:09.845629+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "18.73%",
+              "mem": "1.344GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "94.82%",
+              "mem": "49.21MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "38.42%",
+              "mem": "44.71MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "36.90%",
+              "mem": "39.27MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "17.49%",
+              "mem": "39.21MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "17.47%",
+              "mem": "62.2MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "116.22%",
+              "mem": "317.2MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "41.23%",
+              "mem": "332.1MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "12.30%",
+              "mem": "10.72MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "68.68%",
+              "mem": "302MiB / 11.53GiB"
+            }
+          ]
+        }
+      ],
+      "repeticion": 1,
+      "tareas_disponibles_antes": 377,
+      "tareas_disponibles_despues": 262
     },
-    "codigos_http": {
-      "GET /proyectos/{id}/exportar:200": 31,
-      "GET /analitica/{q}:404": 31,
-      "POST /tareas/siguiente:200": 30,
-      "PUT /tareas/{id}/borrador:200": 36,
-      "POST /tareas/{id}/liberar:200": 5,
-      "POST /tareas/{id}/enviar:200": 25,
-      "POST /tareas/{id}/revision:200": 18
+    {
+      "inicio_utc": "2026-11-24T16:11:47.048547+00:00",
+      "fin_utc": "2026-11-24T16:13:47.827586+00:00",
+      "base_url": "http://localhost:8000",
+      "proyecto_id": "600d1c8a-fc7b-5126-81a0-8775bd5adb36",
+      "usuarios": 10,
+      "duracion_s": 90.0,
+      "semilla": 20262124,
+      "resultados": {
+        "acciones": {
+          "exportar_ok": 2,
+          "tarea_tomada": 156,
+          "borrador_guardado": 229,
+          "tarea_enviada": 133,
+          "tarea_aprobada": 96,
+          "tarea_liberada": 23,
+          "tarea_rechazada": 31
+        },
+        "codigos_http": {
+          "GET /proyectos/{id}/exportar:200": 2,
+          "POST /tareas/siguiente:200": 156,
+          "PUT /tareas/{id}/borrador:200": 229,
+          "POST /tareas/{id}/enviar:200": 133,
+          "POST /tareas/{id}/revision:200": 127,
+          "POST /tareas/{id}/liberar:200": 23,
+          "GET /analitica/{q}:504": 2
+        },
+        "latencias_ms": {
+          "GET /proyectos/{id}/exportar": {
+            "muestras": 2,
+            "prom_ms": 127.81,
+            "p50_ms": 94.76,
+            "p95_ms": 160.86,
+            "p99_ms": 160.86
+          },
+          "POST /tareas/siguiente": {
+            "muestras": 156,
+            "prom_ms": 321.31,
+            "p50_ms": 292.15,
+            "p95_ms": 637.92,
+            "p99_ms": 878.66
+          },
+          "PUT /tareas/{id}/borrador": {
+            "muestras": 229,
+            "prom_ms": 61.04,
+            "p50_ms": 48.72,
+            "p95_ms": 163.38,
+            "p99_ms": 213.5
+          },
+          "POST /tareas/{id}/enviar": {
+            "muestras": 133,
+            "prom_ms": 240.51,
+            "p50_ms": 200.3,
+            "p95_ms": 507.31,
+            "p99_ms": 771.36
+          },
+          "POST /tareas/{id}/revision": {
+            "muestras": 127,
+            "prom_ms": 350.9,
+            "p50_ms": 334.26,
+            "p95_ms": 564.84,
+            "p99_ms": 743.39
+          },
+          "POST /tareas/{id}/liberar": {
+            "muestras": 23,
+            "prom_ms": 122.35,
+            "p50_ms": 101.47,
+            "p95_ms": 288.87,
+            "p99_ms": 435.21
+          }
+        },
+        "analitica": {
+          "muestras": 2,
+          "prom_ms": 120077.0,
+          "p50_ms": 120053.09,
+          "p95_ms": 120100.92,
+          "p99_ms": 120100.92,
+          "codigos_http": {
+            "504": 2
+          }
+        },
+        "muestras_409_siguiente": []
+      },
+      "docker_stats_15s": [
+        {
+          "ts_utc": "2026-11-24T16:11:46.364331+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "27.59%",
+              "mem": "1.334GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "63.35%",
+              "mem": "49.81MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "4.31%",
+              "mem": "44.45MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "6.62%",
+              "mem": "38.86MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "2.58%",
+              "mem": "37.96MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "1.74%",
+              "mem": "62.11MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "13.22%",
+              "mem": "318.1MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "123.64%",
+              "mem": "495.4MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "3.16%",
+              "mem": "11.22MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "131.50%",
+              "mem": "450.2MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:12:03.957722+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "54.40%",
+              "mem": "1.35GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "25.03%",
+              "mem": "49.3MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "10.32%",
+              "mem": "44.94MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "8.13%",
+              "mem": "39.55MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "6.62%",
+              "mem": "39.25MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "4.44%",
+              "mem": "63.71MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "106.52%",
+              "mem": "461MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "46.94%",
+              "mem": "333.2MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "16.29%",
+              "mem": "10.36MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "129.83%",
+              "mem": "461.4MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:12:21.940131+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "109.42%",
+              "mem": "923.8MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "69.31%",
+              "mem": "49.3MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "28.12%",
+              "mem": "44.93MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "26.45%",
+              "mem": "40.31MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "10.85%",
+              "mem": "38.01MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "12.30%",
+              "mem": "64.45MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "139.07%",
+              "mem": "471.5MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "29.41%",
+              "mem": "333MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "8.51%",
+              "mem": "10.95MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "125.10%",
+              "mem": "303MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:12:39.832768+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "23.36%",
+              "mem": "982.2MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "79.74%",
+              "mem": "49.3MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "33.65%",
+              "mem": "44.93MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "22.90%",
+              "mem": "39.89MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "17.17%",
+              "mem": "38.28MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "16.12%",
+              "mem": "65.04MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "157.81%",
+              "mem": "483.9MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "96.11%",
+              "mem": "426MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "10.15%",
+              "mem": "11.3MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "122.97%",
+              "mem": "303.8MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:12:57.622700+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "38.93%",
+              "mem": "987.9MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "45.47%",
+              "mem": "49.04MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "18.33%",
+              "mem": "44.92MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "13.78%",
+              "mem": "39.92MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "9.27%",
+              "mem": "38.79MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "8.68%",
+              "mem": "66.04MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "25.62%",
+              "mem": "319.8MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "152.14%",
+              "mem": "488.9MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "5.49%",
+              "mem": "11.66MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "34.77%",
+              "mem": "304.3MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:13:15.254539+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "16.26%",
+              "mem": "988.8MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "79.34%",
+              "mem": "49.07MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "33.87%",
+              "mem": "44.95MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "32.48%",
+              "mem": "40.42MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "17.05%",
+              "mem": "38.84MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "16.66%",
+              "mem": "66.87MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "109.07%",
+              "mem": "410.4MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "131.52%",
+              "mem": "335.4MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "10.67%",
+              "mem": "11.8MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "175.39%",
+              "mem": "452MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:13:33.184215+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "13.38%",
+              "mem": "1002MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "0.30%",
+              "mem": "48.52MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "0.45%",
+              "mem": "44.38MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.36%",
+              "mem": "38.87MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.28%",
+              "mem": "38MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.14%",
+              "mem": "67.37MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "2.70%",
+              "mem": "319.9MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "20.37%",
+              "mem": "421.2MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "6.89%",
+              "mem": "11.78MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "8.18%",
+              "mem": "304.1MiB / 11.53GiB"
+            }
+          ]
+        }
+      ],
+      "repeticion": 2,
+      "tareas_disponibles_antes": 262,
+      "tareas_disponibles_despues": 160
     },
-    "latencias_ms": {
-      "GET /proyectos/{id}/exportar": {
-        "muestras": 31,
-        "prom_ms": 23.67,
-        "p95_ms": 71.02
+    {
+      "inicio_utc": "2026-11-24T16:14:10.451332+00:00",
+      "fin_utc": "2026-11-24T16:16:11.385770+00:00",
+      "base_url": "http://localhost:8000",
+      "proyecto_id": "600d1c8a-fc7b-5126-81a0-8775bd5adb36",
+      "usuarios": 10,
+      "duracion_s": 90.0,
+      "semilla": 20262125,
+      "resultados": {
+        "acciones": {
+          "exportar_ok": 2,
+          "tarea_tomada": 148,
+          "borrador_guardado": 227,
+          "tarea_enviada": 128,
+          "tarea_aprobada": 95,
+          "tarea_liberada": 20,
+          "tarea_rechazada": 27
+        },
+        "codigos_http": {
+          "GET /proyectos/{id}/exportar:200": 2,
+          "POST /tareas/siguiente:200": 148,
+          "PUT /tareas/{id}/borrador:200": 227,
+          "POST /tareas/{id}/enviar:200": 128,
+          "POST /tareas/{id}/revision:200": 122,
+          "POST /tareas/{id}/liberar:200": 20,
+          "GET /analitica/{q}:504": 2
+        },
+        "latencias_ms": {
+          "GET /proyectos/{id}/exportar": {
+            "muestras": 2,
+            "prom_ms": 284.1,
+            "p50_ms": 252.94,
+            "p95_ms": 315.26,
+            "p99_ms": 315.26
+          },
+          "POST /tareas/siguiente": {
+            "muestras": 148,
+            "prom_ms": 351.85,
+            "p50_ms": 316.25,
+            "p95_ms": 887.27,
+            "p99_ms": 1211.89
+          },
+          "PUT /tareas/{id}/borrador": {
+            "muestras": 227,
+            "prom_ms": 63.0,
+            "p50_ms": 45.73,
+            "p95_ms": 149.77,
+            "p99_ms": 337.68
+          },
+          "POST /tareas/{id}/enviar": {
+            "muestras": 128,
+            "prom_ms": 250.84,
+            "p50_ms": 193.93,
+            "p95_ms": 594.18,
+            "p99_ms": 1023.63
+          },
+          "POST /tareas/{id}/revision": {
+            "muestras": 122,
+            "prom_ms": 378.48,
+            "p50_ms": 339.77,
+            "p95_ms": 742.05,
+            "p99_ms": 1231.75
+          },
+          "POST /tareas/{id}/liberar": {
+            "muestras": 20,
+            "prom_ms": 123.53,
+            "p50_ms": 83.1,
+            "p95_ms": 291.5,
+            "p99_ms": 406.26
+          }
+        },
+        "analitica": {
+          "muestras": 2,
+          "prom_ms": 120093.23,
+          "p50_ms": 120088.09,
+          "p95_ms": 120098.37,
+          "p99_ms": 120098.37,
+          "codigos_http": {
+            "504": 2
+          }
+        },
+        "muestras_409_siguiente": []
       },
-      "GET /analitica/{q}": {
-        "muestras": 31,
-        "prom_ms": 8.41,
-        "p95_ms": 33.89
-      },
-      "POST /tareas/siguiente": {
-        "muestras": 30,
-        "prom_ms": 174.5,
-        "p95_ms": 291.63
-      },
-      "PUT /tareas/{id}/borrador": {
-        "muestras": 36,
-        "prom_ms": 31.17,
-        "p95_ms": 77.6
-      },
-      "POST /tareas/{id}/liberar": {
-        "muestras": 5,
-        "prom_ms": 53.49,
-        "p95_ms": 105.51
-      },
-      "POST /tareas/{id}/enviar": {
-        "muestras": 25,
-        "prom_ms": 116.57,
-        "p95_ms": 216.67
-      },
-      "POST /tareas/{id}/revision": {
-        "muestras": 18,
-        "prom_ms": 143.99,
-        "p95_ms": 262.47
-      }
+      "docker_stats_15s": [
+        {
+          "ts_utc": "2026-11-24T16:14:09.532891+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "28.32%",
+              "mem": "1.066GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "26.51%",
+              "mem": "48.82MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "8.93%",
+              "mem": "44.31MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "11.78%",
+              "mem": "39.58MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "5.06%",
+              "mem": "38.45MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "4.05%",
+              "mem": "67.18MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "20.31%",
+              "mem": "319.9MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "130.09%",
+              "mem": "484.2MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "6.92%",
+              "mem": "11.79MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "32.20%",
+              "mem": "304.7MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:14:27.319554+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "71.67%",
+              "mem": "1.109GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "45.35%",
+              "mem": "48.83MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "19.70%",
+              "mem": "45.04MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "11.57%",
+              "mem": "39.37MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "11.02%",
+              "mem": "38.71MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "9.44%",
+              "mem": "68.48MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "23.16%",
+              "mem": "320MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "22.55%",
+              "mem": "335.4MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "5.97%",
+              "mem": "11.64MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "96.80%",
+              "mem": "448.1MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:14:45.030162+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "23.35%",
+              "mem": "1.147GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "25.87%",
+              "mem": "49.07MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "10.98%",
+              "mem": "44.25MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "7.92%",
+              "mem": "40.16MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "14.60%",
+              "mem": "38.99MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "4.27%",
+              "mem": "68.75MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "89.89%",
+              "mem": "464.7MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "16.78%",
+              "mem": "338.8MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "14.64%",
+              "mem": "12.25MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "148.42%",
+              "mem": "457.2MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:15:03.219333+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "26.35%",
+              "mem": "1.163GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "66.57%",
+              "mem": "48.81MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "23.22%",
+              "mem": "44.99MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "14.88%",
+              "mem": "38.98MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "13.59%",
+              "mem": "38.55MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "13.50%",
+              "mem": "70.72MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "164.84%",
+              "mem": "469.1MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "33.06%",
+              "mem": "339.1MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "8.43%",
+              "mem": "12.6MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "161.51%",
+              "mem": "467.1MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:15:20.977221+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "14.28%",
+              "mem": "1.171GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "39.21%",
+              "mem": "48.8MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "18.97%",
+              "mem": "44.23MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "11.96%",
+              "mem": "39.5MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "9.84%",
+              "mem": "39.55MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "8.09%",
+              "mem": "71.27MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "108.72%",
+              "mem": "322MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "150.45%",
+              "mem": "493.4MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "5.87%",
+              "mem": "11.48MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "49.47%",
+              "mem": "307.5MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:15:38.597158+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "21.72%",
+              "mem": "1.171GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "69.50%",
+              "mem": "49.09MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "20.81%",
+              "mem": "44.58MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "27.67%",
+              "mem": "39.8MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "14.70%",
+              "mem": "38.38MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "13.15%",
+              "mem": "71.7MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "45.26%",
+              "mem": "324MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "158.83%",
+              "mem": "340.6MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "28.14%",
+              "mem": "12.3MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "177.68%",
+              "mem": "458.5MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:15:56.712596+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "13.64%",
+              "mem": "1.176GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "0.33%",
+              "mem": "48.52MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "0.38%",
+              "mem": "44.86MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.31%",
+              "mem": "38.96MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.35%",
+              "mem": "38.04MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.08%",
+              "mem": "71.71MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "5.24%",
+              "mem": "324.8MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "26.81%",
+              "mem": "451.4MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.45%",
+              "mem": "12.07MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "2.77%",
+              "mem": "310.8MiB / 11.53GiB"
+            }
+          ]
+        }
+      ],
+      "repeticion": 3,
+      "tareas_disponibles_antes": 160,
+      "tareas_disponibles_despues": 59
     }
-  }
+  ]
 }
 
---- Nivel de carga: 40 usuarios (8.0s) ---
+--- Nivel de carga: 40 usuarios (warmup=30.0s, 3x90.0s) ---
+Calentamiento 30.0s completado para 40 usuarios.
 {
-  "inicio_utc": "2026-11-23T04:57:00.353462+00:00",
-  "fin_utc": "2026-11-23T04:57:09.038410+00:00",
-  "base_url": "http://localhost:8000",
-  "proyecto_id": "bc4091d0-f3d7-4f7f-992a-e23371d3e3f6",
   "usuarios": 40,
-  "duracion_s": 8.0,
-  "semilla": 20261162,
-  "resultados": {
-    "acciones": {
-      "exportar_ok": 98,
-      "tarea_tomada": 19,
-      "borrador_guardado": 22,
-      "tarea_enviada": 18,
-      "tarea_aprobada": 11,
-      "tarea_rechazada": 1,
-      "tarea_liberada": 1
+  "corridas": [
+    {
+      "inicio_utc": "2026-11-24T16:18:36.542225+00:00",
+      "fin_utc": "2026-11-24T16:20:38.463278+00:00",
+      "base_url": "http://localhost:8000",
+      "proyecto_id": "600d1c8a-fc7b-5126-81a0-8775bd5adb36",
+      "usuarios": 40,
+      "duracion_s": 90.0,
+      "semilla": 20265123,
+      "resultados": {
+        "acciones": {
+          "exportar_ok": 8,
+          "tarea_tomada": 84,
+          "borrador_guardado": 114,
+          "tarea_liberada": 6,
+          "tarea_enviada": 78,
+          "tarea_rechazada": 22,
+          "tarea_aprobada": 53
+        },
+        "codigos_http": {
+          "GET /proyectos/{id}/exportar:200": 8,
+          "POST /tareas/siguiente:504": 1513,
+          "POST /tareas/siguiente:200": 84,
+          "PUT /tareas/{id}/borrador:200": 114,
+          "POST /tareas/{id}/liberar:200": 6,
+          "POST /tareas/{id}/enviar:200": 78,
+          "POST /tareas/{id}/revision:200": 75,
+          "POST /tareas/siguiente:204": 144,
+          "GET /analitica/{q}:504": 8
+        },
+        "latencias_ms": {
+          "GET /proyectos/{id}/exportar": {
+            "muestras": 8,
+            "prom_ms": 912.8,
+            "p50_ms": 1089.32,
+            "p95_ms": 1119.46,
+            "p99_ms": 1119.46
+          },
+          "POST /tareas/siguiente": {
+            "muestras": 1741,
+            "prom_ms": 776.83,
+            "p50_ms": 616.66,
+            "p95_ms": 1707.66,
+            "p99_ms": 3334.81
+          },
+          "PUT /tareas/{id}/borrador": {
+            "muestras": 114,
+            "prom_ms": 503.23,
+            "p50_ms": 395.35,
+            "p95_ms": 966.64,
+            "p99_ms": 2021.91
+          },
+          "POST /tareas/{id}/liberar": {
+            "muestras": 6,
+            "prom_ms": 677.53,
+            "p50_ms": 392.95,
+            "p95_ms": 1402.52,
+            "p99_ms": 1402.52
+          },
+          "POST /tareas/{id}/enviar": {
+            "muestras": 78,
+            "prom_ms": 1349.37,
+            "p50_ms": 1257.48,
+            "p95_ms": 2556.72,
+            "p99_ms": 3015.01
+          },
+          "POST /tareas/{id}/revision": {
+            "muestras": 75,
+            "prom_ms": 1771.3,
+            "p50_ms": 1610.21,
+            "p95_ms": 3402.28,
+            "p99_ms": 3434.17
+          }
+        },
+        "analitica": {
+          "muestras": 8,
+          "prom_ms": 120091.33,
+          "p50_ms": 120099.25,
+          "p95_ms": 120102.99,
+          "p99_ms": 120102.99,
+          "codigos_http": {
+            "504": 8
+          }
+        },
+        "muestras_409_siguiente": []
+      },
+      "docker_stats_15s": [
+        {
+          "ts_utc": "2026-11-24T16:18:35.464367+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "61.54%",
+              "mem": "1024MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "66.02%",
+              "mem": "51.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "49.83%",
+              "mem": "45.12MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "48.50%",
+              "mem": "40.65MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "2.11%",
+              "mem": "38.23MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "1.72%",
+              "mem": "72.93MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "7.48%",
+              "mem": "323.4MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "6.43%",
+              "mem": "339.5MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "6.16%",
+              "mem": "13.42MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "18.66%",
+              "mem": "311.1MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:18:53.489325+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "21.84%",
+              "mem": "1015MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "104.33%",
+              "mem": "51.16MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "38.57%",
+              "mem": "44.75MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "40.03%",
+              "mem": "40.23MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "7.76%",
+              "mem": "38.48MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "5.24%",
+              "mem": "73.07MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "16.57%",
+              "mem": "323.6MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "17.41%",
+              "mem": "340.6MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "8.08%",
+              "mem": "13.43MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "42.82%",
+              "mem": "312.3MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:19:11.232960+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "26.79%",
+              "mem": "1.024GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "107.05%",
+              "mem": "51.73MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "47.73%",
+              "mem": "46.24MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "30.08%",
+              "mem": "40.54MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "10.79%",
+              "mem": "38.03MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.36%",
+              "mem": "73.22MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "83.29%",
+              "mem": "466.5MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "25.10%",
+              "mem": "340.9MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "15.54%",
+              "mem": "11.75MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "75.12%",
+              "mem": "311.9MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:19:29.521563+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "15.49%",
+              "mem": "1.03GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "100.94%",
+              "mem": "53.45MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "45.85%",
+              "mem": "45.46MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "35.13%",
+              "mem": "41.09MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "8.14%",
+              "mem": "39.31MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "6.62%",
+              "mem": "74.21MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "105.89%",
+              "mem": "324.5MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "81.65%",
+              "mem": "392.9MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "7.79%",
+              "mem": "11.82MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "111.49%",
+              "mem": "312MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:19:47.296904+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "15.57%",
+              "mem": "1.03GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "100.47%",
+              "mem": "53.8MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "45.52%",
+              "mem": "45.5MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "33.17%",
+              "mem": "40.88MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "6.33%",
+              "mem": "38.27MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "4.60%",
+              "mem": "74.62MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "20.77%",
+              "mem": "325.6MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "145.11%",
+              "mem": "343.1MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "7.92%",
+              "mem": "12.16MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "155.74%",
+              "mem": "458.2MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:20:05.007018+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "102.02%",
+              "mem": "1.048GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "19.93%",
+              "mem": "51.39MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "8.77%",
+              "mem": "44.86MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "10.30%",
+              "mem": "40.89MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "4.33%",
+              "mem": "38.43MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "2.60%",
+              "mem": "75.83MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "135.60%",
+              "mem": "325.9MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "11.02%",
+              "mem": "341.3MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "18.71%",
+              "mem": "12.73MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "13.97%",
+              "mem": "311.9MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:20:22.667752+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "12.18%",
+              "mem": "1.055GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "0.36%",
+              "mem": "50.95MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "0.50%",
+              "mem": "44.4MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.31%",
+              "mem": "40.18MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.31%",
+              "mem": "38.16MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.20%",
+              "mem": "75.83MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "11.74%",
+              "mem": "372.7MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "4.32%",
+              "mem": "341.1MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.58%",
+              "mem": "12.21MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "79.73%",
+              "mem": "459.7MiB / 11.53GiB"
+            }
+          ]
+        }
+      ],
+      "repeticion": 1,
+      "tareas_disponibles_antes": 44,
+      "tareas_disponibles_despues": 0
     },
-    "codigos_http": {
-      "GET /proyectos/{id}/exportar:200": 98,
-      "GET /analitica/{q}:404": 98,
-      "POST /tareas/siguiente:409": 342,
-      "POST /tareas/siguiente:200": 19,
-      "PUT /tareas/{id}/borrador:200": 22,
-      "POST /tareas/{id}/enviar:200": 18,
-      "POST /tareas/{id}/revision:200": 12,
-      "POST /tareas/{id}/liberar:200": 1
+    {
+      "inicio_utc": "2026-11-24T16:20:56.170964+00:00",
+      "fin_utc": "2026-11-24T16:22:57.703213+00:00",
+      "base_url": "http://localhost:8000",
+      "proyecto_id": "600d1c8a-fc7b-5126-81a0-8775bd5adb36",
+      "usuarios": 40,
+      "duracion_s": 90.0,
+      "semilla": 20265124,
+      "resultados": {
+        "acciones": {
+          "exportar_ok": 8
+        },
+        "codigos_http": {
+          "GET /proyectos/{id}/exportar:200": 8,
+          "POST /tareas/siguiente:204": 5710,
+          "GET /analitica/{q}:504": 8
+        },
+        "latencias_ms": {
+          "GET /proyectos/{id}/exportar": {
+            "muestras": 8,
+            "prom_ms": 527.32,
+            "p50_ms": 577.14,
+            "p95_ms": 851.13,
+            "p99_ms": 851.13
+          },
+          "POST /tareas/siguiente": {
+            "muestras": 5710,
+            "prom_ms": 127.52,
+            "p50_ms": 87.71,
+            "p95_ms": 367.32,
+            "p99_ms": 643.17
+          }
+        },
+        "analitica": {
+          "muestras": 8,
+          "prom_ms": 120072.02,
+          "p50_ms": 120097.91,
+          "p95_ms": 120100.82,
+          "p99_ms": 120100.82,
+          "codigos_http": {
+            "504": 8
+          }
+        },
+        "muestras_409_siguiente": []
+      },
+      "docker_stats_15s": [
+        {
+          "ts_utc": "2026-11-24T16:20:55.346593+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "203.53%",
+              "mem": "1.072GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "96.71%",
+              "mem": "51.58MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "38.27%",
+              "mem": "46.41MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "2.43%",
+              "mem": "40.43MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "1.47%",
+              "mem": "38.87MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.18%",
+              "mem": "75.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "133.17%",
+              "mem": "473.3MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "5.68%",
+              "mem": "341.1MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "1.10%",
+              "mem": "12.43MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "144.19%",
+              "mem": "331.2MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:21:13.240811+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "14.08%",
+              "mem": "1.071GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "88.91%",
+              "mem": "52.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "67.01%",
+              "mem": "45.84MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.41%",
+              "mem": "39.87MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.56%",
+              "mem": "38.11MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.22%",
+              "mem": "75.59MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "5.56%",
+              "mem": "325.7MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "4.31%",
+              "mem": "340.5MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.84%",
+              "mem": "11.97MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "34.50%",
+              "mem": "311.9MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:21:30.948239+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "23.25%",
+              "mem": "1.088GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "94.94%",
+              "mem": "53.25MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "65.41%",
+              "mem": "46.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.45%",
+              "mem": "39.86MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.48%",
+              "mem": "38.11MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.09%",
+              "mem": "75.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "3.72%",
+              "mem": "324.7MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "23.36%",
+              "mem": "340.5MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "7.49%",
+              "mem": "12.7MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "30.82%",
+              "mem": "311.9MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:21:48.638307+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "96.09%",
+              "mem": "1.093GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "99.26%",
+              "mem": "52.57MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "61.06%",
+              "mem": "45.41MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "1.88%",
+              "mem": "40.86MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "1.59%",
+              "mem": "38.87MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.25%",
+              "mem": "75.58MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "127.34%",
+              "mem": "325.3MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "12.05%",
+              "mem": "340.7MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.92%",
+              "mem": "12.21MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "99.28%",
+              "mem": "312.3MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:22:06.329192+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "14.16%",
+              "mem": "1.095GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "77.69%",
+              "mem": "52.15MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "63.93%",
+              "mem": "46.3MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.55%",
+              "mem": "39.86MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.48%",
+              "mem": "38.11MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.19%",
+              "mem": "75.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "2.76%",
+              "mem": "324.9MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "2.99%",
+              "mem": "340.4MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.69%",
+              "mem": "12.21MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "39.84%",
+              "mem": "311.5MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:22:23.991642+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "106.64%",
+              "mem": "1.101GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "78.83%",
+              "mem": "52.26MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "52.76%",
+              "mem": "46.12MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.44%",
+              "mem": "39.86MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.48%",
+              "mem": "38.12MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.36%",
+              "mem": "75.59MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "42.62%",
+              "mem": "435.7MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "9.23%",
+              "mem": "342MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.88%",
+              "mem": "12.21MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "59.42%",
+              "mem": "312.2MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:22:41.554860+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "13.04%",
+              "mem": "1.106GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "0.26%",
+              "mem": "51.72MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "0.47%",
+              "mem": "45.18MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "1.20%",
+              "mem": "40.61MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.29%",
+              "mem": "38.37MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.18%",
+              "mem": "75.59MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "3.24%",
+              "mem": "326.1MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "3.10%",
+              "mem": "340.9MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.58%",
+              "mem": "12.95MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "109.83%",
+              "mem": "473.9MiB / 11.53GiB"
+            }
+          ]
+        }
+      ],
+      "repeticion": 2,
+      "tareas_disponibles_antes": 0,
+      "tareas_disponibles_despues": 0
     },
-    "latencias_ms": {
-      "GET /proyectos/{id}/exportar": {
-        "muestras": 98,
-        "prom_ms": 127.25,
-        "p95_ms": 429.05
+    {
+      "inicio_utc": "2026-11-24T16:23:15.826184+00:00",
+      "fin_utc": "2026-11-24T16:25:17.706876+00:00",
+      "base_url": "http://localhost:8000",
+      "proyecto_id": "600d1c8a-fc7b-5126-81a0-8775bd5adb36",
+      "usuarios": 40,
+      "duracion_s": 90.0,
+      "semilla": 20265125,
+      "resultados": {
+        "acciones": {
+          "exportar_ok": 8
+        },
+        "codigos_http": {
+          "POST /tareas/siguiente:204": 6398,
+          "GET /proyectos/{id}/exportar:200": 8,
+          "GET /analitica/{q}:504": 8
+        },
+        "latencias_ms": {
+          "POST /tareas/siguiente": {
+            "muestras": 6398,
+            "prom_ms": 86.77,
+            "p50_ms": 51.96,
+            "p95_ms": 256.33,
+            "p99_ms": 495.64
+          },
+          "GET /proyectos/{id}/exportar": {
+            "muestras": 8,
+            "prom_ms": 805.91,
+            "p50_ms": 910.15,
+            "p95_ms": 1221.94,
+            "p99_ms": 1221.94
+          }
+        },
+        "analitica": {
+          "muestras": 8,
+          "prom_ms": 120059.27,
+          "p50_ms": 120083.46,
+          "p95_ms": 120101.64,
+          "p99_ms": 120101.64,
+          "codigos_http": {
+            "504": 8
+          }
+        },
+        "muestras_409_siguiente": []
       },
-      "GET /analitica/{q}": {
-        "muestras": 98,
-        "prom_ms": 42.71,
-        "p95_ms": 91.26
-      },
-      "POST /tareas/siguiente": {
-        "muestras": 361,
-        "prom_ms": 212.35,
-        "p95_ms": 778.58
-      },
-      "PUT /tareas/{id}/borrador": {
-        "muestras": 22,
-        "prom_ms": 144.39,
-        "p95_ms": 324.45
-      },
-      "POST /tareas/{id}/enviar": {
-        "muestras": 18,
-        "prom_ms": 358.81,
-        "p95_ms": 683.09
-      },
-      "POST /tareas/{id}/revision": {
-        "muestras": 12,
-        "prom_ms": 614.45,
-        "p95_ms": 944.63
-      },
-      "POST /tareas/{id}/liberar": {
-        "muestras": 1,
-        "prom_ms": 218.63,
-        "p95_ms": 218.63
-      }
+      "docker_stats_15s": [
+        {
+          "ts_utc": "2026-11-24T16:23:15.244237+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "117.80%",
+              "mem": "1.119GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "83.04%",
+              "mem": "52.33MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "53.87%",
+              "mem": "45.16MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.42%",
+              "mem": "39.86MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.63%",
+              "mem": "38.11MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.26%",
+              "mem": "75.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "70.57%",
+              "mem": "468.7MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "7.43%",
+              "mem": "340.4MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.91%",
+              "mem": "12.71MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "32.76%",
+              "mem": "312.3MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:23:32.799857+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "49.27%",
+              "mem": "1.177GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "97.31%",
+              "mem": "53MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "76.19%",
+              "mem": "46.66MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.39%",
+              "mem": "39.87MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.47%",
+              "mem": "38.12MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.78%",
+              "mem": "75.59MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "120.69%",
+              "mem": "325.4MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "91.15%",
+              "mem": "340.4MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.96%",
+              "mem": "12.7MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "45.74%",
+              "mem": "314MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:23:50.434777+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "40.20%",
+              "mem": "1.209GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "89.85%",
+              "mem": "52.29MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "70.66%",
+              "mem": "46.49MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.52%",
+              "mem": "39.87MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.34%",
+              "mem": "38.12MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.27%",
+              "mem": "75.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "3.91%",
+              "mem": "324.8MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "5.52%",
+              "mem": "340.5MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "10.68%",
+              "mem": "13.2MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "102.49%",
+              "mem": "312.6MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:24:08.064974+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "130.07%",
+              "mem": "1.243GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "99.87%",
+              "mem": "52.33MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "67.07%",
+              "mem": "45.39MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "2.14%",
+              "mem": "39.88MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "1.66%",
+              "mem": "38.61MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.30%",
+              "mem": "75.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "103.49%",
+              "mem": "324.7MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "114.77%",
+              "mem": "494.4MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "1.24%",
+              "mem": "12.45MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "36.57%",
+              "mem": "311.7MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:24:25.698369+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "42.70%",
+              "mem": "969.5MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "74.63%",
+              "mem": "52.53MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "52.56%",
+              "mem": "46.37MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.44%",
+              "mem": "39.87MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.28%",
+              "mem": "38.12MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.20%",
+              "mem": "75.59MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "6.57%",
+              "mem": "325.5MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "5.24%",
+              "mem": "340.7MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.56%",
+              "mem": "12.45MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "34.09%",
+              "mem": "312.5MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:24:43.095186+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "112.79%",
+              "mem": "967.9MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "91.72%",
+              "mem": "52.62MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "53.85%",
+              "mem": "46.16MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.32%",
+              "mem": "39.87MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.34%",
+              "mem": "38.12MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.18%",
+              "mem": "75.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "3.46%",
+              "mem": "325.5MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "102.83%",
+              "mem": "341.2MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.80%",
+              "mem": "11.96MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "117.77%",
+              "mem": "459.1MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:25:00.518550+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "53.88%",
+              "mem": "1.241GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "2.90%",
+              "mem": "51.26MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "1.12%",
+              "mem": "44.99MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "1.12%",
+              "mem": "40.62MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.50%",
+              "mem": "38.12MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.16%",
+              "mem": "75.59MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "59.47%",
+              "mem": "326MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "5.36%",
+              "mem": "342.9MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.88%",
+              "mem": "12.44MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "2.32%",
+              "mem": "311.4MiB / 11.53GiB"
+            }
+          ]
+        }
+      ],
+      "repeticion": 3,
+      "tareas_disponibles_antes": 0,
+      "tareas_disponibles_despues": 0
     }
-  }
+  ]
 }
 
---- Nivel de carga: 100 usuarios (8.0s) ---
+--- Nivel de carga: 100 usuarios (warmup=30.0s, 3x90.0s) ---
+Calentamiento 30.0s completado para 100 usuarios.
 {
-  "inicio_utc": "2026-11-23T04:57:09.337614+00:00",
-  "fin_utc": "2026-11-23T04:57:18.175289+00:00",
-  "base_url": "http://localhost:8000",
-  "proyecto_id": "bc4091d0-f3d7-4f7f-992a-e23371d3e3f6",
   "usuarios": 100,
-  "duracion_s": 8.0,
-  "semilla": 20261222,
-  "resultados": {
-    "acciones": {
-      "exportar_ok": 155,
-      "tarea_tomada": 11,
-      "borrador_guardado": 10,
-      "tarea_enviada": 10,
-      "tarea_aprobada": 3,
-      "tarea_liberada": 1
+  "corridas": [
+    {
+      "inicio_utc": "2026-11-24T16:27:35.947728+00:00",
+      "fin_utc": "2026-11-24T16:29:37.876696+00:00",
+      "base_url": "http://localhost:8000",
+      "proyecto_id": "600d1c8a-fc7b-5126-81a0-8775bd5adb36",
+      "usuarios": 100,
+      "duracion_s": 90.0,
+      "semilla": 20271123,
+      "resultados": {
+        "acciones": {
+          "exportar_ok": 20
+        },
+        "codigos_http": {
+          "POST /tareas/siguiente:204": 7199,
+          "GET /proyectos/{id}/exportar:200": 20,
+          "GET /analitica/{q}:504": 20
+        },
+        "latencias_ms": {
+          "POST /tareas/siguiente": {
+            "muestras": 7199,
+            "prom_ms": 500.88,
+            "p50_ms": 475.75,
+            "p95_ms": 797.95,
+            "p99_ms": 1023.06
+          },
+          "GET /proyectos/{id}/exportar": {
+            "muestras": 20,
+            "prom_ms": 736.94,
+            "p50_ms": 654.22,
+            "p95_ms": 1051.03,
+            "p99_ms": 1066.68
+          }
+        },
+        "analitica": {
+          "muestras": 20,
+          "prom_ms": 120088.81,
+          "p50_ms": 120101.94,
+          "p95_ms": 120114.6,
+          "p99_ms": 120117.9,
+          "codigos_http": {
+            "504": 20
+          }
+        },
+        "muestras_409_siguiente": []
+      },
+      "docker_stats_15s": [
+        {
+          "ts_utc": "2026-11-24T16:27:35.369581+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "88.33%",
+              "mem": "1.072GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "81.14%",
+              "mem": "52.75MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "67.36%",
+              "mem": "48.29MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.55%",
+              "mem": "39.88MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "1.29%",
+              "mem": "38.13MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.29%",
+              "mem": "75.59MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "3.61%",
+              "mem": "325MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "109.85%",
+              "mem": "489.5MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "5.49%",
+              "mem": "12.2MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "125.73%",
+              "mem": "460.8MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:27:52.899719+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "52.40%",
+              "mem": "1.083GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "103.46%",
+              "mem": "53.58MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "91.68%",
+              "mem": "48.5MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.34%",
+              "mem": "39.88MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.37%",
+              "mem": "38.13MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.21%",
+              "mem": "75.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "3.71%",
+              "mem": "325MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "3.01%",
+              "mem": "340.8MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.66%",
+              "mem": "12.46MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "27.64%",
+              "mem": "313.1MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:28:10.331580+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "107.88%",
+              "mem": "1.155GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "106.85%",
+              "mem": "53.76MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "71.86%",
+              "mem": "47.96MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.36%",
+              "mem": "39.88MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.73%",
+              "mem": "38.13MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.16%",
+              "mem": "75.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "6.57%",
+              "mem": "327MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "123.03%",
+              "mem": "492.1MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.84%",
+              "mem": "11.96MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "151.18%",
+              "mem": "465.8MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:28:27.776896+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "16.02%",
+              "mem": "1.163GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "105.49%",
+              "mem": "54.18MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "77.60%",
+              "mem": "48.32MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.36%",
+              "mem": "39.88MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.37%",
+              "mem": "38.13MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.31%",
+              "mem": "75.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "4.32%",
+              "mem": "325.5MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "3.34%",
+              "mem": "341.1MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "7.45%",
+              "mem": "13.55MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "32.10%",
+              "mem": "312.5MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:28:45.158166+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "32.45%",
+              "mem": "1.169GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "107.27%",
+              "mem": "54.96MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "73.56%",
+              "mem": "47.37MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.38%",
+              "mem": "39.88MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.56%",
+              "mem": "38.13MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.15%",
+              "mem": "75.59MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "123.89%",
+              "mem": "478.8MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "109.50%",
+              "mem": "340.6MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.55%",
+              "mem": "11.96MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "131.08%",
+              "mem": "312.3MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:29:02.605448+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "19.69%",
+              "mem": "1.188GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "106.19%",
+              "mem": "54.31MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "83.24%",
+              "mem": "48.09MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.34%",
+              "mem": "39.88MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.28%",
+              "mem": "38.13MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.19%",
+              "mem": "75.59MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "2.65%",
+              "mem": "324.6MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "5.10%",
+              "mem": "341MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.53%",
+              "mem": "12.46MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "33.44%",
+              "mem": "312.4MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:29:20.040208+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "59.08%",
+              "mem": "1.187GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "2.57%",
+              "mem": "52.39MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "1.57%",
+              "mem": "45.96MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "1.21%",
+              "mem": "40.38MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "1.09%",
+              "mem": "38.63MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.12%",
+              "mem": "75.35MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "89.53%",
+              "mem": "326.1MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "2.96%",
+              "mem": "341.5MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "6.17%",
+              "mem": "12.6MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "3.64%",
+              "mem": "311.9MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:29:37.444405+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "13.70%",
+              "mem": "1.195GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "0.46%",
+              "mem": "51.88MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "0.62%",
+              "mem": "45.47MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.36%",
+              "mem": "39.89MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.45%",
+              "mem": "38.13MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.10%",
+              "mem": "75.35MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "103.05%",
+              "mem": "474.8MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "120.97%",
+              "mem": "494.5MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.54%",
+              "mem": "12.7MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "121.70%",
+              "mem": "465.9MiB / 11.53GiB"
+            }
+          ]
+        }
+      ],
+      "repeticion": 1,
+      "tareas_disponibles_antes": 0,
+      "tareas_disponibles_despues": 0
     },
-    "codigos_http": {
-      "GET /proyectos/{id}/exportar:200": 155,
-      "GET /analitica/{q}:404": 155,
-      "POST /tareas/siguiente:409": 422,
-      "POST /tareas/siguiente:200": 11,
-      "PUT /tareas/{id}/borrador:200": 10,
-      "POST /tareas/{id}/enviar:200": 10,
-      "POST /tareas/{id}/revision:200": 3,
-      "POST /tareas/{id}/liberar:200": 1
+    {
+      "inicio_utc": "2026-11-24T16:29:57.125238+00:00",
+      "fin_utc": "2026-11-24T16:31:59.007704+00:00",
+      "base_url": "http://localhost:8000",
+      "proyecto_id": "600d1c8a-fc7b-5126-81a0-8775bd5adb36",
+      "usuarios": 100,
+      "duracion_s": 90.0,
+      "semilla": 20271124,
+      "resultados": {
+        "acciones": {
+          "exportar_ok": 20
+        },
+        "codigos_http": {
+          "POST /tareas/siguiente:204": 7469,
+          "GET /proyectos/{id}/exportar:200": 20,
+          "GET /analitica/{q}:504": 20
+        },
+        "latencias_ms": {
+          "POST /tareas/siguiente": {
+            "muestras": 7469,
+            "prom_ms": 473.06,
+            "p50_ms": 435.13,
+            "p95_ms": 798.79,
+            "p99_ms": 918.31
+          },
+          "GET /proyectos/{id}/exportar": {
+            "muestras": 20,
+            "prom_ms": 652.03,
+            "p50_ms": 625.58,
+            "p95_ms": 933.18,
+            "p99_ms": 946.66
+          }
+        },
+        "analitica": {
+          "muestras": 20,
+          "prom_ms": 120071.3,
+          "p50_ms": 120082.7,
+          "p95_ms": 120101.61,
+          "p99_ms": 120102.28,
+          "codigos_http": {
+            "504": 20
+          }
+        },
+        "muestras_409_siguiente": []
+      },
+      "docker_stats_15s": [
+        {
+          "ts_utc": "2026-11-24T16:29:56.603546+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "23.71%",
+              "mem": "1.197GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "83.46%",
+              "mem": "53.82MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "76.39%",
+              "mem": "48.36MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.40%",
+              "mem": "39.88MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.43%",
+              "mem": "38.14MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.12%",
+              "mem": "75.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "4.73%",
+              "mem": "325.3MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "5.19%",
+              "mem": "341MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.86%",
+              "mem": "12.21MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "33.05%",
+              "mem": "312.8MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:30:14.139328+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "13.48%",
+              "mem": "1.202GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "104.61%",
+              "mem": "53.22MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "83.18%",
+              "mem": "48.16MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.34%",
+              "mem": "39.88MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "1.00%",
+              "mem": "38.14MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.10%",
+              "mem": "75.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "4.44%",
+              "mem": "326.3MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "3.35%",
+              "mem": "341MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.55%",
+              "mem": "11.96MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "114.52%",
+              "mem": "312.5MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:30:31.729838+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "20.03%",
+              "mem": "1.202GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "107.52%",
+              "mem": "53.68MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "82.30%",
+              "mem": "47.78MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.37%",
+              "mem": "39.88MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.32%",
+              "mem": "38.14MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.18%",
+              "mem": "75.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "4.88%",
+              "mem": "325.2MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "22.77%",
+              "mem": "416MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "7.12%",
+              "mem": "12.25MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "36.65%",
+              "mem": "312.8MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:30:49.119234+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "75.18%",
+              "mem": "1.213GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "107.58%",
+              "mem": "54.54MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "95.49%",
+              "mem": "48.67MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.34%",
+              "mem": "39.88MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.41%",
+              "mem": "38.14MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.20%",
+              "mem": "75.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "8.00%",
+              "mem": "325.8MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "5.87%",
+              "mem": "341.4MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.64%",
+              "mem": "12.45MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "40.44%",
+              "mem": "313.8MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:31:06.547266+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "13.96%",
+              "mem": "1.213GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "102.65%",
+              "mem": "54.04MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "74.44%",
+              "mem": "47.66MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.36%",
+              "mem": "39.89MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.34%",
+              "mem": "38.14MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.19%",
+              "mem": "75.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "33.20%",
+              "mem": "419.9MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "124.21%",
+              "mem": "492.9MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.73%",
+              "mem": "11.96MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "31.10%",
+              "mem": "313.2MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:31:24.027536+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "19.59%",
+              "mem": "1.217GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "102.84%",
+              "mem": "54.82MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "83.17%",
+              "mem": "48.1MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.40%",
+              "mem": "39.89MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.30%",
+              "mem": "38.14MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.11%",
+              "mem": "75.35MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "4.24%",
+              "mem": "325.4MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "3.81%",
+              "mem": "341.4MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.56%",
+              "mem": "11.97MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "34.07%",
+              "mem": "313.5MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:31:41.467194+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "13.18%",
+              "mem": "1.221GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "0.38%",
+              "mem": "52.28MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "0.56%",
+              "mem": "46.25MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.37%",
+              "mem": "40.14MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.32%",
+              "mem": "38.63MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.15%",
+              "mem": "75.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "65.63%",
+              "mem": "326.2MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "2.48%",
+              "mem": "340.8MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.64%",
+              "mem": "12.94MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "40.30%",
+              "mem": "313.1MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:31:58.904758+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "14.07%",
+              "mem": "1.226GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "0.42%",
+              "mem": "51.75MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "0.76%",
+              "mem": "46.02MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.37%",
+              "mem": "39.89MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.36%",
+              "mem": "38.14MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.13%",
+              "mem": "75.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "21.62%",
+              "mem": "347MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "126.80%",
+              "mem": "494.5MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "7.00%",
+              "mem": "12.2MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "5.10%",
+              "mem": "312.7MiB / 11.53GiB"
+            }
+          ]
+        }
+      ],
+      "repeticion": 2,
+      "tareas_disponibles_antes": 0,
+      "tareas_disponibles_despues": 0
     },
-    "latencias_ms": {
-      "GET /proyectos/{id}/exportar": {
-        "muestras": 155,
-        "prom_ms": 428.69,
-        "p95_ms": 747.91
+    {
+      "inicio_utc": "2026-11-24T16:32:18.191966+00:00",
+      "fin_utc": "2026-11-24T16:34:19.939737+00:00",
+      "base_url": "http://localhost:8000",
+      "proyecto_id": "600d1c8a-fc7b-5126-81a0-8775bd5adb36",
+      "usuarios": 100,
+      "duracion_s": 90.0,
+      "semilla": 20271125,
+      "resultados": {
+        "acciones": {
+          "exportar_ok": 20
+        },
+        "codigos_http": {
+          "GET /proyectos/{id}/exportar:200": 20,
+          "POST /tareas/siguiente:204": 7413,
+          "GET /analitica/{q}:504": 20
+        },
+        "latencias_ms": {
+          "GET /proyectos/{id}/exportar": {
+            "muestras": 20,
+            "prom_ms": 612.76,
+            "p50_ms": 587.07,
+            "p95_ms": 914.79,
+            "p99_ms": 934.5
+          },
+          "POST /tareas/siguiente": {
+            "muestras": 7413,
+            "prom_ms": 479.43,
+            "p50_ms": 447.63,
+            "p95_ms": 773.38,
+            "p99_ms": 939.11
+          }
+        },
+        "analitica": {
+          "muestras": 20,
+          "prom_ms": 120086.29,
+          "p50_ms": 120099.92,
+          "p95_ms": 120106.92,
+          "p99_ms": 120112.78,
+          "codigos_http": {
+            "504": 20
+          }
+        },
+        "muestras_409_siguiente": []
       },
-      "GET /analitica/{q}": {
-        "muestras": 155,
-        "prom_ms": 129.14,
-        "p95_ms": 182.95
-      },
-      "POST /tareas/siguiente": {
-        "muestras": 433,
-        "prom_ms": 829.17,
-        "p95_ms": 1508.72
-      },
-      "PUT /tareas/{id}/borrador": {
-        "muestras": 10,
-        "prom_ms": 475.03,
-        "p95_ms": 598.71
-      },
-      "POST /tareas/{id}/enviar": {
-        "muestras": 10,
-        "prom_ms": 1152.32,
-        "p95_ms": 1878.75
-      },
-      "POST /tareas/{id}/revision": {
-        "muestras": 3,
-        "prom_ms": 1949.9,
-        "p95_ms": 2117.04
-      },
-      "POST /tareas/{id}/liberar": {
-        "muestras": 1,
-        "prom_ms": 123.42,
-        "p95_ms": 123.42
-      }
+      "docker_stats_15s": [
+        {
+          "ts_utc": "2026-11-24T16:32:17.671572+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "14.82%",
+              "mem": "1.227GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "103.02%",
+              "mem": "53.2MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "83.87%",
+              "mem": "48.54MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.33%",
+              "mem": "39.89MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.38%",
+              "mem": "38.14MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.09%",
+              "mem": "75.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "5.69%",
+              "mem": "324.9MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "6.95%",
+              "mem": "343.1MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.89%",
+              "mem": "12.21MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "33.32%",
+              "mem": "312.9MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:32:35.131498+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "17.43%",
+              "mem": "1.231GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "107.90%",
+              "mem": "53.81MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "88.64%",
+              "mem": "48.38MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.31%",
+              "mem": "39.89MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.35%",
+              "mem": "38.14MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.18%",
+              "mem": "75.35MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "42.53%",
+              "mem": "325.3MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "3.22%",
+              "mem": "341.8MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.62%",
+              "mem": "12.3MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "34.04%",
+              "mem": "313.5MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:32:52.635531+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "16.78%",
+              "mem": "1.233GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "104.85%",
+              "mem": "54.15MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "71.88%",
+              "mem": "48.12MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.39%",
+              "mem": "39.89MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.56%",
+              "mem": "38.14MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.14%",
+              "mem": "75.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "3.95%",
+              "mem": "325.1MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "3.01%",
+              "mem": "340.8MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.55%",
+              "mem": "12.21MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "65.72%",
+              "mem": "425.7MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:33:10.048060+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "19.17%",
+              "mem": "1.238GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "106.32%",
+              "mem": "54.11MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "87.35%",
+              "mem": "48.27MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.38%",
+              "mem": "39.89MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.38%",
+              "mem": "38.14MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.14%",
+              "mem": "75.59MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "3.45%",
+              "mem": "325.3MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "2.92%",
+              "mem": "340.7MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.63%",
+              "mem": "11.96MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "34.63%",
+              "mem": "313.3MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:33:27.607096+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "13.70%",
+              "mem": "1.241GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "106.40%",
+              "mem": "53.9MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "61.17%",
+              "mem": "47.89MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "1.33%",
+              "mem": "40.15MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "1.63%",
+              "mem": "38.64MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.16%",
+              "mem": "75.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "3.87%",
+              "mem": "325.3MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "106.31%",
+              "mem": "489.7MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.89%",
+              "mem": "12.45MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "33.89%",
+              "mem": "313MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:33:45.156779+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "104.70%",
+              "mem": "1.244GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "106.73%",
+              "mem": "54.67MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "84.95%",
+              "mem": "49.07MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "1.07%",
+              "mem": "39.89MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.40%",
+              "mem": "38.39MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.21%",
+              "mem": "75.34MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "2.78%",
+              "mem": "325.5MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "3.97%",
+              "mem": "341.2MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "1.12%",
+              "mem": "11.96MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "32.11%",
+              "mem": "313.3MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:34:02.592068+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "31.39%",
+              "mem": "1.248GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "0.34%",
+              "mem": "52.27MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "0.51%",
+              "mem": "46.11MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "0.31%",
+              "mem": "39.89MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.30%",
+              "mem": "38.14MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.20%",
+              "mem": "75.6MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "65.33%",
+              "mem": "326.2MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "2.52%",
+              "mem": "341.4MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "0.50%",
+              "mem": "12.61MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "82.97%",
+              "mem": "312.7MiB / 11.53GiB"
+            }
+          ]
+        },
+        {
+          "ts_utc": "2026-11-24T16:34:19.946032+00:00",
+          "contenedores": [
+            {
+              "contenedor": "bda-proyecto2-analitica-1",
+              "cpu": "22.31%",
+              "mem": "1.25GiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-gateway-1",
+              "cpu": "3.44%",
+              "mem": "52.26MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-registro-1",
+              "cpu": "1.60%",
+              "mem": "46.12MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-sesion-1",
+              "cpu": "1.76%",
+              "mem": "40.15MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-1",
+              "cpu": "0.35%",
+              "mem": "38.14MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-historial-worker-1",
+              "cpu": "0.17%",
+              "mem": "75.84MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-1",
+              "cpu": "38.47%",
+              "mem": "439MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-3",
+              "cpu": "106.28%",
+              "mem": "490.5MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-proyecto2-valkey-1",
+              "cpu": "1.18%",
+              "mem": "12.2MiB / 11.53GiB"
+            },
+            {
+              "contenedor": "bda-mongo-2",
+              "cpu": "102.55%",
+              "mem": "462.2MiB / 11.53GiB"
+            }
+          ]
+        }
+      ],
+      "repeticion": 3,
+      "tareas_disponibles_antes": 0,
+      "tareas_disponibles_despues": 0
     }
-  }
+  ]
 }
 
-=== Fin UTC: 2026-11-23T04:57:18.220016+00:00 ===
+=== Fin UTC: 2026-11-24T16:34:31.234543+00:00 ===

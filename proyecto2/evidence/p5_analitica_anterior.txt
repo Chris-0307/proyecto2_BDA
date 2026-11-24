@@ -1,0 +1,123 @@
+=== P5 Analítica Spark — Inicio UTC: 2026-11-23T04:59:12.420467+00:00 ===
+
+--- Configurando SPARK_WORKERS=1 ---
+Salud: {"servicio": "analitica", "estado": "operativo", "ruta_datalake": "/datalake/eventos", "archivos_parquet": 145, "spark_workers": 1}
+Q1 (w=1): 1ra=38884.59 ms (srv=38861.03 ms) | 2da=25232.43 ms (srv=25205.48 ms) | filas=60
+Q2 (w=1): 1ra=25736.32 ms (srv=25713.12 ms) | 2da=25379.36 ms (srv=25297.42 ms) | filas=50
+Q3 (w=1): 1ra=25874.63 ms (srv=25846.39 ms) | 2da=15476.61 ms (srv=15447.05 ms) | filas=4
+Q4 (w=1): 1ra=14205.68 ms (srv=14183.47 ms) | 2da=13087.23 ms (srv=13068.46 ms) | filas=50
+Q5 (w=1): 1ra=14581.56 ms (srv=14562.68 ms) | 2da=14696.99 ms (srv=14680.38 ms) | filas=50
+
+--- Configurando SPARK_WORKERS=2 ---
+Salud: {"servicio": "analitica", "estado": "operativo", "ruta_datalake": "/datalake/eventos", "archivos_parquet": 145, "spark_workers": 1}
+Q1 (w=2): 1ra=26642.25 ms (srv=26625.23 ms) | 2da=14512.81 ms (srv=14485.92 ms) | filas=60
+Q2 (w=2): 1ra=15915.1 ms (srv=15897.63 ms) | 2da=17044.75 ms (srv=17027.29 ms) | filas=50
+Q3 (w=2): 1ra=23368.77 ms (srv=23329.85 ms) | 2da=14767.86 ms (srv=14739.1 ms) | filas=4
+Q4 (w=2): 1ra=15901.52 ms (srv=15885.19 ms) | 2da=16613.92 ms (srv=16596.06 ms) | filas=50
+Q5 (w=2): 1ra=15766.54 ms (srv=15747.01 ms) | 2da=13643.95 ms (srv=13624.44 ms) | filas=50
+
+--- Restaurando SPARK_WORKERS=1 ---
+
+=== Resumen JSON P5 ===
+{
+  "workers": {
+    "1": {
+      "salud": {
+        "servicio": "analitica",
+        "estado": "operativo",
+        "ruta_datalake": "/datalake/eventos",
+        "archivos_parquet": 145,
+        "spark_workers": 1
+      },
+      "consultas": {
+        "q1": {
+          "primera_ejecucion_wall_ms": 38884.59,
+          "primera_ejecucion_srv_ms": 38861.03,
+          "segunda_ejecucion_wall_ms": 25232.43,
+          "segunda_ejecucion_srv_ms": 25205.48,
+          "total_filas": 60,
+          "plan_explain": "== Physical Plan ==\nAdaptiveSparkPlan isFinalPlan=false\n+- SortAggregate(key=[event_id#0], functions=[first(tipo_evento#1, false), first(estado#2, false), first(ocurrido_en#3, false), first(tarea_id#4, false), first(proyecto_id#5, false), first(cliente_id#6, false), first(batch_id#7, false), first(anotador_id#8, false), first(revisor_id#9, false), first(equipo_id#10, false), first(modalidad#11, false), first(tipo_tarea#12, false), first(version#13L, false), first(tomada_en#14, false), first(aprobada_en#15, false), first(duracion_ms#16L, false), first(sla_horas#17, false), first(motivo_rechazo#18, false), first(datos_extra_json#19, false)])\n   +- Sort [event_id#0 ASC NULLS FIRST], false, 0\n      +- Exchange hashpartitioning(event_id#0, 2), ENSURE_REQUIREMENTS, [plan_id=20]\n         +- SortAggregate(key=[event_id#0], functions=[partial_first(tipo_evento#1, false), partial_first(estado#2, false), partial_first(ocurrido_en#3, false), partial_first(tarea_id#4, false), partial_first(proyecto_id#5, false), partial_first(cliente_id#6, false), partial_first(batch_id#7, false), partial_first(anotador_id#8, false), partial_first(revisor_id#9, false), partial_first(equipo_id#10, false), partial_first(modalidad#11, false), partial_first(tipo_tarea#12, false), partial_first(version#13L, false), partial_first(tomada_en#14, false), partial_first(aprobada_en#15, false), partial_first(duracion_ms#16L, false), partial_first(sla_horas#17, false), partial_first(motivo_rechazo#18, false), partial_first(datos_extra_json#19, false)])\n            +- Sort [event_id#0 ASC NULLS FIRST], false, 0\n               +- Filter ((isnotnull(ocurrido_en#3) AND (ocurrido_en#3 >= 2025-01-01 00:00:00)) AND (ocurrido_en#3 < 2026-01-01 00:00:00))\n                  +- FileScan parquet [event_id#0,tipo_evento#1,estado#2,ocurrido_en#3,tarea_id#4,proyecto_id#5,cliente_id#6,batch_id#7,anotador_id#8,revisor_id#9,equipo_id#10,modalidad#11,tipo_tarea#12,version#13L,tomada_en#14,aprobada_en#15,duracion_ms#16L,sla_horas#17,motivo_rechazo#18,datos_extra_json#19] Batched: true, DataFilters: [isnotnull(ocurrido_en#3), (ocurrido_en#3 >= 2025-01-01 00:00:00), (ocurrido_en#3 < 2026-01-01 00..., Format: Parquet, Location: InMemoryFileIndex(145 paths)[file:/datalake/eventos/mes=2025-01/gen-20261122-2025-01-p000.parquet..., PartitionFilters: [], PushedFilters: [IsNotNull(ocurrido_en), GreaterThanOrEqual(ocurrido_en,2025-01-01 00:00:00.0), LessThan(ocurrido..., ReadSchema: struct<event_id:string,tipo_evento:string,estado:string,ocurrido_en:timestamp,tarea_id:string,pro...\n\n\n"
+        },
+        "q2": {
+          "primera_ejecucion_wall_ms": 25736.32,
+          "primera_ejecucion_srv_ms": 25713.12,
+          "segunda_ejecucion_wall_ms": 25379.36,
+          "segunda_ejecucion_srv_ms": 25297.42,
+          "total_filas": 50
+        },
+        "q3": {
+          "primera_ejecucion_wall_ms": 25874.63,
+          "primera_ejecucion_srv_ms": 25846.39,
+          "segunda_ejecucion_wall_ms": 15476.61,
+          "segunda_ejecucion_srv_ms": 15447.05,
+          "total_filas": 4,
+          "plan_explain": "== Physical Plan ==\nAdaptiveSparkPlan isFinalPlan=false\n+- SortAggregate(key=[event_id#4244], functions=[first(tipo_evento#4245, false), first(estado#4246, false), first(ocurrido_en#4247, false), first(tarea_id#4248, false), first(proyecto_id#4249, false), first(cliente_id#4250, false), first(batch_id#4251, false), first(anotador_id#4252, false), first(revisor_id#4253, false), first(equipo_id#4254, false), first(modalidad#4255, false), first(tipo_tarea#4256, false), first(version#4257L, false), first(tomada_en#4258, false), first(aprobada_en#4259, false), first(duracion_ms#4260L, false), first(sla_horas#4261, false), first(motivo_rechazo#4262, false), first(datos_extra_json#4263, false)])\n   +- Sort [event_id#4244 ASC NULLS FIRST], false, 0\n      +- Exchange hashpartitioning(event_id#4244, 2), ENSURE_REQUIREMENTS, [plan_id=683]\n         +- SortAggregate(key=[event_id#4244], functions=[partial_first(tipo_evento#4245, false), partial_first(estado#4246, false), partial_first(ocurrido_en#4247, false), partial_first(tarea_id#4248, false), partial_first(proyecto_id#4249, false), partial_first(cliente_id#4250, false), partial_first(batch_id#4251, false), partial_first(anotador_id#4252, false), partial_first(revisor_id#4253, false), partial_first(equipo_id#4254, false), partial_first(modalidad#4255, false), partial_first(tipo_tarea#4256, false), partial_first(version#4257L, false), partial_first(tomada_en#4258, false), partial_first(aprobada_en#4259, false), partial_first(duracion_ms#4260L, false), partial_first(sla_horas#4261, false), partial_first(motivo_rechazo#4262, false), partial_first(datos_extra_json#4263, false)])\n            +- Sort [event_id#4244 ASC NULLS FIRST], false, 0\n               +- Filter ((isnotnull(ocurrido_en#4247) AND (ocurrido_en#4247 >= 2025-01-01 00:00:00)) AND (ocurrido_en#4247 < 2026-01-01 00:00:00))\n                  +- FileScan parquet [event_id#4244,tipo_evento#4245,estado#4246,ocurrido_en#4247,tarea_id#4248,proyecto_id#4249,cliente_id#4250,batch_id#4251,anotador_id#4252,revisor_id#4253,equipo_id#4254,modalidad#4255,tipo_tarea#4256,version#4257L,tomada_en#4258,aprobada_en#4259,duracion_ms#4260L,sla_horas#4261,motivo_rechazo#4262,datos_extra_json#4263] Batched: true, DataFilters: [isnotnull(ocurrido_en#4247), (ocurrido_en#4247 >= 2025-01-01 00:00:00), (ocurrido_en#4247 < 2026..., Format: Parquet, Location: InMemoryFileIndex(145 paths)[file:/datalake/eventos/mes=2025-01/gen-20261122-2025-01-p000.parquet..., PartitionFilters: [], PushedFilters: [IsNotNull(ocurrido_en), GreaterThanOrEqual(ocurrido_en,2025-01-01 00:00:00.0), LessThan(ocurrido..., ReadSchema: struct<event_id:string,tipo_evento:string,estado:string,ocurrido_en:timestamp,tarea_id:string,pro...\n\n\n"
+        },
+        "q4": {
+          "primera_ejecucion_wall_ms": 14205.68,
+          "primera_ejecucion_srv_ms": 14183.47,
+          "segunda_ejecucion_wall_ms": 13087.23,
+          "segunda_ejecucion_srv_ms": 13068.46,
+          "total_filas": 50
+        },
+        "q5": {
+          "primera_ejecucion_wall_ms": 14581.56,
+          "primera_ejecucion_srv_ms": 14562.68,
+          "segunda_ejecucion_wall_ms": 14696.99,
+          "segunda_ejecucion_srv_ms": 14680.38,
+          "total_filas": 50
+        }
+      }
+    },
+    "2": {
+      "salud": {
+        "servicio": "analitica",
+        "estado": "operativo",
+        "ruta_datalake": "/datalake/eventos",
+        "archivos_parquet": 145,
+        "spark_workers": 1
+      },
+      "consultas": {
+        "q1": {
+          "primera_ejecucion_wall_ms": 26642.25,
+          "primera_ejecucion_srv_ms": 26625.23,
+          "segunda_ejecucion_wall_ms": 14512.81,
+          "segunda_ejecucion_srv_ms": 14485.92,
+          "total_filas": 60
+        },
+        "q2": {
+          "primera_ejecucion_wall_ms": 15915.1,
+          "primera_ejecucion_srv_ms": 15897.63,
+          "segunda_ejecucion_wall_ms": 17044.75,
+          "segunda_ejecucion_srv_ms": 17027.29,
+          "total_filas": 50
+        },
+        "q3": {
+          "primera_ejecucion_wall_ms": 23368.77,
+          "primera_ejecucion_srv_ms": 23329.85,
+          "segunda_ejecucion_wall_ms": 14767.86,
+          "segunda_ejecucion_srv_ms": 14739.1,
+          "total_filas": 4
+        },
+        "q4": {
+          "primera_ejecucion_wall_ms": 15901.52,
+          "primera_ejecucion_srv_ms": 15885.19,
+          "segunda_ejecucion_wall_ms": 16613.92,
+          "segunda_ejecucion_srv_ms": 16596.06,
+          "total_filas": 50
+        },
+        "q5": {
+          "primera_ejecucion_wall_ms": 15766.54,
+          "primera_ejecucion_srv_ms": 15747.01,
+          "segunda_ejecucion_wall_ms": 13643.95,
+          "segunda_ejecucion_srv_ms": 13624.44,
+          "total_filas": 50
+        }
+      }
+    }
+  }
+}
+=== Fin UTC: 2026-11-23T05:06:04.388034+00:00 ===
+SALUD: {"servicio": "analitica", "estado": "operativo", "ruta_datalake": "/datalake/eventos", "archivos_parquet": 145, "spark_workers": 1}
+Q1_1RA_WALL_MS: 32477.88 SRV_MS: 32473.57 FILAS: 60
+Q1_2DA_WALL_MS: 18619.61 SRV_MS: 18614.82 FILAS: 60

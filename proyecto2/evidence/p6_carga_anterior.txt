@@ -1,0 +1,5 @@
+=== P6 Carga HTTP — Inicio UTC: 2026-11-24T15:41:50.625847+00:00 ===
+Contexto inicial: {"proyecto_id": "600d1c8a-fc7b-5126-81a0-8775bd5adb36", "proyecto_nombre": "Proyecto 084", "tareas_disponibles": 488, "anotadores": "8c2e6a66-cd62-5e6a-a8bb-745a156c882b,a7a32793-90f6-5b47-a022-f7a6a5cac9f4,9b2f0922-c0ce-5921-89ee-2e9ad13d9841,58cfc664-1f89-50a9-af02-e3083172b413,59cc8ce2-4762-40bb-8acb-1e753b2c9b3e,81b52465-c5b9-4a48-821a-840007e84499,dfcdf2b8-3225-58b6-a997-fff7d5537ed6,d590b64f-41fa-5271-bd64-77b94741f864,2888451a-eb65-539f-90c4-c9980eb6e319,e9135abc-ce68-5d07-8cfc-dbbdb7a8863e", "revisores": "d8a908c9-dff5-598d-b70f-87fbfc1ba55f,568fc53e-09e2-5c6f-9b81-57ea415eb197,39bd3d8f-fdd0-4e75-bf35-65e76a91aa62"}
+AVISO: el proyecto tiene 488 tareas en 'disponible' (se recomiendan ~4000 para evitar agotamiento en 100 usuarios).
+
+--- Nivel de carga: 10 usuarios (warmup=30.0s, 3x90.0s) ---

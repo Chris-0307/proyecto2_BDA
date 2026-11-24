@@ -146,7 +146,7 @@ services:
       context: ./servicios/analitica
     environment:
       DATALAKE_EVENTOS: /datalake/eventos
-      SPARK_WORKERS: "1"
+      SPARK_WORKERS: "${SPARK_WORKERS:-1}"
     volumes:
       - ./datalake:/datalake:ro
     restart: unless-stopped

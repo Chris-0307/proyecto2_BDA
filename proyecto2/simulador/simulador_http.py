@@ -31,14 +31,64 @@ class MetricasSimulador:
         self.conteo_rutas: Counter[str] = Counter()
         self.conteo_codigos: Counter[str] = Counter()
         self.latencias_ms: dict[str, list[float]] = defaultdict(list)
+        self.analitica_latencias_ms: list[float] = []
+        self.analitica_codigos: Counter[str] = Counter()
+        self.muestras_409_siguiente: list[object] = []
         self.acciones: Counter[str] = Counter()
         self.tareas_revisadas_ids: list[str] = []
 
-    def registrar_http(self, clave_ruta: str, codigo: int, ms: float) -> None:
+    def registrar_http(
+        self,
+        clave_ruta: str,
+        codigo: int,
+        ms: float,
+        cuerpo: object | None = None,
+    ) -> None:
         with self._lock:
             self.conteo_rutas[clave_ruta] += 1
             self.conteo_codigos[f"{clave_ruta}:{codigo}"] += 1
-            self.latencias_ms[clave_ruta].append(ms)
+            if clave_ruta == "GET /analitica/{q}":
+                self.analitica_latencias_ms.append(ms)
+                self.analitica_codigos[str(codigo)] += 1
+            else:
+                self.latencias_ms[clave_ruta].append(ms)
+            if clave_ruta == "POST /tareas/siguiente" and codigo == 409 and len(self.muestras_409_siguiente) < 5:
+                self.muestras_409_siguiente.append(cuerpo)
+
+    @staticmethod
+    def _percentiles(vals: list[float]) -> dict[str, float]:
+        orden = sorted(vals)
+        n = len(orden)
+        def idx(p: float) -> int:
+            return min(n - 1, max(0, int(round((p / 100.0) * (n - 1)))))
+        return {
+            "muestras": n,
+            "prom_ms": round(sum(orden) / n, 2),
+            "p50_ms": round(orden[idx(50)], 2),
+            "p95_ms": round(orden[idx(95)], 2),
+            "p99_ms": round(orden[idx(99)], 2),
+        }
+
+    def resumen(self) -> dict:
+        with self._lock:
+            latencias = {
+                ruta: self._percentiles(vals)
+                for ruta, vals in self.latencias_ms.items()
+                if vals
+            }
+            analitica_resumen = (
+                self._percentiles(self.analitica_latencias_ms)
+                if self.analitica_latencias_ms
+                else {"muestras": 0}
+            )
+            analitica_resumen["codigos_http"] = dict(self.analitica_codigos)
+            return {
+                "acciones": dict(self.acciones),
+                "codigos_http": dict(self.conteo_codigos),
+                "latencias_ms": latencias,
+                "analitica": analitica_resumen,
+                "muestras_409_siguiente": list(self.muestras_409_siguiente),
+            }
 
     def registrar_accion(self, nombre: str, tarea_id: str | None = None) -> None:
         with self._lock:
@@ -49,27 +99,7 @@ class MetricasSimulador:
     def pop_tarea_para_revisar(self) -> str | None:
         with self._lock:
             return self.tareas_revisadas_ids.pop(0) if self.tareas_revisadas_ids else None
-
-    def resumen(self) -> dict:
-        with self._lock:
-            latencias = {}
-            for ruta, vals in self.latencias_ms.items():
-                if not vals:
-                    continue
-                orden = sorted(vals)
-                p95_idx = min(len(orden) - 1, int(len(orden) * 0.95))
-                latencias[ruta] = {
-                    "muestras": len(orden),
-                    "prom_ms": round(sum(orden) / len(orden), 2),
-                    "p95_ms": round(orden[p95_idx], 2),
-                }
-            return {
-                "acciones": dict(self.acciones),
-                "codigos_http": dict(self.conteo_codigos),
-                "latencias_ms": latencias,
-            }
-
-
+        
 def peticion_json(
     base_url: str,
     metodo: str,
@@ -92,9 +122,9 @@ def peticion_json(
             crudo = resp.read()
             cuerpo_resp = json.loads(crudo.decode("utf-8")) if crudo else None
             return resp.status, cuerpo_resp, ms
-    except urllib.error.HTTPError as exc:
+    except (urllib.error.URLError, TimeoutError) as exc:
         ms = (time.perf_counter() - t0) * 1000.0
-        crudo = exc.read()
+        return 504, {"error": "timeout_o_conexion", "detalle": str(exc)}, ms
         try:
             cuerpo_err = json.loads(crudo.decode("utf-8")) if crudo else None
         except ValueError:
@@ -119,7 +149,7 @@ def worker_anotador(
             "/tareas/siguiente",
             {"anotador_id": anotador_id, "proyecto_id": proyecto_id},
         )
-        metricas.registrar_http("POST /tareas/siguiente", cod, ms)
+        metricas.registrar_http("POST /tareas/siguiente", cod, ms, cuerpo=datos)
 
         if cod == 204 or not isinstance(datos, dict) or "tarea" not in datos:
             time.sleep(0.25)
@@ -230,6 +260,7 @@ def worker_consumidor(
 ) -> None:
     rng = random.Random(semilla + 9000 + idx * 19)
     consultas = ["q1", "q2", "q3", "q4", "q5"]
+    analitica_consultada = False
     while time.perf_counter() < fin_ts:
         cod_ex, _, ms_ex = peticion_json(
             base_url,
@@ -240,11 +271,13 @@ def worker_consumidor(
         if cod_ex == 200:
             metricas.registrar_accion("exportar_ok")
 
-        q = rng.choice(consultas)
-        cod_q, _, ms_q = peticion_json(base_url, "GET", f"/analitica/{q}", timeout_s=60.0)
-        metricas.registrar_http("GET /analitica/{q}", cod_q, ms_q)
-        if cod_q == 200:
-            metricas.registrar_accion("analitica_ok")
+        if not analitica_consultada:
+            analitica_consultada = True
+            q = rng.choice(consultas)
+            cod_q, _, ms_q = peticion_json(base_url, "GET", f"/analitica/{q}", timeout_s=120.0)
+            metricas.registrar_http("GET /analitica/{q}", cod_q, ms_q)
+            if cod_q == 200:
+                metricas.registrar_accion("analitica_ok")
 
         time.sleep(0.5)
 
