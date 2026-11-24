@@ -172,8 +172,13 @@ def test_entrada_invalida_no_recibe_xack():
     {"consumidor": "   "},
 ])
 def test_parametros_invalidos_rechazados(argumentos):
+    parametros = {"consumidor": "worker"}
+    parametros.update(argumentos)
+
     with pytest.raises(ValueError):
-        consumer.procesar_lote(Mock(), lambda _: None, consumidor="worker", **argumentos)
+        consumer.procesar_lote(
+            Mock(), lambda _: None, **parametros
+        )
 
 
 def test_deduplicacion_interna_del_microlote(tmp_path):
