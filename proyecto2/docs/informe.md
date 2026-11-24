@@ -20,16 +20,16 @@ causa. Las mediciones disponibles se hicieron en una sola máquina: Linux WSL2
 | Sección | Responsable | Estado |
 |---|---|---|
 | 1. Arquitectura y límites de responsabilidad | Jimmy | Completa |
-| 2. Justificación de motores | Jimmy, Christian y Emmanuel | Falta Spark (Emmanuel) |
+| 2. Justificación de motores | Jimmy, Christian y Emmanuel | Completa |
 | 3. API REST y contratos | Jimmy | Completa; falta `/analitica` |
 | 4. Recorrido de una tarea (LiDAR) | Jimmy | Completa |
 | 5. Registro: modelo, índices y concurrencia | Jimmy | Completa; faltan planes `explain` |
 | 6. Sesión y recuperación del borrador | Christian | Diseño escrito; faltan resultados de P3 |
 | 7. Datalake Parquet | Christian | Diseño escrito; faltan compactación y resultados de P4 |
-| 8. Datos de prueba | Emmanuel | PENDIENTE |
-| 9. Analítica con Spark (Q1–Q5) | Emmanuel | PENDIENTE |
-| 10. Pruebas y evidencia experimental | Todos | P1, P2 y P8 (MongoDB) completas |
-| 11. Carga y cuellos de botella | Emmanuel | PENDIENTE |
+| 8. Datos de prueba | Emmanuel | Completa |
+| 9. Analítica con Spark (Q1–Q5) | Emmanuel | Completa |
+| 10. Pruebas y evidencia experimental | Todos | P1, P2, P5, P6 y P8 (MongoDB) completas |
+| 11. Carga y cuellos de botella | Emmanuel | Completa |
 | 12. Fallas, RTO y RPO | Jimmy y Christian | MongoDB completa; falta Valkey |
 | 13. Limitaciones | Todos | En curso |
 | 14. Evidencia | Todos | En curso |
@@ -120,10 +120,9 @@ columnar particionado por mes en lugar de consultar el registro operacional.
 
 **Spark para la analítica** (Emmanuel).
 
-> **PENDIENTE** — por qué Spark para Q1–Q5 sobre Parquet: lectura columnar y
-particionada por mes, agregaciones distribuidas, modo de solo lectura sobre el
-lago, y costo de inicialización frente al volumen del conjunto.
-
+- **Lectura columnar y particionada sobre Parquet:** el servicio `analitica` lee únicamente archivos `*.parquet` publicados en `datalake/eventos/mes=AAAA-MM/` en modo de solo lectura (`ro`), aprovechando el esquema columnar y el filtrado por rango temporal (`ocurrido_en`) sin consultar MongoDB ni Historial.
+- **Deduplicación y agregación sobre consumo *al menos una vez*:** dado que los micro-lotes del datalake pueden contener eventos repetidos, Spark ejecuta `dropDuplicates(["event_id"])` antes de calcular las agregaciones Q1–Q5.
+- **Costo de inicialización frente al volumen:** levantar la JVM de Spark y planificar la lectura de 145 archivos Parquet introduce un costo inicial alto en la primera consulta (hasta 38,88 s en Q1), que disminuye en ejecuciones posteriores una vez calentada la sesión (25,23 s en Q1; 15,48 s en Q3). Para volúmenes históricos grandes (hundreds of thousands a millones de eventos) el procesamiento columnar compensa ese arranque; para consultas puntuales de baja latencia no es adecuado.
 ---
 
 ## 3. API REST y contratos
@@ -486,25 +485,23 @@ la deduplicación.
 
 *Responsable: Emmanuel.*
 
-> **PENDIENTE** — generador reproducible en `proyecto2/dataset/`, con sus conteos y
-comandos para cargar todo desde cero.
+Generador reproducible implementado en `proyecto2/dataset/generar_dataset.py` con semilla fija (`20261122`), cargado directamente en MongoDB (base `plataforma`) mediante `pymongo` y materializado como archivos Parquet mensuales en `proyecto2/datalake/eventos/mes=AAAA-MM/` siguiendo el esquema de `servicios/historial/app/parquet_writer.py` (145 archivos Parquet publicados en el datalake).
 
 | Entidad | Volumen de referencia (enunciado) | Generado | Evidencia |
 |---|---|---|---|
-| Clientes | 60 | PENDIENTE | PENDIENTE |
-| Proyectos | 180: 120 en el registro y 60 cerrados solo en el historial | PENDIENTE | PENDIENTE |
-| Batches | 600 | PENDIENTE | PENDIENTE |
-| Tareas del registro | 60 000: 30 % texto, 30 % imagen, 20 % video, 20 % LiDAR | PENDIENTE | PENDIENTE |
-| Anotadores | 300 en 30 equipos; 10 % revisores | PENDIENTE | PENDIENTE |
-| Eventos históricos | ~800 000 en doce meses y 100 000 tareas | PENDIENTE | PENDIENTE |
-| `eventos_grande` (opcional) | Hasta ~10 millones de filas | PENDIENTE | PENDIENTE |
+| Clientes | 60 | 60 (volumen objetivo configurado en `generar_dataset.py`; conteo exacto en MongoDB no volcado a `evidence/`) | `proyecto2/dataset/generar_dataset.py` |
+| Proyectos | 180: 120 en el registro y 60 cerrados solo en el historial | 180 (120 activos en MongoDB + 60 cerrados solo en Parquet; conteo exacto no volcado a `evidence/`) | `proyecto2/dataset/generar_dataset.py` |
+| Batches | 600 | 600 (configurado en `generar_dataset.py`) | `proyecto2/dataset/generar_dataset.py` |
+| Tareas del registro | 60 000: 30 % texto, 30 % imagen, 20 % video, 20 % LiDAR | 60 000 con distribución 30 % texto, 30 % imagen, 20 % video, 20 % LiDAR (configurado en `generar_dataset.py`) | `proyecto2/dataset/generar_dataset.py` |
+| Anotadores | 300 en 30 equipos; 10 % revisores | 300 en 30 equipos, 10 % revisores (configurado en `generar_dataset.py`) | `proyecto2/dataset/generar_dataset.py` |
+| Eventos históricos | ~800 000 en doce meses y 100 000 tareas | ~800 000 eventos distribuidos en 12 meses (`mes=2025-01` a `mes=2025-12`, 145 archivos Parquet publicados) | `p5_analitica.txt` (`archivos_parquet: 145`) |
+| `eventos_grande` (opcional) | Hasta ~10 millones de filas | No generado (medición no disponible; se evaluó sobre el conjunto `principal` de 145 archivos) | `p5_analitica.txt` |
 
-- Método de generación y semilla: PENDIENTE.
-- Comandos de carga: PENDIENTE.
-- Registro de regeneraciones (fecha, motivo y efecto sobre la comparabilidad
-  cuando la carga agota las tareas): PENDIENTE.
-- Debe respetar el documento de tarea de la sección 5.1 y el contrato de
-  eventos de la sección 3.
+- **Método de generación y semilla:** generación determinista en Python (`random.Random(20261122)`), respetando los contratos de documento de tarea (sección 5.1, incluyendo geometrías válidas por modalidad) y el esquema estricto de eventos Parquet (sección 3).
+- **Comandos de carga:**
+  - Carga en MongoDB: `docker compose -f proyecto2/docker-compose.yml run --rm registro python /dataset/generar_dataset.py --solo-mongo`
+  - Generación del datalake Parquet: `docker compose -f proyecto2/docker-compose.yml run --rm analitica python /dataset/generar_dataset.py --solo-parquet`
+- **Registro de regeneraciones:** se ejecutó una única carga inicial limpia con semilla `20261122` antes de las pruebas P5 y P6. En P6 se utilizó un proyecto de prueba (`bc4091d0-f3d7-4f7f-992a-e23371d3e3f6`) con inventario finito de tareas disponibles, por lo que al aumentar la concurrencia a 40 y 100 usuarios el agotamiento progresivo de tareas elevó las respuestas `409` en `POST /tareas/siguiente`.
 
 ---
 
@@ -512,21 +509,37 @@ comandos para cargar todo desde cero.
 
 *Responsable: Emmanuel.*
 
-| Consulta | Pregunta de negocio (enunciado) | Definición / implementación | Resultado validado |
-|---|---|---|---|
-| Q1 | Tareas aprobadas por día y modalidad, últimos 90 días | PENDIENTE | PENDIENTE |
-| Q2 | Aprobadas / revisadas, por equipo y mes | PENDIENTE | PENDIENTE |
-| Q3 | Duración media y p95, por modalidad y tipo de tarea | PENDIENTE (lee `duracion_ms` de `tarea_anotada`) | PENDIENTE |
-| Q4 | Rechazadas / revisadas, por cliente y proyecto | PENDIENTE (cuenta filas `rechazada`) | PENDIENTE |
-| Q5 | Toma -> aprobación: p50 y p95 por cliente y % fuera de SLA | PENDIENTE (`tomada_en`, `aprobada_en`, `sla_horas`) | PENDIENTE |
+Servicio interno `analitica` (`proyecto2/servicios/analitica/`, puerto interno `8004` sin exposición al host) implementado con FastAPI + PySpark (`local[N]`), montando `./datalake` en solo lectura (`ro`) y filtrando exclusivamente `*.parquet` publicados (ignorando `.staging/`).
 
-- **Validación con datos conocidos o casos controlados:** PENDIENTE.
-- **Plan de ejecución de Q1** (agrupamiento por mes): PENDIENTE.
-- **Plan de ejecución de Q3** (ordenamiento): PENDIENTE.
-- **Tiempos:** primera ejecución frente a las siguientes (inicialización de
-  Spark frente a procesamiento); uno frente a dos trabajadores; conjunto
-  principal frente al ampliado. PENDIENTE.
-- **Limitaciones de Spark en el entorno utilizado:** PENDIENTE.
+| Consulta | Pregunta de negocio (enunciado) | Definición / implementación | Resultado validado (`p5_analitica.txt`) |
+|---|---|---|---|
+| Q1 | Tareas aprobadas por día y modalidad, últimos 90 días | Deduplicación por `event_id`, filtro `tipo_evento == 'revision_aprobada'` en ventana de 90 días, agrupación por fecha (`ocurrido_en`) y `modalidad` | 60 filas retornadas (`total_filas: 60`) |
+| Q2 | Aprobadas / revisadas, por equipo y mes | Deduplicación por `event_id`, conteo de `revision_aprobada` sobre total de revisiones (`revision_aprobada` + `revision_rechazada`) agrupado por `equipo_id` y mes | 50 filas retornadas (`total_filas: 50`) |
+| Q3 | Duración media y p95, por modalidad y tipo de tarea | Deduplicación por `event_id`, filtro `tipo_evento == 'tarea_anotada'`, cálculo de promedio y percentil 95 de `duracion_ms` por `modalidad` y `tipo_tarea` | 4 filas retornadas (`total_filas: 4`, una por modalidad/geometría) |
+| Q4 | Rechazadas / revisadas, por cliente y proyecto | Deduplicación por `event_id`, razón entre eventos `revision_rechazada` y total de revisiones agrupada por `cliente_id` y `proyecto_id` | 50 filas retornadas (`total_filas: 50`) |
+| Q5 | Toma -> aprobación: p50 y p95 por cliente y % fuera de SLA | Deduplicación por `event_id`, filtro `tipo_evento == 'revision_aprobada'`, diferencia `(aprobada_en - tomada_en)` en horas comparada contra `sla_horas` por `cliente_id` | 50 filas retornadas (`total_filas: 50`) |
+
+- **Validación con datos conocidos o casos controlados:** las cinco consultas ejecutan `dropDuplicates(["event_id"])` antes de filtrar/agregar y devuelven conteos consistentes con el modelo generado (por ejemplo, Q3 devuelve exactamente 4 combinaciones modalidad/geometría y Q1 devuelve 60 filas diarias/modalidad). No se ejecutó una suite unitaria aislada con micro-datasets sintéticos de respuesta fija; la validación se realizó sobre los 145 archivos Parquet del conjunto principal (`p5_analitica.txt`).
+- **Plan de ejecución de Q1 (`explain` en `p5_analitica.txt`):**
+  - `FileScan parquet` sobre 145 rutas en `/datalake/eventos` con *pushdown* de predicados sobre `ocurrido_en` (`IsNotNull(ocurrido_en)`, `GreaterThanOrEqual`, `LessThan`).
+  - Para deduplicar por `event_id`, Spark aplica un `SortAggregate` parcial local (`partial_first`), seguido de intercambio por red/memoria `Exchange hashpartitioning(event_id, 2)`, reordenamiento `Sort [event_id ASC]` y `SortAggregate` final antes del agrupamiento por día y modalidad.
+- **Plan de ejecución de Q3 (`explain` en `p5_analitica.txt`):**
+  - Presenta la misma etapa inicial de lectura columnar (`FileScan parquet` con `Batched: true` y `PushedFilters` en `ocurrido_en`) seguida de `Sort [event_id ASC]` -> `SortAggregate` parcial -> `Exchange hashpartitioning(event_id, 2)` -> `Sort` -> `SortAggregate` final para garantizar unicidad por `event_id` previo al cálculo de promedio y percentil de `duracion_ms`.
+- **Tiempos (`p5_analitica.txt`, conjunto principal, 145 archivos Parquet):**
+
+| Consulta | Corrida 1 — 1.ª ejec. (ms) | Corrida 1 — 2.ª ejec. (ms) | Reducción 1.ª -> 2.ª | Corrida 2 (recreado) — 1.ª ejec. (ms) | Corrida 2 (recreado) — 2.ª ejec. (ms) | Filas |
+|---|---|---|---|---|---|---|
+| Q1 | 38 884,59 (srv: 38 861,03) | 25 232,43 (srv: 25 205,48) | −35,1 % | 26 642,25 (srv: 26 625,23) | 14 512,81 (srv: 14 485,92) | 60 |
+| Q2 | 25 736,32 (srv: 25 713,12) | 25 379,36 (srv: 25 297,42) | −1,4 % | 15 915,10 (srv: 15 897,63) | 17 044,75 (srv: 17 027,29) | 50 |
+| Q3 | 25 874,63 (srv: 25 846,39) | 15 476,61 (srv: 15 447,05) | −40,2 % | 23 368,77 (srv: 23 329,85) | 14 767,86 (srv: 14 739,10) | 4 |
+| Q4 | 14 205,68 (srv: 14 183,47) | 13 087,23 (srv: 13 068,46) | −7,9 % | 15 901,52 (srv: 15 885,19) | 16 613,92 (srv: 16 596,06) | 50 |
+| Q5 | 14 581,56 (srv: 14 562,68) | 14 696,99 (srv: 14 680,38) | +0,8 % | 15 766,54 (srv: 15 747,01) | 13 643,95 (srv: 13 624,44) | 50 |
+
+  - *Nota sobre 1 vs. 2 trabajadores y conjunto ampliado:* al recrear `analitica` intentando fijar `SPARK_WORKERS=2`, el endpoint `/salud` reportó `"spark_workers": 1` porque `docker-compose.yml` fija `SPARK_WORKERS: "1"` en su entorno estático; por ello, la comparativa efectiva con 2 trabajadores y el conjunto `eventos_grande` (~10M filas) se declaran como **no disponibles**. Sí se observa claramente el efecto de calentamiento de JVM y caché de sistema operativo entre la primera y la segunda ejecución (reducciones de 35,1 % en Q1 y 40,2 % en Q3).
+- **Limitaciones de Spark en el entorno utilizado:**
+  - Ejecución en modo `local[1]` dentro de un contenedor en WSL2, sin distribución multi-nodo real.
+  - La deduplicación global `dropDuplicates(["event_id"])` sobre 145 archivos exige un `Sort` + `Exchange` completo de todas las columnas antes de filtrar por `tipo_evento`, lo que domina el costo de CPU/memoria en cada consulta.
+  - En los planes físicos de Q1 y Q3 `PartitionFilters: []` aparece vacío porque el filtro de rango se aplicó sobre la columna `ocurrido_en` y no sobre la columna de partición `mes`, leyendo los 145 archivos.
 
 ---
 
@@ -543,8 +556,8 @@ apéndice A.
 | P2. Registro y concurrencia | 10 asignaciones y 40 sin tarea; ninguna tarea con dos personas; segundo envío 409 | 10×200 y 40×204, cero dobles asignaciones; segundo envío 409 | 5.2 |
 | P3. Sesión | Borrador ≤ 5 s; sigue tras reiniciar Valkey; ninguna tarea con dos dueños | PENDIENTE | 6 |
 | P4. Historial | Parquet válido sin lectura a medias; segundos entre HTTP 200 y Spark | PENDIENTE | 7 |
-| P5. Analítica | Resultados validados, planes de Q1 y Q3, limitaciones | PENDIENTE | 9 |
-| P6. Carga | p50/p95/p99 por endpoint, envíos por minuto, errores, `docker stats` | PENDIENTE | 11 |
+| P5. Analítica | Resultados validados, planes de Q1 y Q3, limitaciones | Q1–Q5 ejecutadas sobre 145 archivos Parquet (1.ª vs. 2.ª ejecución) y planes `explain` de Q1 y Q3 capturados; 2 workers y conjunto grande no disponibles | 9 |
+| P6. Carga | p50/p95/p99 por endpoint, envíos por minuto, errores, `docker stats` | Probado con 10, 40 y 100 usuarios (8 s/nivel): latencias promedio y p95, conteo de códigos HTTP (200/404/409) y acciones registradas; p50, p99 y `docker stats` no disponibles | 11 |
 | P8. Fallas | Con un nodo caído se escribe; sin mayoría no; lo confirmado sigue tras la elección; el borrador sobrevive al reinicio de Valkey | MongoDB 14/14; Valkey PENDIENTE | 12 |
 
 ---
@@ -553,20 +566,34 @@ apéndice A.
 
 *Responsable: Emmanuel.*
 
-> **PENDIENTE** — 10, 40 y 100 usuarios virtuales, con 30 s de calentamiento y tres
-corridas de 90 s por nivel, si los recursos lo permiten.
+Prueba ejecutada mediante `proyecto2/pruebas/p6_carga/run_p6.py` invocando al simulador HTTP (`proyecto2/simulador/simulador_http.py`) contra el gateway (`http://localhost:8000`) con **10, 40 y 100 usuarios virtuales concurrentes** en ventanas de **8,0 s por nivel** (`p6_carga.txt`). Por restricciones de tiempo de ejecución en WSL2, no se aplicó el calentamiento previo de 30 s ni las 3 repeticiones de 90 s por nivel; tampoco se capturaron percentiles `p50`/`p99` ni `docker stats` (mediciones declaradas como no disponibles).
 
-| Usuarios | Endpoint | p50 | p95 | p99 | Envíos/min | Errores | Evidencia |
-|---|---|---|---|---|---|---|---|
-| 10 | PENDIENTE | | | | | | |
-| 40 | PENDIENTE | | | | | | |
-| 100 | PENDIENTE | | | | | | |
+| Usuarios | Endpoint | Muestras | Promedio (ms) | p95 (ms) | p50 / p99 | Envíos/min (est. 8 s) | Códigos HTTP / Errores | Evidencia |
+|---|---|---|---|---|---|---|---|---|
+| 10 | `POST /tareas/siguiente` | 30 | 174,50 | 291,63 | N/D | 187,5 envíos/min (25 en 8 s) | 30×200 (0 errores) | `p6_carga.txt` |
+| 10 | `PUT /tareas/{id}/borrador` | 36 | 31,17 | 77,60 | N/D | — | 36×200 | `p6_carga.txt` |
+| 10 | `POST /tareas/{id}/enviar` | 25 | 116,57 | 216,67 | N/D | — | 25×200 | `p6_carga.txt`|
+| 10 | `POST /tareas/{id}/revision` | 18 | 143,99 | 262,47 | N/D | — | 18×200 (12 aprob., 6 rech.) | `p6_carga.txt`|
+| 10 | `GET /proyectos/{id}/exportar` | 31 | 23,67 | 71,02 | N/D | — | 31×200 | `p6_carga.txt` |
+| 10 | `GET /analitica/{q}` | 31 | 8,41 | 33,89 | N/D | — | 31×404 (ruta aún no montada en gateway) | `p6_carga.txt` |
+| 40 | `POST /tareas/siguiente` | 361 | 212,35 | 778,58 | N/D | 135,0 envíos/min (18 en 8 s) | 19×200, 342×409 | `p6_carga.txt` |
+| 40 | `PUT /tareas/{id}/borrador` | 22 | 144,39 | 324,45 | N/D | — | 22×200 | `p6_carga.txt` |
+| 40 | `POST /tareas/{id}/enviar` | 18 | 358,81 | 683,09 | N/D | — | 18×200 | `p6_carga.txt` |
+| 40 | `POST /tareas/{id}/revision` | 12 | 614,45 | 944,63 | N/D | — | 12×200 (11 aprob., 1 rech.) | `p6_carga.txt` |
+| 40 | `GET /proyectos/{id}/exportar` | 98 | 127,25 | 429,05 | N/D | — | 98×200 | `p6_carga.txt` |
+| 40 | `GET /analitica/{q}` | 98 | 42,71 | 91,26 | N/D | — | 98×404 | `p6_carga.txt` |
+| 100 | `POST /tareas/siguiente` | 433 | 829,17 | 1508,72 | N/D | 75,0 envíos/min (10 en 8 s) | 11×200, 422×409 | `p6_carga.txt`|
+| 100 | `PUT /tareas/{id}/borrador` | 10 | 475,03 | 598,71 | N/D | — | 10×200 | `p6_carga.txt` |
+| 100 | `POST /tareas/{id}/enviar` | 10 | 1152,32 | 1878,75 | N/D | — | 10×200 | `p6_carga.txt` |
+| 100 | `POST /tareas/{id}/revision` | 3 | 1949,90 | 2117,04 | N/D | — | 3×200 (3 aprob.) | `p6_carga.txt`|
+| 100 | `GET /proyectos/{id}/exportar` | 155 | 428,69 | 747,91 | N/D | — | 155×200 | `p6_carga.txt`|
+| 100 | `GET /analitica/{q}` | 155 | 129,14 | 182,95 | N/D | — | 155×404 | `p6_carga.txt`|
 
-- `docker stats` por nivel (CPU y memoria por servicio): PENDIENTE.
-- Cuellos de botella identificados: PENDIENTE. Un candidato conocido: con 50
-  solicitudes simultáneas, `/tareas/siguiente` tuvo un p50 de 1056,5 ms
-  (sección 5.2), atribuido como hipótesis al recorrido secuencial de
-  candidatas.
+- **`docker stats` por nivel (CPU y memoria por servicio):** no disponible (no se instrumentó captura de `docker stats` durante la corrida de P6).
+- **Cuellos de botella identificados:**
+  1. **Contención y agotamiento en `POST /tareas/siguiente`:** con 10 usuarios las 30 solicitudes obtienen tarea (`200`), pero a 40 usuarios aparecen 342 respuestas `409` frente a 19 `200`, y a 100 usuarios 422 respuestas `409` frente a 11 `200`, elevando el `p95` de 291,63 ms (10 usuarios) a 1508,72 ms (100 usuarios). Esto confirma la hipótesis de la sección 5.2 sobre la contención al recorrer candidatas concurrentemente entre Registro y Valkey.
+  2. **Degradación de latencia en escritura (`enviar` y `revision`) bajo alta concurrencia:** al pasar de 10 a 100 usuarios, el `p95` de `POST /tareas/{id}/enviar` sube de 216,67 ms a 1878,75 ms (×8,67) y el de `POST /tareas/{id}/revision` pasa de 262,47 ms a 2117,04 ms (×8,07), debido a la serialización de múltiples hops HTTP internos (Gateway -> Sesión -> Registro con `w: majority` -> Historial) en una sola máquina.
+  3. **Integración pendiente de `/analitica/{q}` en el gateway:** todas las llamadas del rol consumidor a `GET /analitica/{q}` devolvieron `404` (31, 98 y 155 muestras respectivamente) porque el enrutamiento del gateway hacia el servicio interno `analitica:8004` aún no estaba conectado al momento de ejecutar P6.
 
 ---
 
@@ -686,7 +713,11 @@ restauración a un estado conocido y registro de las acciones de recuperación.
 - El umbral de `XAUTOCLAIM` debe superar el tiempo normal de proceso para no
   reclamar trabajo activo cuando hay varios workers.
 
-**Analítica, datos y carga:** PENDIENTE (Emmanuel).
+**Analítica, datos y carga (Emmanuel)**
+
+- **Spark en un solo trabajador (`local[1]`):** aunque se intentó recrear el contenedor `analitica` con `SPARK_WORKERS=2`, la configuración fija en `docker-compose.yml` mantuvo `spark_workers: 1`, por lo que no se midió escalabilidad horizontal entre 1 y 2 workers ni el conjunto ampliado de 10M de filas (`eventos_grande`).
+- **Deduplicación global y poda de particiones:** `dropDuplicates(["event_id"])` obliga a un `Sort` y `Exchange` sobre todas las columnas de los 145 archivos antes de agregar, y los filtros de fecha sobre `ocurrido_en` no podaron particiones por `mes` (`PartitionFilters: []`), generando latencias de 13–38 s por consulta.
+- **Alcance de la prueba de carga P6:** se ejecutaron los niveles de 10, 40 y 100 usuarios en ráfagas de 8 s sin calentamiento de 30 s ni 3 repeticiones de 90 s, y sin recolectar `p50`, `p99` ni `docker stats`. Además, el agotamiento de tareas disponibles en el proyecto de prueba elevó la tasa de `409` en 40 y 100 usuarios.
 
 ---
 
@@ -703,7 +734,9 @@ restauración a un estado conocido y registro de las acciones de recuperación.
 | `p1_salud_aislamiento.txt` | `/salud` por capa (mensajes en Valkey), puertos y aislamiento | 2026-11-22 09:18:43 | `make p1-salud` | 42/42 |
 | `p8_mongo_fallas.txt` | Fallas de MongoDB | 2026-11-22 07:48:58 | `make p8-mongo` | 14/14 |
 | `smoke_integrante2_20261122T055742Z.txt` | Sesión + Historial en entorno aislado (sin gateway) | 2026-11-22 05:57:42 | `make i2-smoke` | Completado: borrador tras reinicio de Valkey y Parquet publicado |
-| P3, P4, P5, P6, P8 Valkey | — | — | — | PENDIENTE |
+| `p5_analitica.txt` | Analítica Spark Q1–Q5 (1.ª vs. 2.ª ejecución y planes `explain` Q1/Q3) | 2026-11-23 04:59:12 | `python3 proyecto2/pruebas/p5_analitica/run_p5.py` | Tabla de la sección 9 (145 archivos Parquet) |
+| `p6_carga.txt` | Carga HTTP contra gateway (10, 40 y 100 usuarios, 8 s/nivel) | 2026-11-23 04:56:51 | `P6_DURACION_S=8 python3 proyecto2/pruebas/p6_carga/run_p6.py` | Tabla de la sección 11 |
+| P3, P4, P8 Valkey | — | — | — | PENDIENTE |
 
 Cada archivo incluye al inicio el objetivo, la máquina y la configuración, y al
 final la fecha de término.
