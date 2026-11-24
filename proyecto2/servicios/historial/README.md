@@ -142,24 +142,135 @@ rendimiento siguen pendientes y deben conservarse en `proyecto2/evidence/`.
 - Los mensajes inválidos permanecen sin `XACK` y requieren inspección
   manual: el worker registra la excepción, pero no elimina eventos.
 
-### Pruebas y evidencias P4 aún pendientes
 
-Las pruebas unitarias (`test_historial_reprocesamiento.py`) cubren
-recuperación simulada, error del escritor, reinicio entre publicación y
-confirmación, deduplicación interna y archivos solapados. **No equivalen**
-a demostrar una caída real ni la frescura del datalake.
+### Pruebas y evidencias P4
 
-En WSL, con Docker Compose, Valkey AOF y el volumen de datalake:
+La prueba P4 integrada se ejecuta desde la raíz del repositorio
+con el Compose final levantado:
 
-1. Publicar eventos de prueba desde el gateway y detener el worker durante
-   un micro-lote (o antes de su `XACK`).
-2. Reiniciar el worker y esperar a que las entradas pendientes superen el
-   umbral `HISTORIAL_RECUPERACION_IDLE_MS`.
-3. Comprobar el grupo con `XPENDING historial:eventos historial-parquet`.
-4. Verificar el número de archivos, los `event_id`, los estados rechazados,
-   las lecturas de Spark y el tiempo hasta hacerse visible.
-5. Guardar fecha, configuración, comandos y salidas en `proyecto2/evidence/`.
+```bash
+make p4
+```
 
-La API de historial y los estados de MongoDB siguen separados. Aún se
-requiere acordar un mecanismo durable de entrega desde Registro tras un
-HTTP 200 del gateway para evitar el intervalo de pérdida entre motores.
+En Windows también puede ejecutarse directamente:
+
+```powershell
+python proyecto2/pruebas/p4_historial/p4_gateway_parquet.py
+```
+
+La ejecución del 24 de noviembre de 2026 obtuvo 27/27
+comprobaciones correctas.
+
+Resultados principales:
+
+- Recuperación de un mensaje pendiente mediante XAUTOCLAIM.
+- Confirmación mediante XACK después de publicar Parquet.
+- Reprocesamiento sin generar archivos adicionales.
+- Lectura correcta de Spark durante una escritura temporal.
+- Tres filas físicas reducidas a dos eventos únicos.
+- Ocho eventos de negocio materializados en el flujo de prueba.
+- Frescura de los dos envíos: 2,177 s y 2,366 s.
+- Conservación del estado histórico rechazada cuando MongoDB
+  devuelve la tarea a disponible.
+
+La evidencia completa se encuentra en:
+
+proyecto2/evidence/p4_gateway_parquet.txt
+
+La falla antes de XACK fue simulada. La frescura se midió
+mediante la primera observación del event_id en Spark,
+no mediante Q1 ni bajo condiciones de carga.
+
+
+
+## Estrategia de compactación de micro-lotes
+
+El worker genera archivos Parquet a partir de micro-lotes de hasta
+100 eventos. Con el uso continuo del sistema pueden acumularse
+muchos archivos pequeños, aumentando el costo de apertura,
+lectura y planificación de consultas en Spark.
+
+### Política de compactación
+
+La compactación se plantea como una operación manual de
+mantenimiento, preferiblemente sobre particiones mensuales
+cerradas o con una cantidad elevada de archivos pequeños.
+
+Como referencia inicial, se propone evaluar la compactación
+cuando una partición acumule más de 100 archivos y generar
+archivos de aproximadamente 128 MiB cuando el volumen de
+datos lo permita.
+
+Estos valores son parámetros propuestos, no resultados de
+una optimización experimental.
+
+### Procedimiento propuesto
+
+1. Suspender la entrada de nuevas operaciones al gateway y
+   comprobar que no existan eventos pendientes de publicación
+   desde Registro.
+
+2. Esperar a que el worker procese los eventos restantes de
+   Valkey Streams y verificar los mensajes pendientes.
+
+3. Detener el worker de Historial y el servicio de Analítica,
+   asegurando que ningún proceso lea o escriba la partición
+   durante la compactación.
+
+4. Leer los archivos Parquet publicados de la partición
+   mensual seleccionada.
+
+5. Verificar que los eventos con el mismo event_id tengan
+   contenido equivalente. Si existen diferencias, abortar
+   la compactación para investigar la inconsistencia.
+
+6. Deduplicar las filas por event_id, conservando las
+   diferentes versiones y transiciones de cada tarea.
+
+7. Escribir los archivos compactados en un directorio
+   temporal fuera del patrón de lectura de Spark.
+
+8. Validar el esquema, el contenido, los identificadores
+   únicos, la partición mensual y la cantidad de eventos
+   antes y después de la compactación.
+
+9. Respaldar los archivos originales fuera del directorio
+   consultado por Spark y publicar los archivos compactados
+   dentro de la partición correspondiente.
+
+10. Si la validación falla, restaurar los archivos originales.
+    Si es correcta, reanudar el worker, Analítica y el gateway.
+
+### Consistencia y deduplicación
+
+La compactación no modifica MongoDB, Valkey Streams ni los
+estados históricos de las tareas. Tampoco genera eventos de
+negocio adicionales.
+
+Los eventos de rechazo conservan el estado rechazada y su
+motivo original. Las diferentes transiciones de una tarea
+se conservan porque poseen identificadores event_id distintos.
+
+Spark debe continuar aplicando dropDuplicates(["event_id"])
+antes de ejecutar las consultas Q1-Q5, incluso después de
+una compactación. Esto permite manejar posibles eventos
+reprocesados o incorporados posteriormente.
+
+El intercambio de varios archivos no constituye una
+transacción atómica de toda la partición. Por esta razón,
+la estrategia requiere una ventana de mantenimiento sin
+lectores ni escritores activos.
+
+### Estado de implementación
+
+La compactación automática no está implementada en la
+versión actual. Se documenta como estrategia de mantenimiento
+y mejora futura del datalake.
+
+Las pruebas P4 validaron la publicación atómica por archivo,
+el reprocesamiento y la deduplicación mediante Spark, pero
+no evaluaron el rendimiento antes y después de compactar.
+
+Evidencia relacionada:
+
+- proyecto2/evidence/p4_gateway_parquet.txt
