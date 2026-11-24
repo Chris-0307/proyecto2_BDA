@@ -131,6 +131,7 @@ services:
       REGISTRO_URL: http://registro:8003
       SESION_URL: http://sesion:8001
       HISTORIAL_URL: http://historial:8002
+      ANALITICA_URL: http://analitica:8004
       # Mensajes de salud por capa: base 2 de Valkey, llaves salud:* (Sesión e Historial usan la base 0)
       SALUD_VALKEY_URL: redis://valkey:6379/2
     ports:

@@ -20,7 +20,7 @@ from fastapi.responses import JSONResponse, Response
 from . import clientes, flujo, salud as salud_capas
 from .clientes import REGISTRO_URL
 from .modelos import Borrador, Envio, DatosSesion, Recuperacion, Revision, SolicitudSiguiente
-
+from .clientes import ANALITICA_URL, REGISTRO_URL, TIMEOUT_ANALITICA
 
 RECONCILIAR_S = float(os.getenv("GATEWAY_RECONCILIAR_S", "10"))
 
@@ -168,6 +168,26 @@ async def recuperar(request: Request, datos: Recuperacion):
     codigo, cuerpo = await flujo.recuperar(request.state.request_id, datos.model_dump(mode="json"))
     return JSONResponse(status_code=codigo, content=cuerpo)
 
+# ---------------------------------------------------------------- analítica
+
+CONSULTAS = {"q1", "q2", "q3", "q4", "q5"}
+CONJUNTOS = {"principal", "grande"}
+
+
+@app.get("/analitica/{q}")
+async def analitica(request: Request, q: str, conjunto: str = "principal"):
+    """Consulta Q1–Q5 sobre Parquet (Spark). Timeout largo y sin reintento:
+    una consulta tarda 13–39 s y repetirla duplicaría el costo."""
+    if q not in CONSULTAS:
+        raise HTTPException(status_code=404, detail="consulta desconocida (q1..q5)")
+    if conjunto not in CONJUNTOS:
+        raise HTTPException(status_code=422, detail="conjunto debe ser principal o grande")
+    r = await clientes.llamar(
+        "analitica", ANALITICA_URL, "GET", f"/q/{q}",
+        request_id=request.state.request_id, params={"conjunto": conjunto},
+        timeout=TIMEOUT_ANALITICA, reintentar=False,
+    )
+    return _reenviar(r)
 
 # ---------------------------------------------------------------- salud
 

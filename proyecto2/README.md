@@ -17,8 +17,8 @@ resultados de las pruebas y las limitaciones están en el informe:
 | Registro | FastAPI + MongoDB (3 nodos en réplica) | 8003, interno | [`servicios/registro/`](servicios/registro/README.md) | Integrado |
 | Sesión | FastAPI + Valkey (AOF `everysec`) | 8001, interno | [`servicios/sesion/`](servicios/sesion/README.md) | Integrado |
 | Historial | FastAPI + Valkey Streams + worker Parquet | 8002, interno | [`servicios/historial/`](servicios/historial/README.md) | Integrado |
-| Analítica | Apache Spark | — | — | PENDIENTE |
-| Simulador | Cliente HTTP contra el gateway | — | — | PENDIENTE |
+| Analítica | FastAPI + PySpark (`local`, solo lectura sobre Parquet) | 8004, interno | `servicios/analitica/` | Integrado (falta ruta en gateway) |
+| Simulador | Cliente HTTP (`simulador_http.py`) contra el gateway | — | `simulador/` | Implementado |
 
 ## 2. Estructura del repositorio
 
@@ -58,8 +58,6 @@ proyecto2_BDA/
     ├── evidence/                     # salidas de las pruebas (ver sección 9)
     └── docs/                         # informe.md (informe del proyecto), contratos y guías de Sesión e Historial
 ```
-
-Carpetas previstas, aún no creadas: `servicios/analitica/` y `simulador/`.
 
 ## 3. Requisitos previos
 
@@ -113,9 +111,14 @@ siguen abajo.
 
 **Fallas de MongoDB (P8)**
 
+**Datos, analítica Spark, simulador y carga (P5/P6, Emmanuel)**
+
 | Objetivo | Qué hace | Evidencia |
 |---|---|---|
-| `make p8-mongo` | Tumba (SIGKILL) un secundario, luego el primario, luego los dos secundarios; restaura después de cada caso. Corre en el host, ~3-5 min | `evidence/p8_mongo_fallas.txt` |
+| `make datos` | Carga el dataset reproducible en MongoDB y genera Parquet mensuales con semilla fija | `datalake/eventos/` |
+| `make simulador` | Ejecuta el simulador HTTP (`simulador_http.py`) contra el gateway | — |
+| `make p5` | Ejecuta Q1–Q5 en Spark (1.ª vs. 2.ª corrida y planes `explain` de Q1/Q3) | `evidence/p5_analitica.txt` |
+| `make p6` | Ejecuta pruebas de carga HTTP (10, 40 y 100 usuarios) contra el gateway | `evidence/p6_carga.txt` |
 
 **Sesión e Historial (P3/P4, Christian)**
 
@@ -207,18 +210,16 @@ LiDAR y un lote de tareas. Requiere el sistema levantado.
 
 ```bash
 docker compose -f proyecto2/docker-compose.yml run --rm registro python /dataset/cargar_demo.py
-```
-
-**PENDIENTE:** el generador reproducible oficial (60 clientes, 180 proyectos,
-600 lotes, 60 000 tareas, 300 anotadores en 30 equipos y ~800 000 eventos)
-irá también en `dataset/`, con sus conteos y comandos documentados. Debe
-respetar el esquema de documentos del registro.
 
 ## 7. Consultas analíticas Q1–Q5
 
-**PENDIENTE (Emmanuel).** Comando de ejecución de cada consulta y del
-conjunto ampliado. Las definiciones, los resultados y los planes de ejecución
-irán en el informe, sección 9.
+El servicio `analitica` expone internamente las consultas `q1` a `q5` sobre
+`proyecto2/datalake/eventos/` en modo de solo lectura. Para ejecutar la
+prueba P5 completa (1.ª y 2.ª ejecución de Q1–Q5 y planes `explain` de Q1 y
+Q3):
+
+```bash
+make p5
 
 ## 8. Pruebas
 
