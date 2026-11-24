@@ -12,7 +12,7 @@ s ?= registro mongo-init sesion historial historial-worker
 .DEFAULT_GOAL := help
 .PHONY: help up ps down reset logs \
         replica aof demo smoke-registro registro smoke-gateway salud smoke-flujo \
-        p2-gateway p8-mongo write-concern p1-salud endpoints \
+        p2-gateway p8-mongo p8-valkey write-concern p1-salud endpoints \
         i2-up i2-down i2-smoke i2-pytest p3-p4 p3 p4 \
         datos simulador p5 p6
 
@@ -94,6 +94,9 @@ p8-mongo: ## P8: caída de secundario, primario y mayoría de MongoDB (deja evid
 	@mkdir -p $(EVIDENCIA)
 	set -o pipefail; python3 proyecto2/pruebas/p8_fallas/p8_mongo.py \
 	  | tee $(EVIDENCIA)/p8_mongo_fallas.txt
+
+p8-valkey: ## P8: fallas de Valkey, persistencia AOF, RTO y RPO
+	python3 proyecto2/pruebas/p8_fallas/p8_valkey.py
 
 ## ---- Valkey / Sesión / Historial (Christian) ----
 aof: ## Verifica AOF de Valkey (esperado: yes / everysec)
