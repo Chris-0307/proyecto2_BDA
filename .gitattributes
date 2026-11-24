@@ -1,0 +1,4 @@
+
+# Mantener compatibilidad 
+*.sh text eol=lf
+Makefile text eol=lf
