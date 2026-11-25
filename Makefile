@@ -12,9 +12,9 @@ s ?= registro mongo-init sesion historial historial-worker
 .DEFAULT_GOAL := help
 .PHONY: help up ps down reset logs \
         replica aof demo smoke-registro registro smoke-gateway salud smoke-flujo \
-        p2-gateway p8-mongo p8-valkey write-concern explain-registro p1-salud endpoints \
+        p2-gateway p8-mongo p8-valkey write-concern explain-registro p1-salud endpoints compactar \
         i2-up i2-down i2-smoke i2-pytest p3-p4 p3 p4 \
-        datos simulador p5 p5-validar p6
+        datos simulador p5 p5-validar p5-frescura p6
 
 help: ## Lista los objetivos
 	@grep -hE '^[a-zA-Z0-9_-]+:.*## ' $(MAKEFILE_LIST) | \
@@ -104,6 +104,13 @@ p8-valkey: ## P8: fallas de Valkey, persistencia AOF, RTO y RPO
 	python3 proyecto2/pruebas/p8_fallas/p8_valkey.py
 
 ## ---- Valkey / Sesión / Historial (Christian) ----
+compactar: ## Compacta los micro-lotes Parquet (detiene historial-worker; agrega a evidence/compactacion_parquet.txt)
+	@mkdir -p $(EVIDENCIA)
+	$(COMPOSE) stop historial-worker
+	set -o pipefail; $(COMPOSE) run --rm --no-deps -v "$(CURDIR)/proyecto2/mantenimiento:/mantenimiento:ro" \
+	  historial-worker python /mantenimiento/compactar_parquet.py | tee -a $(EVIDENCIA)/compactacion_parquet.txt; \
+	  rc=$$?; $(COMPOSE) start historial-worker; exit $$rc
+
 aof: ## Verifica AOF de Valkey (esperado: yes / everysec)
 	$(COMPOSE) exec valkey valkey-cli CONFIG GET appendonly
 	$(COMPOSE) exec valkey valkey-cli CONFIG GET appendfsync
@@ -156,7 +163,12 @@ p5-validar: ## P5: valida Q1-Q5 con un micro-dataset de resultado conocido (deja
 	set -o pipefail; $(COMPOSE) run --rm -v "$(CURDIR)/proyecto2/pruebas:/pruebas:ro" analitica \
 	  python /pruebas/p5_analitica/validar_consultas.py | tee $(EVIDENCIA)/p5_validacion_consultas.txt
 
-p6: ## P6: carga HTTP 10, 40 y 100 usuarios contra el gateway (deja evidencia)
+p5-frescura: ## Frescura hasta Q1: HTTP 200 de la aprobación -> Q1 la cuenta (deja evidencia, ~3 min)
+	@mkdir -p $(EVIDENCIA)
+	set -o pipefail; $(COMPOSE) run --rm registro python /pruebas/p5_analitica/frescura_q1.py \
+	  | tee $(EVIDENCIA)/p5_frescura_q1.txt
+
+p6: ## P6: carga HTTP 10, 40 y 100 usuarios repartidos en 100 proyectos (deja evidencia)
 	@mkdir -p $(EVIDENCIA)
 	set -o pipefail; python3 proyecto2/pruebas/p6_carga/run_p6.py \
 	  | tee $(EVIDENCIA)/p6_carga.txt

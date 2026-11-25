@@ -1,0 +1,19 @@
+Inicio UTC: 2026-11-25T02:29:49.886638+00:00
+Objetivo: frescura hasta Q1 (HTTP 200 de la aprobación -> Q1 la cuenta), por el gateway
+Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.41, CPU lógicos: 16
+Configuración: 5 muestras, modalidad imagen, límite 180 s por muestra; Q1 se repite sin pausa (cada llamada lee todo el datalake)
+[OK] crear proyecto responde 201 — código 201
+[OK] registrar lote de 5 tareas responde 201 — código 201
+Q1 de precalentamiento: 10.45 s
+[OK] muestra 1: Q1 pasa de 143 a 144 para (2026-11-25, imagen) — frescura 11.40 s (la consulta que lo vio empezó a los 0.00 s); intentos=1; Q1 base 10.50 s
+[OK] muestra 2: Q1 pasa de 144 a 145 para (2026-11-25, imagen) — frescura 11.23 s (la consulta que lo vio empezó a los 0.00 s); intentos=1; Q1 base 11.17 s
+[OK] muestra 3: Q1 pasa de 145 a 146 para (2026-11-25, imagen) — frescura 11.27 s (la consulta que lo vio empezó a los 0.00 s); intentos=1; Q1 base 10.87 s
+[OK] muestra 4: Q1 pasa de 146 a 147 para (2026-11-25, imagen) — frescura 11.34 s (la consulta que lo vio empezó a los 0.00 s); intentos=1; Q1 base 11.88 s
+[OK] muestra 5: Q1 pasa de 147 a 148 para (2026-11-25, imagen) — frescura 11.59 s (la consulta que lo vio empezó a los 0.00 s); intentos=1; Q1 base 11.46 s
+
+Frescura hasta Q1 (s), n=5: p50=11.34 p95=11.59 p99=11.59 mín=11.23 máx=11.59
+Duración de cada GET /analitica/q1 (s), n=5: p50=11.34 máx=11.59
+Interpretación: la frescura incluye la publicación del evento (gateway -> Historial -> worker -> Parquet) y al menos una lectura completa del datalake por Q1; su resolución es la duración de una Q1.
+
+Resultado: 7/7 comprobaciones correctas
+Fin UTC: 2026-11-25T02:32:01.267906+00:00

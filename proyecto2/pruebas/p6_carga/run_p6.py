@@ -1,4 +1,9 @@
-"""Prueba P6: Carga HTTP contra el gateway con 10, 40 y 100 usuarios."""
+"""Prueba P6: Carga HTTP contra el gateway con 10, 40 y 100 usuarios.
+
+Usa varios proyectos del dataset (P6_PROYECTOS, por defecto 100): el usuario u
+trabaja en el proyecto u % n, así 100 usuarios no agotan el inventario de un
+solo proyecto (500 tareas). P6_PROYECTO_ID fija uno solo, como antes.
+"""
 
 from __future__ import annotations
 
@@ -18,26 +23,28 @@ SIMULADOR = Path("proyecto2/simulador/simulador_http.py")
 
 def _ejecutar_mongo_python(codigo: str) -> dict:
     out = subprocess.check_output(
-        ["docker", "compose", "-f", COMPOSE_FILE, "run", "--rm", "registro", "python", "-c", codigo],
+        ["docker", "compose", "-f", COMPOSE_FILE, "exec", "-T", "registro", "python", "-c", codigo],
         text=True,
     ).strip().splitlines()[-1]
     return json.loads(out)
 
 
-def obtener_ids_y_inventario(proyecto_id_fijo: str = "") -> dict:
-    filtro_proy = f"{{'_id': '{proyecto_id_fijo}'}}" if proyecto_id_fijo else "{}"
+def obtener_ids_y_inventario(proyecto_id_fijo: str = "", n_proyectos: int = 100) -> dict:
+    # Proyectos del dataset generado ("Proyecto NNN"), en orden estable.
+    filtro_proy = (f"{{'_id': '{proyecto_id_fijo}'}}" if proyecto_id_fijo
+                   else "{'nombre': {'$regex': '^Proyecto [0-9]+$'}}")
     codigo = f"""
 import json, os
 from pymongo import MongoClient
 db = MongoClient(os.environ['MONGO_URI'])['plataforma']
-p = db.proyectos.find_one({filtro_proy}, {{'_id': 1, 'nombre': 1}})
-pid = p['_id'] if p else ''
-disp = db.tareas.count_documents({{'proyecto_id': pid, 'estado': 'disponible'}}) if pid else 0
-a = list(db.anotadores.find({{'es_revisor': False}}, {{'_id': 1}}).limit(10))
-r = list(db.anotadores.find({{'es_revisor': True}}, {{'_id': 1}}).limit(3))
+ps = list(db.proyectos.find({filtro_proy}, {{'_id': 1}}).sort('nombre', 1).limit({n_proyectos}))
+pids = [p['_id'] for p in ps]
+disp = db.tareas.count_documents({{'proyecto_id': {{'$in': pids}}, 'estado': 'disponible'}})
+a = list(db.anotadores.find({{'es_revisor': False, 'nombre': {{'$regex': '^Anotador E'}}}}, {{'_id': 1}}).sort('_id', 1).limit(100))
+r = list(db.anotadores.find({{'es_revisor': True, 'nombre': {{'$regex': '^Revisor E'}}}}, {{'_id': 1}}).sort('_id', 1).limit(30))
 print(json.dumps({{
-    'proyecto_id': pid,
-    'proyecto_nombre': p.get('nombre', '') if p else '',
+    'proyecto_id': ','.join(pids),
+    'proyectos': len(pids),
     'tareas_disponibles': disp,
     'anotadores': ','.join(x['_id'] for x in a),
     'revisores': ','.join(x['_id'] for x in r),
@@ -47,11 +54,12 @@ print(json.dumps({{
 
 
 def contar_disponibles(proyecto_id: str) -> int:
+    pids = [p for p in proyecto_id.split(",") if p]
     codigo = f"""
 import json, os
 from pymongo import MongoClient
 db = MongoClient(os.environ['MONGO_URI'])['plataforma']
-disp = db.tareas.count_documents({{'proyecto_id': '{proyecto_id}', 'estado': 'disponible'}})
+disp = db.tareas.count_documents({{'proyecto_id': {{'$in': {pids!r}}}, 'estado': 'disponible'}})
 print(json.dumps({{'tareas_disponibles': disp}}))
 """
     return int(_ejecutar_mongo_python(codigo)["tareas_disponibles"])
@@ -144,17 +152,20 @@ def main() -> None:
     duracion_s = float(os.getenv("P6_DURACION_S", "90"))
     repeticiones = int(os.getenv("P6_REPETICIONES", "3"))
     proyecto_fijo = os.getenv("P6_PROYECTO_ID", "")
+    n_proyectos = int(os.getenv("P6_PROYECTOS", "100"))
     niveles = [10, 40, 100]
 
-    ctx = obtener_ids_y_inventario(proyecto_fijo)
+    ctx = obtener_ids_y_inventario(proyecto_fijo, n_proyectos)
     print(f"=== P6 Carga HTTP — Inicio UTC: {datetime.now(timezone.utc).isoformat()} ===")
-    print("Contexto inicial:", json.dumps(ctx, ensure_ascii=False))
-
-    if ctx["tareas_disponibles"] < 4000:
-        print(
-            f"AVISO: el proyecto tiene {ctx['tareas_disponibles']} tareas en 'disponible' "
-            f"(se recomiendan ~4000 para evitar agotamiento en 100 usuarios)."
-        )
+    print("Contexto inicial:", json.dumps({
+        "proyectos": ctx["proyectos"],
+        "tareas_disponibles": ctx["tareas_disponibles"],
+        "anotadores": len(ctx["anotadores"].split(",")),
+        "revisores": len(ctx["revisores"].split(",")),
+        "reparto": "usuario u -> proyecto u % proyectos",
+    }, ensure_ascii=False))
+    if ctx["proyectos"] == 0:
+        raise SystemExit("No hay proyectos del dataset: ejecute make datos.")
 
     for u in niveles:
         print(f"\n--- Nivel de carga: {u} usuarios (warmup={warmup_s}s, {repeticiones}x{duracion_s}s) ---")

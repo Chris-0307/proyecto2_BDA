@@ -45,8 +45,9 @@ proyecto2_BDA/
     │   └── historial/                # API de eventos y worker Parquet, puerto interno 8002
     │       ├── Dockerfile, requirements*.txt, README.md
     │       └── app/                  # main.py, eventos.py, consumer.py, worker.py, parquet_writer.py
-    ├── dataset/                      # cargar_demo.py (carga de demostración)
+    ├── dataset/                      # cargar_demo.py (demo) y generar_dataset.py (dataset reproducible)
     ├── datalake/                     # Parquet publicado por el worker (no se versiona)
+    ├── mantenimiento/                # compactar_parquet.py (make compactar)
     ├── pruebas/                      # una carpeta por grupo de prueba del enunciado
     │   ├── p1_gateway/               # smoke_gateway.py, smoke_flujo.py, p1_salud_aislamiento.py
     │   ├── p2_registro/              # smoke_registro.py, verificar_replica.sh, p2_concurrencia_gateway.py, write_concern.py, explain_registro.py
@@ -180,50 +181,53 @@ docker compose -f proyecto2/docker-compose.yml down
 
 ### Corrida completa desde cero (todas las pruebas)
 
-Regenera los datos y toda la evidencia en `evidence/` con la máquina
-actual. Desde la raíz del repositorio, en este orden. Cada paso de prueba
-sobrescribe su archivo de evidencia. Duración total: ~45–60 min (P6 sola
-tarda ~20 min).
+Regenera los datos y toda la evidencia de `evidence/` en la máquina actual.
+Se ejecuta desde la raíz del repositorio y **en este orden**: cada paso deja
+el sistema listo para el siguiente y sobrescribe su archivo de evidencia
+(`compactacion_parquet.txt` acumula las corridas). Duración total: ~60–75 min
+(P6 sola tarda ~20 min). No correr dos pasos en paralelo.
 
-**0. Máquina.** Deja registrada la máquina donde se mide:
+**0. Preparación.**
 
 ```bash
+make i2-down     # apaga el Compose aislado de Sesión + Historial si quedó levantado
 { date -u; uname -srm; echo "CPU lógicos: $(nproc)"; free -h | head -2; \
   docker info --format 'Docker: {{.NCPU}} CPU, {{.MemTotal}} bytes, {{.ServerVersion}}'; } \
   | tee proyecto2/evidence/maquina.txt
 ```
 
-**1. Sistema limpio.** Borra los volúmenes de MongoDB y Valkey y levanta
-todo (pide confirmar con `s`). Esperar ~30 s a que la réplica elija
-primario:
+> Si el repo está en `/mnt/c/...` (disco de Windows), Spark abre cada Parquet
+> a través del puente Windows–Linux y todo es más lento. Clonarlo en el disco
+> de WSL (`~/`) acelera P4, P5, P6 y la frescura.
+
+**1. Sistema limpio.** Borra los volúmenes de MongoDB y Valkey, reconstruye
+y levanta todo (pide confirmar con `s`). Esperar ~30 s a que la réplica
+elija primario:
 
 ```bash
 make reset
 make ps          # todos "running" / "healthy"
-make salud       # "estado": "operativo"
+make salud       # "estado": "operativo" en las 4 capas
 make replica     # 1 PRIMARY + 2 SECONDARY, w: majority, índices -> p2_replica.txt
 make aof         # appendonly yes / appendfsync everysec
 ```
 
-**2. Datos.** Carga MongoDB y el datalake Parquet (~1 min):
+**2. Datos** (~1 min):
 
 ```bash
-make datos       # -> datos_generacion.txt
+make datos       # 60.000 tareas en MongoDB y ~830.000 eventos Parquet -> datos_generacion.txt
 ```
 
-**3. Analítica (P5).** Va justo después de los datos, antes de las pruebas
-que escriben eventos nuevos: Q1 ancla su ventana de 90 días en el último
-evento del datalake.
+**3. Analítica (P5).** Justo después de los datos, con el datalake limpio:
+Q1 ancla su ventana de 90 días en el último evento del datalake.
 
 ```bash
 make p5-validar  # Q1-Q5 contra valores a mano -> p5_validacion_consultas.txt
 make p5          # w=1 y w=2, tiempos y planes de Q1/Q3 -> p5_analitica.txt (~3 min)
 ```
 
-**4. Registro y gateway (P1, P2).**
-
-`smoke-registro` y `smoke-gateway` cargan antes la demo (`make demo`: cliente y
-anotadores de demostración), porque `make datos` vacía el registro.
+**4. Registro y gateway (P1, P2).** `smoke-registro` y `smoke-gateway`
+cargan antes la demo (`make demo`), porque `make datos` vacía el registro.
 
 ```bash
 make explain-registro   # planes de las consultas del registro -> p2_explain_registro.txt
@@ -231,31 +235,50 @@ make smoke-registro     # demo + smoke -> p2_registro_smoke.txt
 make smoke-gateway      # demo + smoke -> p1_gateway_smoke.txt
 make smoke-flujo        # -> p1_gateway_flujo.txt
 make p2-gateway         # 50 contra 10 -> p2_concurrencia_gateway.txt
-make write-concern      # w:1 frente a w:majority -> p2_write_concern.txt
+make write-concern      # w:1 frente a w:majority -> p2_write_concern.txt (~1 min)
 ```
 
-**5. Sesión e historial (P3, P4).**
+**5. Sesión, historial y frescura (P3, P4).**
 
 ```bash
-make p3          # -> p3_gateway_sesion.txt
-make p4          # -> p4_gateway_parquet.txt
+make p3          # -> p3_gateway_sesion.txt (~2,5 min: espera el vencimiento del lock)
+make p4          # -> p4_gateway_parquet.txt (~1 min)
+make compactar   # junta los micro-lotes que dejaron las pruebas -> compactacion_parquet.txt
+make p5-frescura # HTTP 200 de la aprobación -> Q1 la cuenta -> p5_frescura_q1.txt (~3 min)
 ```
 
-**6. Carga (P6).** Primero se recarga el dataset para que P6 parta con el
-inventario completo de tareas (las pruebas anteriores consumen tareas):
+`p5-frescura` debe correr sin otra carga y después de compactar: cada Q1
+lee todo el datalake, y con miles de micro-lotes pasaría de 120 s.
+
+**6. Carga (P6).** Se recarga el dataset para que P6 parta con el
+inventario completo, se dan más núcleos a Spark y, al terminar, se compacta
+y se devuelve Analítica a su configuración normal (eso además vacía la cola
+de consultas que deja P6):
 
 ```bash
 make datos
-make p6          # 10, 40 y 100 usuarios, 30 s de calentamiento y 3 x 90 s -> p6_carga.txt
+SPARK_WORKERS=8 docker compose -f proyecto2/docker-compose.yml up -d analitica
+make salud       # esperar "analitica": "operativo" (~10 s)
+make p6          # 10, 40 y 100 usuarios, 30 s de calentamiento y 3 x 90 s -> p6_carga.txt (~20 min)
+make compactar   # P6 deja miles de micro-lotes nuevos
+docker compose -f proyecto2/docker-compose.yml up -d analitica   # vuelve a SPARK_WORKERS por defecto
 ```
+
+P6 reparte a los usuarios entre 100 proyectos del dataset (el usuario `u`
+trabaja en el proyecto `u % 100`), así 100 usuarios no agotan las 500 tareas
+de un solo proyecto. `P6_PROYECTOS=n` cambia la cantidad y `P6_PROYECTO_ID=<id>`
+vuelve a un solo proyecto. La duración la fija el enunciado (3 niveles x
+(30 s + 3 x 90 s)); más recursos no la acortan, pero `SPARK_WORKERS` alto
+evita que `/analitica` se ahogue en cola.
 
 **7. Salud y fallas (P1, P8).** Detienen y reinician contenedores; van al
 final. Cada script deja el sistema como estaba:
 
 ```bash
-make p1-salud    # /salud con cada capa caída, puertos y aislamiento -> p1_salud_aislamiento.txt
-make p8-mongo    # secundario, primario y sin mayoría -> p8_mongo_fallas.txt (~3-5 min)
-make p8-valkey   # reinicio, AOF, RTO y RPO -> p8_valkey_fallas.txt
+make salud       # todo "operativo" antes de empezar
+make p1-salud    # /salud con cada capa caída, puertos y aislamiento -> p1_salud_aislamiento.txt (~1,5 min)
+make p8-mongo    # secundario, primario y sin mayoría -> p8_mongo_fallas.txt (~2-5 min)
+make p8-valkey   # reinicio, AOF, RTO y RPO -> p8_valkey_fallas.txt (~1 min)
 ```
 
 **8. Cierre.**
@@ -265,9 +288,26 @@ make endpoints   # opcional: OpenAPI actualizado en endpoints/openapi/
 make down
 ```
 
+**Resumen para copiar** (los mismos pasos, sin comentarios):
+
+```bash
+make i2-down
+make reset && make ps && make salud && make replica && make aof
+make datos
+make p5-validar && make p5
+make explain-registro && make smoke-registro && make smoke-gateway && make smoke-flujo && make p2-gateway && make write-concern
+make p3 && make p4 && make compactar && make p5-frescura
+make datos
+SPARK_WORKERS=8 docker compose -f proyecto2/docker-compose.yml up -d analitica && sleep 15
+make p6 && make compactar
+docker compose -f proyecto2/docker-compose.yml up -d analitica && sleep 15
+make p1-salud && make p8-mongo && make p8-valkey
+make down
+```
+
 Si un paso falla, revisar `make logs s=<servicio>` y repetir solo ese paso.
-Los pasos 4 a 7 no dependen entre sí salvo por el orden recomendado
-(P6 después de recargar datos; P1-salud y P8 al final).
+Si la corrida se interrumpe, se puede retomar desde el paso que falló sin
+`make down`: el sistema queda arriba entre pasos.
 
 ### Entorno aislado de Sesión + Historial
 
@@ -294,6 +334,21 @@ ls -R proyecto2/datalake/eventos | head
 
 El diseño (publicación atómica, deduplicación por `event_id`, fila
 `rechazada`) está en el informe, sección 7.
+
+**Compactación.** Cada micro-lote es un archivo; después de P6 una partición
+puede tener miles de archivos pequeños y cada consulta Spark tiene que
+abrirlos todos (más lento aún con el repo en `/mnt/c`). `make compactar`:
+
+1. detiene `historial-worker` (los eventos nuevos esperan en Valkey Streams);
+2. en cada partición con 20 o más micro-lotes, junta los archivos, deduplica
+   por `event_id`, escribe uno solo en `.staging/` y lo publica con
+   `os.replace`; verifica filas y `event_id` antes de retirar los originales;
+3. mueve los originales a `datalake/respaldo_compactacion/<fecha>/` (fuera de
+   lo que lee Spark; no se borran);
+4. reanuda el worker.
+
+No toca los archivos del generador (`gen-*`). Deja el resultado en
+`evidence/compactacion_parquet.txt` (cada corrida se agrega al final).
 
 ## 6. Carga de datos
 

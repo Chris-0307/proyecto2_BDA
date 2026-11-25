@@ -1,0 +1,16 @@
+Inicio UTC: 2026-11-25T02:29:12.773511+00:00
+Objetivo: compactar micro-lotes Parquet por partición mensual (deduplicado por event_id)
+Configuración: /datalake/eventos, mínimo 20 micro-lotes por partición; respaldo en /datalake/respaldo_compactacion/20261125T022912Z; historial-worker detenido
+[OK] mes=2026-11: 1680 -> 1 archivo; 2601 filas -> 2601 event_id únicos; 11,207,011 -> 166,747 bytes; 23.23 s
+Archivos Parquet publicados tras compactar: 61
+Resumen JSON: [{"mes": "mes=2026-11", "archivos_antes": 1680, "archivos_despues": 1, "filas": 2601, "event_id_unicos": 2601, "duplicados_quitados": 0, "bytes_antes": 11207011, "bytes_despues": 166747, "archivo": "compactado-20261125T022912Z.parquet", "segundos": 23.23}]
+Fin UTC: 2026-11-25T02:29:38.133516+00:00
+
+Inicio UTC: 2026-11-25T02:56:01.800699+00:00
+Objetivo: compactar micro-lotes Parquet por partición mensual (deduplicado por event_id)
+Configuración: /datalake/eventos, mínimo 20 micro-lotes por partición; respaldo en /datalake/respaldo_compactacion/20261125T025601Z; historial-worker detenido
+[OK] mes=2026-11: 8288 -> 1 archivo; 28553 filas -> 28553 event_id únicos; 60,521,136 -> 1,830,508 bytes; 234.57 s
+Archivos Parquet publicados tras compactar: 61
+Resumen JSON: [{"mes": "mes=2026-11", "archivos_antes": 8288, "archivos_despues": 1, "filas": 28553, "event_id_unicos": 28553, "duplicados_quitados": 0, "bytes_antes": 60521136, "bytes_despues": 1830508, "archivo": "compactado-20261125T025601Z.parquet", "segundos": 234.57}]
+Fin UTC: 2026-11-25T03:00:13.049715+00:00
+

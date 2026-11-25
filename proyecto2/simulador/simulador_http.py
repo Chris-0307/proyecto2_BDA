@@ -3,12 +3,15 @@
 Uso:
   python3 proyecto2/simulador/simulador_http.py \
     --base-url http://localhost:8000 \
-    --proyecto-id <UUID_PROYECTO> \
+    --proyecto-id <UUID_PROYECTO>[,<UUID_PROYECTO>...] \
     --anotadores <ID1>,<ID2> \
     --revisores <REV1> \
     --usuarios 10 \
     --duracion-s 15 \
     --semilla 20261122
+
+Con varios proyectos, el usuario u trabaja en el proyecto u % n (anotadores y
+consumidores), para que la carga no agote el inventario de uno solo.
 """
 
 from __future__ import annotations
@@ -285,7 +288,7 @@ def worker_consumidor(
 def main() -> None:
     parser = argparse.ArgumentParser(description="Simulador HTTP contra el gateway")
     parser.add_argument("--base-url", default="http://localhost:8000")
-    parser.add_argument("--proyecto-id", required=True)
+    parser.add_argument("--proyecto-id", required=True, help="Uno o varios IDs separados por coma")
     parser.add_argument("--anotadores", required=True, help="IDs separados por coma")
     parser.add_argument("--revisores", required=True, help="IDs separados por coma")
     parser.add_argument("--usuarios", type=int, default=6)
@@ -295,7 +298,8 @@ def main() -> None:
 
     anotadores = [x.strip() for x in args.anotadores.split(",") if x.strip()]
     revisores = [x.strip() for x in args.revisores.split(",") if x.strip()]
-    if not anotadores or not revisores:
+    proyectos = [x.strip() for x in args.proyecto_id.split(",") if x.strip()]
+    if not anotadores or not revisores or not proyectos:
         raise SystemExit("Debe indicar al menos un anotador y un revisor.")
 
     metricas = MetricasSimulador()
@@ -313,7 +317,7 @@ def main() -> None:
                         worker_anotador,
                         u,
                         args.base_url,
-                        args.proyecto_id,
+                        proyectos[u % len(proyectos)],
                         ant,
                         fin_ts,
                         args.semilla,
@@ -339,7 +343,7 @@ def main() -> None:
                         worker_consumidor,
                         u,
                         args.base_url,
-                        args.proyecto_id,
+                        proyectos[u % len(proyectos)],
                         fin_ts,
                         args.semilla,
                         metricas,
@@ -353,7 +357,7 @@ def main() -> None:
         "inicio_utc": t_inicio_utc,
         "fin_utc": datetime.now(timezone.utc).isoformat(),
         "base_url": args.base_url,
-        "proyecto_id": args.proyecto_id,
+        "proyectos": len(proyectos),
         "usuarios": args.usuarios,
         "duracion_s": args.duracion_s,
         "semilla": args.semilla,
