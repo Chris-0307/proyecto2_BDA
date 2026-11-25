@@ -1,0 +1,6 @@
+UNICO_COUNT: 5
+Q1: [Row(to_date(ocurrido_en)=datetime.date(2025, 5, 4), modalidad='imagen', count=1), Row(to_date(ocurrido_en)=datetime.date(2025, 5, 1), modalidad='lidar', count=1)]
+Q3_AVG: [Row(avg(duracion_ms)=2000.0)]
+Q2: [Row(equipo_id='eq2', mes='2025-05', count=1), Row(equipo_id='eq1', mes='2025-05', count=2)]
+Q4_RECH: [Row(cliente_id='c1', proyecto_id='p1', count=1)]
+Q5_FUERA_SLA: 1 de 2
