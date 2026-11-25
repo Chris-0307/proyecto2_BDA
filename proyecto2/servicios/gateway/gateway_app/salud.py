@@ -1,7 +1,8 @@
 """Salud por capa con mensajes en Valkey.
 
 Un monitor en segundo plano consulta cada SALUD_INTERVALO_S segundos el /salud
-de cada capa y publica el resultado en Valkey:
+de cada capa (Registro, Sesión, Historial y Analítica) y publica el resultado
+en Valkey:
 
 - `salud:capa:{capa}`: último estado (JSON) con expiración SALUD_TTL_S. Si el
   monitor deja de publicar, el estado expira y no queda un valor viejo.
@@ -24,12 +25,17 @@ from redis.asyncio import Redis
 from redis.exceptions import RedisError
 
 from . import clientes
-from .clientes import HISTORIAL_URL, REGISTRO_URL, SESION_URL
+from .clientes import ANALITICA_URL, HISTORIAL_URL, REGISTRO_URL, SESION_URL
 
 VALKEY_URL = os.getenv("SALUD_VALKEY_URL", "redis://valkey:6379/2")
 INTERVALO_S = float(os.getenv("SALUD_INTERVALO_S", "5"))
 TTL_S = int(os.getenv("SALUD_TTL_S", "15"))
-CAPAS = {"registro": REGISTRO_URL, "sesion": SESION_URL, "historial": HISTORIAL_URL}
+CAPAS = {
+    "registro": REGISTRO_URL,
+    "sesion": SESION_URL,
+    "historial": HISTORIAL_URL,
+    "analitica": ANALITICA_URL,
+}
 STREAM_MAXLEN = 1000
 
 _valkey: Redis | None = None

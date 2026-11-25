@@ -2,7 +2,7 @@
 
 Rutas de registro (proyectos, lotes, exportar), flujo de tareas (siguiente,
 borrador, enviar, liberar, revisión, recuperar) y /salud por capa.
-Pendiente: /analitica/{q1..q5} (Emmanuel).
+Analítica: /analitica/{q1..q5} reenvía al servicio de Spark (Emmanuel).
 
 El gateway no accede a ninguna base de datos: solo habla HTTP con los
 servicios internos. Propaga X-Request-ID (lo genera si no llega).
@@ -18,9 +18,8 @@ from fastapi import Body, FastAPI, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, Response
 
 from . import clientes, flujo, salud as salud_capas
-from .clientes import REGISTRO_URL
-from .modelos import Borrador, Envio, DatosSesion, Recuperacion, Revision, SolicitudSiguiente
 from .clientes import ANALITICA_URL, REGISTRO_URL, TIMEOUT_ANALITICA
+from .modelos import Borrador, Envio, DatosSesion, Recuperacion, Revision, SolicitudSiguiente
 
 RECONCILIAR_S = float(os.getenv("GATEWAY_RECONCILIAR_S", "10"))
 

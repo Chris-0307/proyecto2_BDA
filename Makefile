@@ -12,7 +12,7 @@ s ?= registro mongo-init sesion historial historial-worker
 .DEFAULT_GOAL := help
 .PHONY: help up ps down reset logs \
         replica aof demo smoke-registro registro smoke-gateway salud smoke-flujo \
-        p2-gateway p8-mongo p8-valkey write-concern p1-salud endpoints \
+        p2-gateway p8-mongo p8-valkey write-concern explain-registro p1-salud endpoints \
         i2-up i2-down i2-smoke i2-pytest p3-p4 p3 p4 \
         datos simulador p5 p6
 
@@ -81,9 +81,14 @@ write-concern: ## Latencia y rendimiento con w:1 frente a w:majority (deja evide
 	set -o pipefail; $(COMPOSE) run --rm registro python /pruebas/p2_registro/write_concern.py \
 	  | tee $(EVIDENCIA)/p2_write_concern.txt
 
+explain-registro: ## Planes explain de las consultas del registro (deja evidencia; usar tras make datos)
+	@mkdir -p $(EVIDENCIA)
+	set -o pipefail; $(COMPOSE) run --rm registro python /pruebas/p2_registro/explain_registro.py \
+	  | tee $(EVIDENCIA)/p2_explain_registro.txt
+
 endpoints: ## Exporta el OpenAPI de cada servicio a proyecto2/endpoints/openapi/
 	@mkdir -p proyecto2/endpoints/openapi
-	@for par in gateway:gateway_app.main registro:registro_app.main sesion:app.main historial:app.main; do \
+	@for par in gateway:gateway_app.main registro:registro_app.main sesion:app.main historial:app.main analitica:app.main; do \
 	  s=$${par%%:*}; m=$${par#*:}; \
 	  $(COMPOSE) exec -T $$s python -c "import json; from $$m import app; print(json.dumps(app.openapi(), ensure_ascii=False, indent=2))" \
 	    > proyecto2/endpoints/openapi/$$s.json && echo "OK proyecto2/endpoints/openapi/$$s.json"; \
@@ -130,9 +135,11 @@ p4: ## P4: materializacion, reprocesamiento, deduplicacion y frescura Parquet
 
 	
 ## ---- Datos, analítica Spark, simulador y carga (Emmanuel) ----
+# Parquet se genera en historial-worker: tiene app.parquet_writer, pyarrow y el datalake con escritura.
 datos: ## Genera dataset en MongoDB y datalake Parquet (semilla fija)
-	$(COMPOSE) run --rm registro python /dataset/generar_dataset.py --solo-mongo
-	$(COMPOSE) run --rm analitica python /dataset/generar_dataset.py --solo-parquet
+	$(COMPOSE) run --rm registro python /dataset/generar_dataset.py --solo mongo
+	$(COMPOSE) run --rm -v "$(CURDIR)/proyecto2/dataset:/dataset:ro" historial-worker \
+	  python /dataset/generar_dataset.py --solo parquet --dir-eventos /datalake/eventos
 
 simulador: ## Ejecuta el simulador HTTP contra el gateway
 	python3 proyecto2/simulador/simulador_http.py

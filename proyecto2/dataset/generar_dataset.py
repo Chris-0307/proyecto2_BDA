@@ -112,6 +112,8 @@ def generar_mongo(semilla: int, mongo_uri: str, db_nombre: str) -> dict:
     db.batches.insert_many(lotes)
 
     proy_por_id = {pr["_id"]: pr for pr in proyectos_mongo}
+    # Volver a correr el generador reemplaza las tareas de sus lotes (evita claves duplicadas).
+    db.tareas.delete_many({"batch_id": {"$in": [b["_id"] for b in lotes]}})
     tareas_batch = []
     total_tareas = 0
     for lote in lotes:

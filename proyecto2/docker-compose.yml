@@ -127,6 +127,7 @@ services:
       - sesion
       - historial
       - valkey
+      - analitica
     environment:
       REGISTRO_URL: http://registro:8003
       SESION_URL: http://sesion:8001

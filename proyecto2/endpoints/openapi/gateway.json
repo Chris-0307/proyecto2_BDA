@@ -424,6 +424,54 @@
         }
       }
     },
+    "/analitica/{q}": {
+      "get": {
+        "summary": "Analitica",
+        "description": "Consulta Q1–Q5 sobre Parquet (Spark). Timeout largo y sin reintento:\nuna consulta tarda 13–39 s y repetirla duplicaría el costo.",
+        "operationId": "analitica_analitica__q__get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Q"
+            }
+          },
+          {
+            "name": "conjunto",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "principal",
+              "title": "Conjunto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/salud": {
       "get": {
         "summary": "Salud",

@@ -1,7 +1,7 @@
 """P1 — /salud por capa, exposición de puertos y reglas de aislamiento.
 
-1. /salud con cada servicio interno detenido (Sesión, Historial, Registro) y
-   con Valkey detenido: el gateway sigue respondiendo y marca la capa caída.
+1. /salud con cada servicio interno detenido (Sesión, Historial, Analítica,
+   Registro) y con Valkey detenido: el gateway sigue respondiendo y marca la capa caída.
    El estado sale de los mensajes que el monitor del gateway guarda en Valkey
    (base 2, llaves salud:*); cada cambio queda en el stream salud:eventos.
    Con Valkey caído, el gateway consulta cada capa directamente. Se restaura
@@ -39,7 +39,7 @@ GATEWAY = os.getenv("GATEWAY_URL", "http://localhost:8000")
 resultados: list[bool] = []
 
 # Puertos internos que NO deben responder desde el host.
-INTERNOS = {"sesion": 8001, "historial": 8002, "registro": 8003,
+INTERNOS = {"sesion": 8001, "historial": 8002, "registro": 8003, "analitica": 8004,
             "mongo": 27017, "valkey": 6379}
 
 # Servicio -> (carpeta del código, módulos prohibidos, variables prohibidas)
@@ -48,7 +48,14 @@ REGLAS = {
     "registro": ("servicios/registro/registro_app", {"redis"}, {"VALKEY_URL"}),
     "sesion": ("servicios/sesion/app", {"pymongo"}, {"MONGO_URI"}),
     "historial": ("servicios/historial/app", {"pymongo"}, {"MONGO_URI"}),
+    "analitica": ("servicios/analitica/app", {"pymongo", "redis"}, {"MONGO_URI", "VALKEY_URL"}),
 }
+
+# El simulador solo habla con el gateway: sin clientes de bases ni hosts internos.
+SIMULADOR = "simulador"
+SIMULADOR_PROHIBIDOS = {"pymongo", "redis", "pyspark"}
+HOSTS_INTERNOS = ("mongo-", "valkey", "registro:", "sesion:", "historial:", "analitica:",
+                  ":8001", ":8002", ":8003", ":8004", ":27017", ":6379")
 
 
 def comprobar(nombre, condicion, detalle=""):
@@ -237,9 +244,26 @@ def aislamiento():
     llaves0 = [k for k in valkey_cli("-n", "0", "--scan", "--pattern", "salud:*").splitlines() if k]
     comprobar("gateway: no escribe llaves salud:* en la base de Sesión e Historial (0)",
               not llaves0, str(llaves0[:5]))
+    # Analítica: el datalake montado en solo lectura.
+    cid = compose("ps", "-q", "analitica")[1]
+    p = subprocess.run(["docker", "inspect", "-f", "{{json .Mounts}}", cid],
+                       capture_output=True, text=True)
+    montajes = json.loads(p.stdout or "[]") if p.returncode == 0 else []
+    datalake = [m for m in montajes if m.get("Destination") == "/datalake"]
+    comprobar("analitica: el datalake está montado en solo lectura",
+              datalake and not datalake[0].get("RW", True),
+              f"RW={datalake[0].get('RW') if datalake else 'sin montaje'}")
+
+    # Simulador: solo usa HTTP contra el gateway.
+    usados = imports_de(PROYECTO / SIMULADOR) & SIMULADOR_PROHIBIDOS
+    comprobar(f"simulador: el código no importa {sorted(SIMULADOR_PROHIBIDOS)}",
+              not usados, str(sorted(usados)))
+    texto = "".join(f.read_text(encoding="utf-8") for f in (PROYECTO / SIMULADOR).rglob("*.py"))
+    internos = [h for h in HOSTS_INTERNOS if h in texto]
+    comprobar("simulador: no menciona hosts ni puertos internos (solo el gateway :8000)",
+              not internos and "localhost:8000" in texto, str(internos))
     print("    Nota: todos los servicios comparten la red de Compose; el aislamiento se")
     print("    garantiza por dependencias y configuración, no por segmentación de red.")
-    print("    Analítica y simulador: PENDIENTES (aún no existen en el repositorio).")
 
 
 def main():
@@ -256,10 +280,11 @@ def main():
     try:
         caso_salud("sesion", "degradado", 200)
         caso_salud("historial", "degradado", 200)
+        caso_salud("analitica", "degradado", 200)
         caso_salud("registro", "caido", 503)
         caso_valkey()
     finally:
-        compose("start", "valkey", "sesion", "historial", "registro")
+        compose("start", "valkey", "sesion", "historial", "analitica", "registro")
         esperar(lambda: salud()[:2] == (200, "operativo"), 90)
 
     puertos()

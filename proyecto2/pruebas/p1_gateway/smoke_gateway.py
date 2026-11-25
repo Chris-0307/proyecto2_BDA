@@ -61,8 +61,8 @@ def main():
     comprobar("salud responde 200 y operativo", c == 200 and b.get("estado") == "operativo",
               f"{c} {b.get('estado') if isinstance(b, dict) else b}")
     capas = b.get("capas", {}) if isinstance(b, dict) else {}
-    comprobar("salud informa las capas registro, sesion e historial",
-              set(capas) == {"registro", "sesion", "historial"}, ",".join(capas))
+    comprobar("salud informa las capas registro, sesion, historial y analitica",
+              set(capas) == {"registro", "sesion", "historial", "analitica"}, ",".join(capas))
 
     rid = str(uuid4())
     c, proyecto, h = llamar("POST", "/proyectos", {

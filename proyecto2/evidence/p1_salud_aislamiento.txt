@@ -1,43 +1,52 @@
-Inicio UTC: 2026-11-22T09:18:43.047799+00:00
+Inicio UTC: 2026-11-25T00:37:22.989030+00:00
 Objetivo: P1 — /salud por capa, puertos publicados y reglas de aislamiento
 Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.39, CPU lógicos: 16
-[OK] estado inicial: /salud 200 operativo desde los mensajes en Valkey — (200, 'operativo', {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo'}) fuente=valkey
+[OK] estado inicial: /salud 200 operativo desde los mensajes en Valkey — (200, 'operativo', {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo', 'analitica': 'operativo'}) fuente=valkey
 
 --- /salud con sesion detenido ---
-    /salud: 200 degradado {'registro': 'operativo', 'sesion': 'caido', 'historial': 'operativo'}
-[OK] con sesion caído, /salud responde 200 degradado — 5.0s
-[OK] la capa sesion figura como caída y las demás no — {'registro': 'operativo', 'sesion': 'caido', 'historial': 'operativo'}
+    /salud: 200 degradado {'registro': 'operativo', 'sesion': 'caido', 'historial': 'operativo', 'analitica': 'operativo'}
+[OK] con sesion caído, /salud responde 200 degradado — 2.0s
+[OK] la capa sesion figura como caída y las demás no — {'registro': 'operativo', 'sesion': 'caido', 'historial': 'operativo', 'analitica': 'operativo'}
 [OK] el cambio de sesion a caído quedó en el stream salud:eventos
 [OK] las rutas que solo usan el registro siguen respondiendo (exportar -> 404) — código 404
 [OK] sin Sesión, guardar borrador responde 503 (sin colgarse) — código 503
-[OK] tras arrancar sesion, /salud vuelve a operativo — (200, 'operativo', {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo'})
+[OK] tras arrancar sesion, /salud vuelve a operativo — (200, 'operativo', {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo', 'analitica': 'operativo'})
 
 --- /salud con historial detenido ---
-    /salud: 200 degradado {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'caido'}
-[OK] con historial caído, /salud responde 200 degradado — 6.0s
-[OK] la capa historial figura como caída y las demás no — {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'caido'}
+    /salud: 200 degradado {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'caido', 'analitica': 'operativo'}
+[OK] con historial caído, /salud responde 200 degradado — 5.0s
+[OK] la capa historial figura como caída y las demás no — {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'caido', 'analitica': 'operativo'}
 [OK] el cambio de historial a caído quedó en el stream salud:eventos
 [OK] las rutas que solo usan el registro siguen respondiendo (exportar -> 404) — código 404
-[OK] tras arrancar historial, /salud vuelve a operativo — (200, 'operativo', {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo'})
+[OK] tras arrancar historial, /salud vuelve a operativo — (200, 'operativo', {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo', 'analitica': 'operativo'})
+
+--- /salud con analitica detenido ---
+    /salud: 200 degradado {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo', 'analitica': 'caido'}
+[OK] con analitica caído, /salud responde 200 degradado — 5.0s
+[OK] la capa analitica figura como caída y las demás no — {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo', 'analitica': 'caido'}
+[OK] el cambio de analitica a caído quedó en el stream salud:eventos
+[OK] las rutas que solo usan el registro siguen respondiendo (exportar -> 404) — código 404
+[OK] tras arrancar analitica, /salud vuelve a operativo — (200, 'operativo', {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo', 'analitica': 'operativo'})
 
 --- /salud con registro detenido ---
-    /salud: 503 caido {'registro': 'caido', 'sesion': 'operativo', 'historial': 'operativo'}
-[OK] con registro caído, /salud responde 503 caido — 5.0s
-[OK] la capa registro figura como caída y las demás no — {'registro': 'caido', 'sesion': 'operativo', 'historial': 'operativo'}
+    /salud: 503 caido {'registro': 'caido', 'sesion': 'operativo', 'historial': 'operativo', 'analitica': 'operativo'}
+[OK] con registro caído, /salud responde 503 caido — 6.0s
+[OK] la capa registro figura como caída y las demás no — {'registro': 'caido', 'sesion': 'operativo', 'historial': 'operativo', 'analitica': 'operativo'}
 [OK] el cambio de registro a caído quedó en el stream salud:eventos
 [OK] sin registro, exportar responde 503 — código 503
-[OK] tras arrancar registro, /salud vuelve a operativo — (200, 'operativo', {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo'})
+[OK] tras arrancar registro, /salud vuelve a operativo — (200, 'operativo', {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo', 'analitica': 'operativo'})
 
 --- /salud con valkey detenido ---
-    /salud: 200 degradado fuente=directo {'registro': 'operativo', 'sesion': 'caido', 'historial': 'caido'}
-[OK] sin Valkey, /salud responde 200 degradado consultando cada capa (fuente directo) — 16.0s
-[OK] sin Valkey, Sesión e Historial figuran caídos y el registro no — {'registro': 'operativo', 'sesion': 'caido', 'historial': 'caido'}
-[OK] tras arrancar Valkey, /salud vuelve a operativo con fuente valkey — (200, 'operativo', {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo'}) fuente=valkey
+    /salud: 200 degradado fuente=directo {'registro': 'operativo', 'sesion': 'caido', 'historial': 'caido', 'analitica': 'operativo'}
+[OK] sin Valkey, /salud responde 200 degradado consultando cada capa (fuente directo) — 16.4s
+[OK] sin Valkey, Sesión e Historial figuran caídos y el registro no — {'registro': 'operativo', 'sesion': 'caido', 'historial': 'caido', 'analitica': 'operativo'}
+[OK] tras arrancar Valkey, /salud vuelve a operativo con fuente valkey — (200, 'operativo', {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo', 'analitica': 'operativo'}) fuente=valkey
 
 --- Puertos publicados al host ---
     mongo-1           running   publicados=[]
     mongo-2           running   publicados=[]
     mongo-3           running   publicados=[]
+    analitica         running   publicados=[]
     gateway           running   publicados=[8000]
     historial         running   publicados=[]
     historial-worker  running   publicados=[]
@@ -49,6 +58,7 @@ Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.39, CPU lóg
 [OK] desde el host, sesion (8001) no es accesible — conexión rechazada
 [OK] desde el host, historial (8002) no es accesible — conexión rechazada
 [OK] desde el host, registro (8003) no es accesible — conexión rechazada
+[OK] desde el host, analitica (8004) no es accesible — conexión rechazada
 [OK] desde el host, mongo (27017) no es accesible — conexión rechazada
 [OK] desde el host, valkey (6379) no es accesible — conexión rechazada
 
@@ -65,12 +75,17 @@ Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.39, CPU lóg
 [OK] historial: el código no importa ['pymongo'] — []
 [OK] historial: la imagen no tiene instalado ['pymongo'] — []
 [OK] historial: el contenedor no recibe ['MONGO_URI'] — []
+[OK] analitica: el código no importa ['pymongo', 'redis'] — []
+[OK] analitica: la imagen no tiene instalado ['pymongo', 'redis'] — []
+[OK] analitica: el contenedor no recibe ['MONGO_URI', 'VALKEY_URL'] — []
 [OK] gateway: usa Valkey solo en su base propia (2) para la salud — redis://valkey:6379/2
-[OK] gateway: en la base 2 solo hay llaves salud:* — ['salud:capa:registro', 'salud:eventos', 'salud:capa:sesion', 'salud:capa:historial']
+[OK] gateway: en la base 2 solo hay llaves salud:* — ['salud:capa:registro', 'salud:eventos', 'salud:capa:sesion', 'salud:capa:historial', 'salud:capa:analitica']
 [OK] gateway: no escribe llaves salud:* en la base de Sesión e Historial (0) — []
+[OK] analitica: el datalake está montado en solo lectura — RW=False
+[OK] simulador: el código no importa ['pymongo', 'pyspark', 'redis'] — []
+[OK] simulador: no menciona hosts ni puertos internos (solo el gateway :8000) — []
     Nota: todos los servicios comparten la red de Compose; el aislamiento se
     garantiza por dependencias y configuración, no por segmentación de red.
-    Analítica y simulador: PENDIENTES (aún no existen en el repositorio).
 
-Resultado: 42/42 comprobaciones correctas
-Fin UTC: 2026-11-22T09:19:50.886694+00:00
+Resultado: 54/54 comprobaciones correctas
+Fin UTC: 2026-11-25T00:38:40.761535+00:00

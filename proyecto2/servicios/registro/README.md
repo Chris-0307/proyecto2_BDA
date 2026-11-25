@@ -267,6 +267,7 @@ actualización de `transiciones.py`.
 | `evidence/p2_registro_smoke.txt` | Transiciones, 409/403/422, 50 asignaciones simultáneas sobre una tarea, eventos pendientes | `make smoke-registro` |
 | `evidence/p2_concurrencia_gateway.txt` | 50 contra 10 por el gateway (con locks de Valkey) | `make p2-gateway` |
 | `evidence/p2_write_concern.txt` | `w:1` frente a `w:majority` (driver, 1 y 8 hilos) | `make write-concern` |
+| `evidence/p2_explain_registro.txt` | Planes `explain` de las consultas del registro (índice, claves y documentos examinados) | `make explain-registro` |
 | `evidence/p8_mongo_fallas.txt` | Secundario, primario y sin mayoría; elección, RTO y RPO | `make p8-mongo` |
 
 Resultados: [informe](../../docs/informe.md), secciones 5 y 12.1.

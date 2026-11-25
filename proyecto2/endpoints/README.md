@@ -8,11 +8,11 @@ servicio está en su README.
 
 | Servicio | Puerto | Publicado al host | Rutas | Detalle |
 |---|---|---|---|---|
-| Gateway | 8000 | Sí (único) | 10 | [`servicios/gateway/README.md`](../servicios/gateway/README.md) |
+| Gateway | 8000 | Sí (único) | 11 | [`servicios/gateway/README.md`](../servicios/gateway/README.md) |
 | Registro | 8003 | No | 6 | [`servicios/registro/README.md`](../servicios/registro/README.md) |
 | Sesión | 8001 | No | 6 | [`servicios/sesion/README.md`](../servicios/sesion/README.md) |
 | Historial | 8002 | No | 2 | [`servicios/historial/README.md`](../servicios/historial/README.md) |
-| Analítica | — | No | — | PENDIENTE (Emmanuel) |
+| Analítica | 8004 | No | 2 | [`servicios/analitica/`](../servicios/analitica/) |
 
 Los servicios internos respetan el máximo de seis rutas por servicio. El
 simulador y cualquier cliente externo solo hablan con el gateway.
@@ -35,7 +35,7 @@ internos no publican puerto), con el Compose levantado y desde la raíz del repo
 make endpoints
 ```
 
-Escribe `endpoints/openapi/{gateway,registro,sesion,historial}.json`. Vuelva a
+Escribe `endpoints/openapi/{gateway,registro,sesion,historial,analitica}.json`. Vuelva a
 correrlo si cambia alguna ruta.
 
 ## Gateway (`http://localhost:8000`)
@@ -56,7 +56,7 @@ traduce a 503. Solo los `GET` se reintentan una vez ante error de conexión.
 | `POST /tareas/{id}/revision` | `revisor_id`, `decision` (`aprobar`/`rechazar`), `motivo` | `tarea`, `eventos` | 200, 403, 404, 409, 422, 503 |
 | `POST /sesiones/recuperar` | `anotador_id`, `proyecto_id`, `tarea_id`, `token` | `estado`, `borrador`, `version`, `ttl_ms` | 200, 409, 422, 503 |
 | `GET /salud` | — | `estado` global y por capa | 200, 503 |
-| `GET /analitica/{q1..q5}?conjunto=` | — | — | PENDIENTE |
+| `GET /analitica/{q1..q5}?conjunto=` | `conjunto`: `principal` (defecto) o `grande` | `consulta`, `conjunto`, `duracion_ms`, `total_filas`, `filas` | 200, 404, 422, 503 |
 
 Significado de los códigos del flujo:
 
@@ -66,10 +66,11 @@ Significado de los códigos del flujo:
 | 403 | `revision`: el actor no es revisor |
 | 409 | Token ajeno o lock vencido; la tarea ya no está en el estado esperado (segundo envío, aprobar dos veces); el anotador ya tiene una tarea activa |
 | 422 | Cuerpo inválido, id que no es UUID, rechazo sin `motivo` |
-| 503 | MongoDB, Valkey o un servicio interno no responde. `enviar` no reintenta |
+| 404 | `analitica`: consulta distinta de `q1`..`q5` |
+| 503 | MongoDB, Valkey o un servicio interno no responde. `enviar` no reintenta. `analitica` espera hasta 120 s y no reintenta |
 
-`/salud`: `operativo` (200), `degradado` (200: Sesión o Historial caídos, o
-MongoDB sin un nodo) o `caido` (503: el registro no está disponible). El estado
+`/salud`: `operativo` (200), `degradado` (200: Sesión, Historial o Analítica
+caídos, o MongoDB sin un nodo) o `caido` (503: el registro no está disponible). El estado
 de cada capa sale de los mensajes que el monitor del gateway guarda en Valkey
 (base 2: `salud:capa:{capa}` y el stream `salud:eventos`); `fuente` indica
 `valkey` o `directo` (Valkey no disponible).
@@ -119,6 +120,16 @@ no expone HTTP.
 |---|---|---|
 | `POST /eventos` | Encola un evento de negocio | 202 nuevo, 200 repetido, 409 `event_id` con otro contenido, 422 inválido, 503 |
 | `GET /salud` | Comprueba Valkey | 200, 503 |
+
+## Analítica (`analitica:8004`)
+
+Consultas Q1–Q5 con Spark (Emmanuel). Solo lee el datalake Parquet, montado en
+solo lectura; no consulta MongoDB ni Historial.
+
+| Método y ruta | Uso | Códigos |
+|---|---|---|
+| `GET /q/{q1..q5}?conjunto=principal\|grande&incluir_plan=` | Ejecuta una consulta; con `incluir_plan=true` agrega el plan de Spark | 200, 404, 422 |
+| `GET /salud` | Comprueba que exista el datalake y cuenta los archivos Parquet | 200 |
 
 ## Contrato de eventos (Registro -> Gateway -> Historial)
 

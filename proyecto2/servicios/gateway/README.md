@@ -12,7 +12,7 @@ Python 3.12, FastAPI, httpx. Paquete `gateway_app`.
 |---|---|---|
 | 4 — básico | `POST /proyectos`, `POST /proyectos/{id}/lotes`, `GET /proyectos/{id}/exportar`, `GET /salud` | Implementado |
 | 5 — flujo de tareas | `POST /tareas/siguiente`, `PUT /tareas/{id}/borrador`, `POST /tareas/{id}/enviar`, `POST /tareas/{id}/liberar`, `POST /tareas/{id}/revision`, `POST /sesiones/recuperar` | Implementado |
-| 6 — analítica | `GET /analitica/{q1..q5}?conjunto=` | PENDIENTE (Emmanuel) |
+| 6 — analítica | `GET /analitica/{q1..q5}?conjunto=` | Implementado (ruta agregada por Emmanuel) |
 
 ## Estructura
 
@@ -38,6 +38,13 @@ servicios/gateway/
 
 El cuerpo y el código del servicio interno se devuelven tal cual. El esquema
 detallado de cada cuerpo está en [`../registro/README.md`](../registro/README.md).
+
+## Analítica
+
+`GET /analitica/{q1..q5}?conjunto=principal|grande` reenvía a
+`analitica:8004/q/{q}`. Espera hasta 120 s (`GATEWAY_TIMEOUT_ANALITICA_S`) y no
+reintenta, porque una consulta de Spark tarda decenas de segundos. Consulta
+desconocida: 404; `conjunto` inválido: 422; Analítica sin respuesta: 503.
 
 ## Flujo de tareas
 
@@ -137,14 +144,14 @@ Un servicio interno que no responde (conexión, timeout) se traduce a **503**.
 Cada capa notifica su estado con mensajes guardados en Valkey:
 
 1. Un monitor en segundo plano del gateway consulta cada 5 s
-   (`SALUD_INTERVALO_S`) el `/salud` de Registro, Sesión e Historial.
+   (`SALUD_INTERVALO_S`) el `/salud` de Registro, Sesión, Historial y Analítica.
 2. Publica el estado de cada capa en `salud:capa:{capa}` (JSON con `estado`,
    `detalle` y `revisado_en`), con expiración de 15 s (`SALUD_TTL_S`): si el
    monitor deja de publicar, el estado expira y no queda un valor viejo.
 3. Cada cambio de estado se agrega al stream `salud:eventos`, con
    `mensaje` = `capa:antes->ahora` (`inicio` si no había estado previo).
 4. `GET /salud` lee esos mensajes (`fuente: valkey`). Si Valkey no responde o
-   todavía no hay mensajes de las tres capas, consulta cada capa directamente
+   todavía no hay mensajes de todas las capas, consulta cada capa directamente
    (`fuente: directo`). El gateway responde siempre.
 
 El gateway usa **su propia base de Valkey (2)** y solo llaves `salud:*`.
@@ -155,8 +162,8 @@ cada capa.
 
 | Estado global | Condición | Código |
 |---|---|---|
-| `operativo` | Las tres capas operativas | 200 |
-| `degradado` | El registro responde, pero Sesión o Historial fallan, o MongoDB perdió un nodo | 200 |
+| `operativo` | Todas las capas operativas | 200 |
+| `degradado` | El registro responde, pero Sesión, Historial o Analítica fallan, o MongoDB perdió un nodo | 200 |
 | `caido` | El registro (fuente de verdad) no está disponible | 503 |
 
 Ejemplo:
@@ -191,6 +198,8 @@ docker compose -f proyecto2/docker-compose.yml exec valkey valkey-cli -n 2 XREVR
 | `GATEWAY_TIMEOUT_S` | `10` |
 | `GATEWAY_TIMEOUT_SALUD_S` | `3` |
 | `GATEWAY_RECONCILIAR_S` | `10` (0 lo desactiva) |
+| `ANALITICA_URL` | `http://analitica:8004` |
+| `GATEWAY_TIMEOUT_ANALITICA_S` | `120` |
 | `SALUD_VALKEY_URL` | `redis://valkey:6379/2` |
 | `SALUD_INTERVALO_S` | `5` |
 | `SALUD_TTL_S` | `15` |
@@ -252,10 +261,10 @@ de detenerlo.
 
 | Bloque | Qué comprueba |
 |---|---|
-| `/salud` por capa | Sesión caída -> 200 `degradado`; Historial caído -> 200 `degradado`; Registro caído -> 503 `caido`. Solo la capa detenida figura caída, el cambio queda en `salud:eventos`, las rutas que no dependen de ella siguen respondiendo y todo vuelve a `operativo` con `fuente: valkey` |
+| `/salud` por capa | Sesión, Historial o Analítica caídos -> 200 `degradado`; Registro caído -> 503 `caido`. Solo la capa detenida figura caída, el cambio queda en `salud:eventos`, las rutas que no dependen de ella siguen respondiendo y todo vuelve a `operativo` con `fuente: valkey` |
 | Valkey caído | 200 `degradado` con `fuente: directo`; Sesión e Historial caídos, Registro no; al volver, `fuente: valkey` |
-| Puertos | En `docker compose ps` solo `gateway` publica, y es el 8000; desde el host, 8001, 8002, 8003, 27017 y 6379 rechazan la conexión |
-| Aislamiento | Gateway sin `pymongo`; Registro sin `redis`; Sesión e Historial sin `pymongo`. Se revisa en tres niveles: imports del código, paquetes instalados en la imagen y variables de entorno del contenedor. Además: el gateway usa la base 2 de Valkey, ahí solo hay llaves `salud:*` y no hay llaves `salud:*` en la base 0 |
+| Puertos | En `docker compose ps` solo `gateway` publica, y es el 8000; desde el host, 8001, 8002, 8003, 8004, 27017 y 6379 rechazan la conexión |
+| Aislamiento | Gateway sin `pymongo`; Registro sin `redis`; Sesión e Historial sin `pymongo`; Analítica sin `pymongo` ni `redis` y con el datalake en solo lectura; simulador sin clientes de bases ni hosts internos (solo `localhost:8000`). Se revisa en imports del código, paquetes de la imagen y variables de entorno. Además: el gateway usa la base 2 de Valkey, ahí solo hay llaves `salud:*` y no hay llaves `salud:*` en la base 0 |
 
 Todos los servicios comparten la red de Compose: el aislamiento se garantiza
 por dependencias y configuración, no por segmentación de red. Si algo propio

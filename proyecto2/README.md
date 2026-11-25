@@ -17,7 +17,7 @@ resultados de las pruebas y las limitaciones están en el informe:
 | Registro | FastAPI + MongoDB (3 nodos en réplica) | 8003, interno | [`servicios/registro/`](servicios/registro/README.md) | Integrado |
 | Sesión | FastAPI + Valkey (AOF `everysec`) | 8001, interno | [`servicios/sesion/`](servicios/sesion/README.md) | Integrado |
 | Historial | FastAPI + Valkey Streams + worker Parquet | 8002, interno | [`servicios/historial/`](servicios/historial/README.md) | Integrado |
-| Analítica | FastAPI + PySpark (`local`, solo lectura sobre Parquet) | 8004, interno | `servicios/analitica/` | Integrado (falta ruta en gateway) |
+| Analítica | FastAPI + PySpark (`local`, solo lectura sobre Parquet) | 8004, interno | `servicios/analitica/` | Integrado (`/analitica/{q}` en el gateway) |
 | Simulador | Cliente HTTP (`simulador_http.py`) contra el gateway | — | `simulador/` | Implementado |
 
 ## 2. Estructura del repositorio
@@ -49,7 +49,7 @@ proyecto2_BDA/
     ├── datalake/                     # Parquet publicado por el worker (no se versiona)
     ├── pruebas/                      # una carpeta por grupo de prueba del enunciado
     │   ├── p1_gateway/               # smoke_gateway.py, smoke_flujo.py, p1_salud_aislamiento.py
-    │   ├── p2_registro/              # smoke_registro.py, verificar_replica.sh, p2_concurrencia_gateway.py, write_concern.py
+    │   ├── p2_registro/              # smoke_registro.py, verificar_replica.sh, p2_concurrencia_gateway.py, write_concern.py, explain_registro.py
     │   ├── p3_sesion/                # test_sesion_*.py, p3_reinicio_aof.py
     │   ├── p4_historial/             # test_historial_*.py
     │   ├── p3_p4_integracion/        # test_p3_p4_integracion.py, smoke_integrante2.sh, ejecutar_evidencias_p3_p4.py
@@ -98,6 +98,7 @@ siguen abajo.
 | `make registro` | Todo seguido: `up` + `replica` + `demo` + `smoke-registro` | las dos anteriores |
 | `make p2-gateway` | 50 solicitudes simultáneas contra 10 tareas por el gateway; latencias p50/p95/p99 | `evidence/p2_concurrencia_gateway.txt` |
 | `make write-concern` | Latencia y rendimiento de las escrituras del registro con `w:1` frente a `w:majority` | `evidence/p2_write_concern.txt` |
+| `make explain-registro` | Planes `explain` de las consultas del registro (tras `make datos`) | `evidence/p2_explain_registro.txt` |
 
 **Gateway (P1)**
 
@@ -107,7 +108,7 @@ siguen abajo.
 | `make smoke-gateway` | Rutas básicas, códigos y salud por capa (requiere `make demo`) | `evidence/p1_gateway_smoke.txt` |
 | `make endpoints` | Exporta el OpenAPI de cada servicio a `endpoints/openapi/` | — |
 | `make smoke-flujo` | Flujo completo: siguiente, borrador, recuperar, enviar, liberar, revisión, exportar | `evidence/p1_gateway_flujo.txt` |
-| `make p1-salud` | `/salud` con Sesión, Historial, Registro y Valkey caídos; mensajes de salud en Valkey; puertos publicados; reglas de aislamiento. Corre en el host | `evidence/p1_salud_aislamiento.txt` |
+| `make p1-salud` | `/salud` con Sesión, Historial, Analítica, Registro y Valkey caídos; mensajes de salud en Valkey; puertos publicados; reglas de aislamiento. Corre en el host | `evidence/p1_salud_aislamiento.txt` |
 
 **Fallas de MongoDB (P8)**
 
@@ -210,6 +211,25 @@ LiDAR y un lote de tareas. Requiere el sistema levantado.
 
 ```bash
 docker compose -f proyecto2/docker-compose.yml run --rm registro python /dataset/cargar_demo.py
+```
+
+**Dataset oficial** (generador reproducible, semilla fija `20261122`): 60
+clientes, 300 anotadores en 30 equipos (10 % revisores), 120 proyectos, 600
+lotes y 60 000 tareas en MongoDB; ~800 000 eventos de 100 000 tareas en el
+datalake Parquet, particionados por mes. Volver a correrlo reemplaza los datos
+que genera.
+
+```bash
+make datos
+```
+
+Equivale a:
+
+```bash
+docker compose -f proyecto2/docker-compose.yml run --rm registro python /dataset/generar_dataset.py --solo mongo
+docker compose -f proyecto2/docker-compose.yml run --rm -v "$(pwd)/proyecto2/dataset:/dataset:ro" historial-worker \
+  python /dataset/generar_dataset.py --solo parquet --dir-eventos /datalake/eventos
+```
 
 ## 7. Consultas analíticas Q1–Q5
 
@@ -220,6 +240,13 @@ Q3):
 
 ```bash
 make p5
+```
+
+Una consulta individual, por el gateway:
+
+```bash
+curl -s "http://localhost:8000/analitica/q1?conjunto=principal"
+```
 
 ## 8. Pruebas
 
@@ -240,6 +267,7 @@ archivo.
 | `p1_salud_aislamiento.txt` | `make p1-salud` (`pruebas/p1_gateway/p1_salud_aislamiento.py`) |
 | `p2_concurrencia_gateway.txt` | `make p2-gateway` (`pruebas/p2_registro/p2_concurrencia_gateway.py`) |
 | `p2_write_concern.txt` | `make write-concern` (`pruebas/p2_registro/write_concern.py`) |
+| `p2_explain_registro.txt` | `make explain-registro` (`pruebas/p2_registro/explain_registro.py`) |
 | `p8_mongo_fallas.txt` | `make p8-mongo` (`pruebas/p8_fallas/p8_mongo.py`) |
 
 Los resultados de cada prueba y su análisis están en el informe
