@@ -1,11 +1,11 @@
-Inicio UTC: 2026-11-25T00:37:22.989030+00:00
+Inicio UTC: 2026-11-25T02:02:03.633084+00:00
 Objetivo: P1 — /salud por capa, puertos publicados y reglas de aislamiento
 Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.39, CPU lógicos: 16
 [OK] estado inicial: /salud 200 operativo desde los mensajes en Valkey — (200, 'operativo', {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo', 'analitica': 'operativo'}) fuente=valkey
 
 --- /salud con sesion detenido ---
     /salud: 200 degradado {'registro': 'operativo', 'sesion': 'caido', 'historial': 'operativo', 'analitica': 'operativo'}
-[OK] con sesion caído, /salud responde 200 degradado — 2.0s
+[OK] con sesion caído, /salud responde 200 degradado — 3.0s
 [OK] la capa sesion figura como caída y las demás no — {'registro': 'operativo', 'sesion': 'caido', 'historial': 'operativo', 'analitica': 'operativo'}
 [OK] el cambio de sesion a caído quedó en el stream salud:eventos
 [OK] las rutas que solo usan el registro siguen respondiendo (exportar -> 404) — código 404
@@ -22,7 +22,7 @@ Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.39, CPU lóg
 
 --- /salud con analitica detenido ---
     /salud: 200 degradado {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo', 'analitica': 'caido'}
-[OK] con analitica caído, /salud responde 200 degradado — 5.0s
+[OK] con analitica caído, /salud responde 200 degradado — 6.0s
 [OK] la capa analitica figura como caída y las demás no — {'registro': 'operativo', 'sesion': 'operativo', 'historial': 'operativo', 'analitica': 'caido'}
 [OK] el cambio de analitica a caído quedó en el stream salud:eventos
 [OK] las rutas que solo usan el registro siguen respondiendo (exportar -> 404) — código 404
@@ -30,7 +30,7 @@ Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.39, CPU lóg
 
 --- /salud con registro detenido ---
     /salud: 503 caido {'registro': 'caido', 'sesion': 'operativo', 'historial': 'operativo', 'analitica': 'operativo'}
-[OK] con registro caído, /salud responde 503 caido — 6.0s
+[OK] con registro caído, /salud responde 503 caido — 5.0s
 [OK] la capa registro figura como caída y las demás no — {'registro': 'caido', 'sesion': 'operativo', 'historial': 'operativo', 'analitica': 'operativo'}
 [OK] el cambio de registro a caído quedó en el stream salud:eventos
 [OK] sin registro, exportar responde 503 — código 503
@@ -88,4 +88,4 @@ Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.39, CPU lóg
     garantiza por dependencias y configuración, no por segmentación de red.
 
 Resultado: 54/54 comprobaciones correctas
-Fin UTC: 2026-11-25T00:38:40.761535+00:00
+Fin UTC: 2026-11-25T02:03:21.879468+00:00

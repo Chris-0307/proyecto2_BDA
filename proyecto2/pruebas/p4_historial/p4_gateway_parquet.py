@@ -120,7 +120,7 @@ else:
 '''
 
 # Una sola JVM de prueba, precalentada antes del flujo HTTP. Se usa el
-# mismo lector de produccion, con conjunto grande (sin el filtro de 2025).
+# mismo lector de produccion (df_eventos_limpios sobre la ruta dada; ya no filtra por año).
 # No se escriben archivos desde el contenedor de analitica.
 SPARK = r'''
 import json, sys, traceback
@@ -143,7 +143,7 @@ try:
             if not archivos:
                 res = {"filas": [], "archivos": 0}
             else:
-                limpio = df_eventos_limpios(spark, ruta, conjunto="grande")
+                limpio = df_eventos_limpios(spark, ruta)
                 if req["modo"] == "fixture":
                     raw = spark.read.parquet(ruta.rstrip("/") + "/mes=*/*.parquet")
                     res = {"raw": raw.count(), "unicos": limpio.count(),
@@ -429,7 +429,7 @@ def main():
         log.info("Recursos Docker: %s", info.strip())
         log.info("Servicios:\n%s", docker("ps"))
         log.info("Configuracion: micro-lotes max 100; worker recuperacion 30000 ms; fixture usa grupo aislado y 20 ms")
-        log.info("Frescura: JVM precalentada, lector de produccion sin filtro historico (conjunto grande); incluye lectura, sondeo y transporte; no es demora exacta de escritura")
+        log.info("Frescura: JVM precalentada, lector de produccion (df_eventos_limpios sobre la ruta dada); incluye lectura, sondeo y transporte; no es demora exacta de escritura")
         with LectorSpark() as spark:
             fixture(spark)
             flujo(spark)

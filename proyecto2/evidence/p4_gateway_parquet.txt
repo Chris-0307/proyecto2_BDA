@@ -1,89 +1,124 @@
-2026-11-24 15:26:13,726 Objetivo P4: materializacion, reprocesamiento, lectura atomica, deduplicacion y frescura
-2026-11-24 15:26:13,726 Inicio UTC: 2026-11-24T21:26:13.726692+00:00
-2026-11-24 15:26:13,796 Host: Windows-10-10.0.19045-SP0; CPU logicos=12; Python=3.12.3
-2026-11-24 15:26:13,797 Comando reproducible: python proyecto2/pruebas/p4_historial/p4_gateway_parquet.py (make p4)
-2026-11-24 15:26:13,797 Comando Docker: docker compose -f proyecto2/docker-compose.yml version
-2026-11-24 15:26:13,893 Docker: Docker Compose version v5.3.1
-2026-11-24 15:26:14,558 Recursos Docker: 12 CPU; RAM=8301330432 bytes; Docker=29.7.2
-2026-11-24 15:26:14,559 Comando Docker: docker compose -f proyecto2/docker-compose.yml ps
-2026-11-24 15:26:14,812 Servicios:
+2026-11-24 19:33:12,283 Objetivo P4: materializacion, reprocesamiento, lectura atomica, deduplicacion y frescura
+2026-11-24 19:33:12,284 Inicio UTC: 2026-11-25T01:33:12.284179+00:00
+2026-11-24 19:33:12,285 Host: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.39; CPU logicos=16; Python=3.12.3
+2026-11-24 19:33:12,285 Comando reproducible: python proyecto2/pruebas/p4_historial/p4_gateway_parquet.py (make p4)
+2026-11-24 19:33:12,286 Comando Docker: docker compose -f proyecto2/docker-compose.yml version
+2026-11-24 19:33:12,330 Docker: Docker Compose version v2.39.2-desktop.1
+2026-11-24 19:33:12,692 Recursos Docker: 16 CPU; RAM=16680960000 bytes; Docker=28.3.3
+2026-11-24 19:33:12,692 Comando Docker: docker compose -f proyecto2/docker-compose.yml ps
+2026-11-24 19:33:12,873 Servicios:
 NAME                               IMAGE                            COMMAND                  SERVICE            CREATED          STATUS                    PORTS
-bda-mongo-1                        mongo:8.0                        "docker-entrypoint.s…"   mongo-1            24 minutes ago   Up 24 minutes (healthy)   27017/tcp
-bda-mongo-2                        mongo:8.0                        "docker-entrypoint.s…"   mongo-2            24 minutes ago   Up 24 minutes (healthy)   27017/tcp
-bda-mongo-3                        mongo:8.0                        "docker-entrypoint.s…"   mongo-3            24 minutes ago   Up 24 minutes (healthy)   27017/tcp
-bda-proyecto2-analitica-1          bda-proyecto2-analitica          "uvicorn app.main:ap…"   analitica          24 minutes ago   Up 24 minutes             8004/tcp
-bda-proyecto2-gateway-1            bda-proyecto2-gateway            "uvicorn gateway_app…"   gateway            24 minutes ago   Up 24 minutes             0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
-bda-proyecto2-historial-1          bda-proyecto2-historial          "uvicorn app.main:ap…"   historial          24 minutes ago   Up 24 minutes             8002/tcp
-bda-proyecto2-historial-worker-1   bda-proyecto2-historial-worker   "python -m app.worker"   historial-worker   24 minutes ago   Up 24 minutes             8002/tcp
-bda-proyecto2-registro-1           bda-proyecto2-registro           "uvicorn registro_ap…"   registro           24 minutes ago   Up 24 minutes             8003/tcp
-bda-proyecto2-sesion-1             bda-proyecto2-sesion             "uvicorn app.main:ap…"   sesion             24 minutes ago   Up 24 minutes             8001/tcp
-bda-proyecto2-valkey-1             valkey/valkey:8.1.11-alpine      "tini -- docker-entr…"   valkey             24 minutes ago   Up 23 minutes (healthy)   6379/tcp
-2026-11-24 15:26:14,813 Configuracion: micro-lotes max 100; worker recuperacion 30000 ms; fixture usa grupo aislado y 20 ms
-2026-11-24 15:26:14,815 Frescura: JVM precalentada, lector de produccion sin filtro historico (conjunto grande); incluye lectura, sondeo y transporte; no es demora exacta de escritura
-2026-11-24 15:26:16,210 Spark: /usr/local/lib/python3.12/site-packages/pyspark/bin/load-spark-env.sh: line 68: ps: command not found
-2026-11-24 15:26:20,395 Spark: Setting default log level to "WARN".
-2026-11-24 15:26:20,396 Spark: To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
-2026-11-24 15:26:20,705 Spark: 26/11/24 21:26:20 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
-2026-11-24 15:26:25,805 [OK] Spark inicializado y precalentado {'ready': True, 'spark': '3.5.3', 'master': 'local[1]'}
-2026-11-24 15:26:25,806 Comando Docker: docker compose -f proyecto2/docker-compose.yml exec -T historial-worker python [codigo Python]
-2026-11-24 15:26:26,803 [OK] Reingreso idempotente, XAUTOCLAIM y XACK tras publicar {"pendientes_antes": 1, "pendientes_despues": 0, "recuperados": 1, "archivos_antes": 1, "archivos_despues": 1, "filas": 1, "reintento_ingreso": "repetido", "archivo": "/datalake/p4-fixture-8f5484ac15104b8ebe1861633808af8b/mes=2026-11/lote-b55d2ee27ffc3bbc3c714142.parquet"}
-2026-11-24 15:26:30,369 [OK] Spark excluye temporal incompleto mientras el writer esta pausado {"raw": 1, "unicos": 1, "ids": ["57fca019-ca70-452e-80ae-683818c78ccb"], "temporales": 1, "archivos": 1}
-2026-11-24 15:26:30,582 Publicacion del segundo lote: {'archivo_publicado': '/datalake/p4-fixture-8f5484ac15104b8ebe1861633808af8b/mes=2026-11/lote-7dfd445ab2581150920aa1d4.parquet', 'filas': 2}
-2026-11-24 15:26:31,623 [OK] Dos lotes solapados: tres filas fisicas, dos event_id unicos {"raw": 3, "unicos": 2, "ids": ["57fca019-ca70-452e-80ae-683818c78ccb", "add6c209-8689-4f9c-9b8e-e2b84990fe8b"], "temporales": 0, "archivos": 2}
-2026-11-24 15:26:31,625 Restauracion fixture: directorio aislado eliminado=True
-2026-11-24 15:26:31,626 Comando Docker: docker compose -f proyecto2/docker-compose.yml exec -T registro python [codigo Python]
-2026-11-24 15:26:32,300 Spark: 26/11/24 21:26:32 WARN GarbageCollectionMetrics: To enable non-built-in garbage collector(s) List(G1 Concurrent GC), users should configure it(them) to spark.eventLog.gcMetrics.youngGenerationGarbageCollectors or spark.eventLog.gcMetrics.oldGenerationGarbageCollectors
-2026-11-24 15:26:32,812 POST /proyectos -> HTTP 201 (119.32 ms)
-2026-11-24 15:26:32,813 [OK] POST /proyectos responde 201 
-2026-11-24 15:26:32,885 POST /proyectos/a282117a-2eec-4bf3-b9a3-b88967c8b354/lotes -> HTTP 201 (71.36 ms)
-2026-11-24 15:26:32,885 [OK] POST /proyectos/a282117a-2eec-4bf3-b9a3-b88967c8b354/lotes responde 201 
-2026-11-24 15:26:32,886 Proyecto=a282117a-2eec-4bf3-b9a3-b88967c8b354 tarea=5596792b-f2e4-4246-8fcf-c6fb9c428e8c
-2026-11-24 15:26:33,055 POST /tareas/siguiente -> HTTP 200 (167.96 ms)
-2026-11-24 15:26:33,056 [OK] POST /tareas/siguiente responde 200 
-2026-11-24 15:26:33,057 [OK] Tarea adquirida 
-2026-11-24 15:26:33,070 PUT /tareas/5596792b-f2e4-4246-8fcf-c6fb9c428e8c/borrador -> HTTP 200 (11.87 ms)
-2026-11-24 15:26:33,071 [OK] PUT /tareas/5596792b-f2e4-4246-8fcf-c6fb9c428e8c/borrador responde 200 
-2026-11-24 15:26:33,153 POST /tareas/5596792b-f2e4-4246-8fcf-c6fb9c428e8c/enviar -> HTTP 200 (81.08 ms)
-2026-11-24 15:26:33,153 [OK] POST /tareas/5596792b-f2e4-4246-8fcf-c6fb9c428e8c/enviar responde 200 
-2026-11-24 15:26:33,154 [OK] MongoDB confirma anotada 
-2026-11-24 15:26:35,330 [OK] Spark observa tarea_anotada con estado anotada [{"event_id": "d506d463-7a8c-41fe-9120-6157ed5352a8", "tipo_evento": "tarea_anotada", "estado": "anotada", "version": 3, "motivo_rechazo": null}]
-2026-11-24 15:26:35,331 Frescura HTTP 200 -> primera observacion Spark: tipo=tarea_anotada event_id=d506d463-7a8c-41fe-9120-6157ed5352a8 segundos=2.177 intentos=2 archivos=4
-2026-11-24 15:26:35,359 POST /tareas/5596792b-f2e4-4246-8fcf-c6fb9c428e8c/enviar -> HTTP 409 (25.80 ms)
-2026-11-24 15:26:35,359 [OK] POST /tareas/5596792b-f2e4-4246-8fcf-c6fb9c428e8c/enviar responde 409 
-2026-11-24 15:26:35,437 POST /tareas/5596792b-f2e4-4246-8fcf-c6fb9c428e8c/revision -> HTTP 200 (77.32 ms)
-2026-11-24 15:26:35,438 [OK] POST /tareas/5596792b-f2e4-4246-8fcf-c6fb9c428e8c/revision responde 200 
-2026-11-24 15:26:35,439 [OK] MongoDB devuelve disponible 
-2026-11-24 15:26:37,370 [OK] Spark observa revision_rechazada con estado rechazada [{"event_id": "5bf3c7f8-7fd6-49f7-9b1a-9951399a3df9", "tipo_evento": "revision_rechazada", "estado": "rechazada", "version": 5, "motivo_rechazo": "caja_incompleta"}]
-2026-11-24 15:26:37,371 Frescura HTTP 200 -> primera observacion Spark: tipo=revision_rechazada event_id=5bf3c7f8-7fd6-49f7-9b1a-9951399a3df9 segundos=1.933 intentos=2 archivos=6
-2026-11-24 15:26:37,518 POST /tareas/siguiente -> HTTP 200 (145.78 ms)
-2026-11-24 15:26:37,518 [OK] POST /tareas/siguiente responde 200 
-2026-11-24 15:26:37,519 [OK] Tarea adquirida 
-2026-11-24 15:26:37,539 PUT /tareas/5596792b-f2e4-4246-8fcf-c6fb9c428e8c/borrador -> HTTP 200 (17.61 ms)
-2026-11-24 15:26:37,539 [OK] PUT /tareas/5596792b-f2e4-4246-8fcf-c6fb9c428e8c/borrador responde 200 
-2026-11-24 15:26:37,625 POST /tareas/5596792b-f2e4-4246-8fcf-c6fb9c428e8c/enviar -> HTTP 200 (85.07 ms)
-2026-11-24 15:26:37,626 [OK] POST /tareas/5596792b-f2e4-4246-8fcf-c6fb9c428e8c/enviar responde 200 
-2026-11-24 15:26:37,627 [OK] MongoDB confirma anotada 
-2026-11-24 15:26:39,900 Spark: [Stage 75:>                                                         (0 + 1) / 1]
-2026-11-24 15:26:39,991 [OK] Spark observa tarea_anotada con estado anotada [{"event_id": "7129e593-d1c9-4315-ac10-b8581f59f1b4", "tipo_evento": "tarea_anotada", "estado": "anotada", "version": 7, "motivo_rechazo": null}]
-2026-11-24 15:26:39,992 Frescura HTTP 200 -> primera observacion Spark: tipo=tarea_anotada event_id=7129e593-d1c9-4315-ac10-b8581f59f1b4 segundos=2.366 intentos=2 archivos=8
-2026-11-24 15:26:40,024 POST /tareas/5596792b-f2e4-4246-8fcf-c6fb9c428e8c/enviar -> HTTP 409 (31.48 ms)
-2026-11-24 15:26:40,025 [OK] POST /tareas/5596792b-f2e4-4246-8fcf-c6fb9c428e8c/enviar responde 409 
-2026-11-24 15:26:40,138 POST /tareas/5596792b-f2e4-4246-8fcf-c6fb9c428e8c/revision -> HTTP 200 (111.57 ms)
-2026-11-24 15:26:40,138 [OK] POST /tareas/5596792b-f2e4-4246-8fcf-c6fb9c428e8c/revision responde 200 
-2026-11-24 15:26:40,139 [OK] MongoDB devuelve aprobada 
-2026-11-24 15:26:42,681 Spark: [Stage 93:>                                                         (0 + 1) / 1]
-2026-11-24 15:26:42,738 [OK] Spark observa revision_aprobada con estado aprobada [{"event_id": "07d91cb2-ef5c-4566-b72c-78a0f2c54efb", "tipo_evento": "revision_aprobada", "estado": "aprobada", "version": 9, "motivo_rechazo": null}]
-2026-11-24 15:26:42,738 Frescura HTTP 200 -> primera observacion Spark: tipo=revision_aprobada event_id=07d91cb2-ef5c-4566-b72c-78a0f2c54efb segundos=2.600 intentos=2 archivos=10
-2026-11-24 15:26:42,739 [OK] Ocho eventos de negocio; borradores y envios 409 no generan filas [{"event_id": "631f47dc-c9fe-4ad8-baf8-af69f19bce1c", "tipo_evento": "tarea_abierta", "estado": "abierta", "version": 2, "motivo_rechazo": null}, {"event_id": "d506d463-7a8c-41fe-9120-6157ed5352a8", "tipo_evento": "tarea_anotada", "estado": "anotada", "version": 3, "motivo_rechazo": null}, {"event_id": "951414a2-8aa1-45cc-9463-629d49cdd5c9", "tipo_evento": "revision_iniciada", "estado": "en_revision", "version": 4, "motivo_rechazo": null}, {"event_id": "5bf3c7f8-7fd6-49f7-9b1a-9951399a3df9", "tipo_evento": "revision_rechazada", "estado": "rechazada", "version": 5, "motivo_rechazo": "caja_incompleta"}, {"event_id": "009ea8b6-35e3-4cd5-a5e9-164fb65ed960", "tipo_evento": "tarea_abierta", "estado": "abierta", "version": 6, "motivo_rechazo": null}, {"event_id": "7129e593-d1c9-4315-ac10-b8581f59f1b4", "tipo_evento": "tarea_anotada", "estado": "anotada", "version": 7, "motivo_rechazo": null}, {"event_id": "4f341fe0-680a-4d06-a42c-e9d8c017c8cb", "tipo_evento": "revision_iniciada", "estado": "en_revision", "version": 8, "motivo_rechazo": null}, {"event_id": "07d91cb2-ef5c-4566-b72c-78a0f2c54efb", "tipo_evento": "revision_aprobada", "estado": "aprobada", "version": 9, "motivo_rechazo": null}]
-2026-11-24 15:26:42,741 Se conservan entidades y eventos del flujo real para trazabilidad; no se borran datos previos.
-2026-11-24 15:26:43,704 Latencia HTTP ms POST /proyectos: n=1; p50=119.320; p95=119.320; p99=119.320; muestras=[119.32030000025406] (rango mas cercano)
-2026-11-24 15:26:43,704 Latencia HTTP ms POST /proyectos/{id}/lotes: n=1; p50=71.362; p95=71.362; p99=71.362; muestras=[71.36199999877135] (rango mas cercano)
-2026-11-24 15:26:43,705 Latencia HTTP ms POST /tareas/siguiente: n=2; p50=145.775; p95=167.962; p99=167.962; muestras=[167.96230000181822, 145.7750000008673] (rango mas cercano)
-2026-11-24 15:26:43,707 Latencia HTTP ms PUT /tareas/{id}/borrador: n=2; p50=11.868; p95=17.613; p99=17.613; muestras=[11.86759999836795, 17.612600000575185] (rango mas cercano)
-2026-11-24 15:26:43,707 Latencia HTTP ms POST /tareas/{id}/enviar: n=4; p50=31.484; p95=85.066; p99=85.066; muestras=[81.08160000119824, 25.80149999994319, 85.06589999888092, 31.483700000535464] (rango mas cercano)
-2026-11-24 15:26:43,708 Latencia HTTP ms POST /tareas/{id}/revision: n=2; p50=77.325; p95=111.568; p99=111.568; muestras=[77.32499999838183, 111.5682999989076] (rango mas cercano)
-2026-11-24 15:26:43,709 Frescura de envios (s): n=2; p50=2.177; p95=2.366; p99=2.366; muestras=[2.177112000001216, 2.366191599998274] (rango mas cercano)
-2026-11-24 15:26:43,711 Limitaciones: fixture simula falla antes de XACK; no mata worker real. Pocas muestras; no es carga. Q1 no se midio; se observo event_id directo en Spark.
-2026-11-24 15:26:43,711 Resultado: 27/27 comprobaciones ejecutadas correctas; exit=0
-2026-11-24 15:26:43,711 Fin UTC: 2026-11-24T21:26:43.711025+00:00
-2026-11-24 15:26:43,712 Evidencia: C:\Users\chris\OneDrive\Documentos\GitHub\proyecto2_BDA\proyecto2\evidence\p4_gateway_parquet.txt
+bda-mongo-1                        mongo:8.0                        "docker-entrypoint.s…"   mongo-1            20 minutes ago   Up 20 minutes (healthy)   27017/tcp
+bda-mongo-2                        mongo:8.0                        "docker-entrypoint.s…"   mongo-2            20 minutes ago   Up 20 minutes (healthy)   27017/tcp
+bda-mongo-3                        mongo:8.0                        "docker-entrypoint.s…"   mongo-3            20 minutes ago   Up 20 minutes (healthy)   27017/tcp
+bda-proyecto2-analitica-1          bda-proyecto2-analitica          "uvicorn app.main:ap…"   analitica          15 minutes ago   Up 15 minutes             8004/tcp
+bda-proyecto2-gateway-1            bda-proyecto2-gateway            "uvicorn gateway_app…"   gateway            20 minutes ago   Up 19 minutes             0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
+bda-proyecto2-historial-1          bda-proyecto2-historial          "uvicorn app.main:ap…"   historial          20 minutes ago   Up 20 minutes             8002/tcp
+bda-proyecto2-historial-worker-1   bda-proyecto2-historial-worker   "python -m app.worker"   historial-worker   20 minutes ago   Up 20 minutes             8002/tcp
+bda-proyecto2-registro-1           bda-proyecto2-registro           "uvicorn registro_ap…"   registro           20 minutes ago   Up 19 minutes             8003/tcp
+bda-proyecto2-sesion-1             bda-proyecto2-sesion             "uvicorn app.main:ap…"   sesion             20 minutes ago   Up 20 minutes             8001/tcp
+bda-proyecto2-valkey-1             valkey/valkey:8.1.11-alpine      "tini -- docker-entr…"   valkey             20 minutes ago   Up 6 minutes (healthy)    6379/tcp
+2026-11-24 19:33:12,873 Configuracion: micro-lotes max 100; worker recuperacion 30000 ms; fixture usa grupo aislado y 20 ms
+2026-11-24 19:33:12,874 Frescura: JVM precalentada, lector de produccion (df_eventos_limpios sobre la ruta dada); incluye lectura, sondeo y transporte; no es demora exacta de escritura
+2026-11-24 19:33:13,680 Spark: /usr/local/lib/python3.12/site-packages/pyspark/bin/load-spark-env.sh: line 68: ps: command not found
+2026-11-24 19:33:14,710 Spark: Setting default log level to "WARN".
+2026-11-24 19:33:14,711 Spark: To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+2026-11-24 19:33:14,897 Spark: 26/11/25 01:33:14 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+2026-11-24 19:33:18,616 [OK] Spark inicializado y precalentado {'ready': True, 'spark': '3.5.3', 'master': 'local[1]'}
+2026-11-24 19:33:18,617 Comando Docker: docker compose -f proyecto2/docker-compose.yml exec -T historial-worker python [codigo Python]
+2026-11-24 19:33:19,139 [OK] Reingreso idempotente, XAUTOCLAIM y XACK tras publicar {"pendientes_antes": 1, "pendientes_despues": 0, "recuperados": 1, "archivos_antes": 1, "archivos_despues": 1, "filas": 1, "reintento_ingreso": "repetido", "archivo": "/datalake/p4-fixture-b6b9ff9161b54e2f83c279c024c89399/mes=2026-11/lote-0d34d64c34fb9b2774c6f0e2.parquet"}
+2026-11-24 19:33:20,723 Spark: [Stage 1:>                                                          (0 + 1) / 1]
+2026-11-24 19:33:23,175 [OK] Spark excluye temporal incompleto mientras el writer esta pausado {"raw": 1, "unicos": 1, "ids": ["e5f3928f-b3f7-4d94-b31c-0beb8398295b"], "temporales": 1, "archivos": 1}
+2026-11-24 19:33:23,305 Publicacion del segundo lote: {'archivo_publicado': '/datalake/p4-fixture-b6b9ff9161b54e2f83c279c024c89399/mes=2026-11/lote-828442a126d3554d4eef3c9b.parquet', 'filas': 2}
+2026-11-24 19:33:24,386 [OK] Dos lotes solapados: tres filas fisicas, dos event_id unicos {"raw": 3, "unicos": 2, "ids": ["c59a0f56-919c-4320-89bc-fdca5f0fedcc", "e5f3928f-b3f7-4d94-b31c-0beb8398295b"], "temporales": 0, "archivos": 2}
+2026-11-24 19:33:24,399 Restauracion fixture: directorio aislado eliminado=True
+2026-11-24 19:33:24,399 Comando Docker: docker compose -f proyecto2/docker-compose.yml exec -T registro python [codigo Python]
+2026-11-24 19:33:25,315 POST /proyectos -> HTTP 201 (27.92 ms)
+2026-11-24 19:33:25,315 [OK] POST /proyectos responde 201 
+2026-11-24 19:33:25,327 POST /proyectos/4ec9ef98-e036-4524-9d85-74477125025d/lotes -> HTTP 201 (11.10 ms)
+2026-11-24 19:33:25,327 [OK] POST /proyectos/4ec9ef98-e036-4524-9d85-74477125025d/lotes responde 201 
+2026-11-24 19:33:25,327 Proyecto=4ec9ef98-e036-4524-9d85-74477125025d tarea=fdf270a5-76cd-4753-a686-850c671677d7
+2026-11-24 19:33:25,359 POST /tareas/siguiente -> HTTP 200 (31.03 ms)
+2026-11-24 19:33:25,359 [OK] POST /tareas/siguiente responde 200 
+2026-11-24 19:33:25,359 [OK] Tarea adquirida 
+2026-11-24 19:33:25,365 PUT /tareas/fdf270a5-76cd-4753-a686-850c671677d7/borrador -> HTTP 200 (5.89 ms)
+2026-11-24 19:33:25,366 [OK] PUT /tareas/fdf270a5-76cd-4753-a686-850c671677d7/borrador responde 200 
+2026-11-24 19:33:25,391 POST /tareas/fdf270a5-76cd-4753-a686-850c671677d7/enviar -> HTTP 200 (25.35 ms)
+2026-11-24 19:33:25,392 [OK] POST /tareas/fdf270a5-76cd-4753-a686-850c671677d7/enviar responde 200 
+2026-11-24 19:33:25,392 [OK] MongoDB confirma anotada 
+2026-11-24 19:33:26,956 Spark: [Stage 29:=====================>                                  (31 + 1) / 81]
+2026-11-24 19:33:27,155 Spark: [Stage 29:=============================>                          (43 + 1) / 81]
+2026-11-24 19:33:27,356 Spark: [Stage 29:======================================>                 (56 + 1) / 81]
+2026-11-24 19:33:27,521 Spark: [Stage 29:===============================================>        (69 + 1) / 81]
+2026-11-24 19:33:28,479 Spark: [Stage 31:>                                                         (0 + 1) / 3]
+2026-11-24 19:33:28,480 Spark: 26/11/25 01:33:28 WARN GarbageCollectionMetrics: To enable non-built-in garbage collector(s) List(G1 Concurrent GC), users should configure it(them) to spark.eventLog.gcMetrics.youngGenerationGarbageCollectors or spark.eventLog.gcMetrics.oldGenerationGarbageCollectors
+2026-11-24 19:33:32,160 Spark: [Stage 31:===================>                                      (1 + 1) / 3]
+2026-11-24 19:33:34,361 Spark: [Stage 31:======================================>                   (2 + 1) / 3]
+2026-11-24 19:33:34,489 Spark: [Stage 33:=============================>                            (1 + 1) / 2]
+2026-11-24 19:33:35,464 Spark: [Stage 35:=============================>                            (1 + 1) / 2]
+2026-11-24 19:33:35,471 [OK] Spark observa tarea_anotada con estado anotada [{"event_id": "39c51a87-ecae-4aa3-933c-5ec537839f03", "tipo_evento": "tarea_anotada", "estado": "anotada", "version": 3, "motivo_rechazo": null}]
+2026-11-24 19:33:35,472 Frescura HTTP 200 -> primera observacion Spark: tipo=tarea_anotada event_id=39c51a87-ecae-4aa3-933c-5ec537839f03 segundos=10.080 intentos=1 archivos=81
+2026-11-24 19:33:35,481 POST /tareas/fdf270a5-76cd-4753-a686-850c671677d7/enviar -> HTTP 409 (8.45 ms)
+2026-11-24 19:33:35,481 [OK] POST /tareas/fdf270a5-76cd-4753-a686-850c671677d7/enviar responde 409 
+2026-11-24 19:33:35,519 POST /tareas/fdf270a5-76cd-4753-a686-850c671677d7/revision -> HTTP 200 (37.75 ms)
+2026-11-24 19:33:35,520 [OK] POST /tareas/fdf270a5-76cd-4753-a686-850c671677d7/revision responde 200 
+2026-11-24 19:33:35,520 [OK] MongoDB devuelve disponible 
+2026-11-24 19:33:37,166 Spark: [Stage 39:==================>                                     (28 + 1) / 83]
+2026-11-24 19:33:37,366 Spark: [Stage 39:============================>                           (42 + 1) / 83]
+2026-11-24 19:33:37,566 Spark: [Stage 39:=====================================>                  (56 + 1) / 83]
+2026-11-24 19:33:37,758 Spark: [Stage 39:==============================================>         (69 + 1) / 83]
+2026-11-24 19:33:40,167 Spark: [Stage 41:>                                                         (0 + 1) / 3]
+2026-11-24 19:33:42,168 Spark: [Stage 41:===================>                                      (1 + 1) / 3]
+2026-11-24 19:33:44,169 Spark: [Stage 41:======================================>                   (2 + 1) / 3]
+2026-11-24 19:33:44,234 Spark: [Stage 43:=============================>                            (1 + 1) / 2]
+2026-11-24 19:33:44,877 Spark: [Stage 45:=============================>                            (1 + 1) / 2]
+2026-11-24 19:33:44,882 [OK] Spark observa revision_rechazada con estado rechazada [{"event_id": "3fea3e10-431b-40ee-9a26-29c41065bcd4", "tipo_evento": "revision_rechazada", "estado": "rechazada", "version": 5, "motivo_rechazo": "caja_incompleta"}]
+2026-11-24 19:33:44,882 Frescura HTTP 200 -> primera observacion Spark: tipo=revision_rechazada event_id=3fea3e10-431b-40ee-9a26-29c41065bcd4 segundos=9.362 intentos=1 archivos=82
+2026-11-24 19:33:44,914 POST /tareas/siguiente -> HTTP 200 (31.49 ms)
+2026-11-24 19:33:44,914 [OK] POST /tareas/siguiente responde 200 
+2026-11-24 19:33:44,915 [OK] Tarea adquirida 
+2026-11-24 19:33:44,920 PUT /tareas/fdf270a5-76cd-4753-a686-850c671677d7/borrador -> HTTP 200 (5.31 ms)
+2026-11-24 19:33:44,920 [OK] PUT /tareas/fdf270a5-76cd-4753-a686-850c671677d7/borrador responde 200 
+2026-11-24 19:33:44,946 POST /tareas/fdf270a5-76cd-4753-a686-850c671677d7/enviar -> HTTP 200 (25.40 ms)
+2026-11-24 19:33:44,947 [OK] POST /tareas/fdf270a5-76cd-4753-a686-850c671677d7/enviar responde 200 
+2026-11-24 19:33:44,947 [OK] MongoDB confirma anotada 
+2026-11-24 19:33:46,570 Spark: [Stage 49:============================>                           (43 + 1) / 85]
+2026-11-24 19:33:46,771 Spark: [Stage 49:====================================>                   (56 + 1) / 85]
+2026-11-24 19:33:46,971 Spark: [Stage 49:============================================>           (67 + 1) / 85]
+2026-11-24 19:33:47,105 Spark: [Stage 49:===================================================>    (78 + 1) / 85]
+2026-11-24 19:33:49,170 Spark: [Stage 51:>                                                         (0 + 1) / 3]
+2026-11-24 19:33:51,172 Spark: [Stage 51:===================>                                      (1 + 1) / 3]
+2026-11-24 19:33:55,095 Spark: [Stage 51:======================================>                   (2 + 1) / 3]
+2026-11-24 19:33:55,133 Spark: [Stage 53:=============================>                            (1 + 1) / 2]
+2026-11-24 19:33:55,791 Spark: [Stage 55:=============================>                            (1 + 1) / 2]
+2026-11-24 19:33:55,800 [OK] Spark observa tarea_anotada con estado anotada [{"event_id": "2a9ed68b-e96d-4e9d-86d4-6a3146460c5c", "tipo_evento": "tarea_anotada", "estado": "anotada", "version": 7, "motivo_rechazo": null}]
+2026-11-24 19:33:55,801 Frescura HTTP 200 -> primera observacion Spark: tipo=tarea_anotada event_id=2a9ed68b-e96d-4e9d-86d4-6a3146460c5c segundos=9.134 intentos=1 archivos=85
+2026-11-24 19:33:55,807 POST /tareas/fdf270a5-76cd-4753-a686-850c671677d7/enviar -> HTTP 409 (5.30 ms)
+2026-11-24 19:33:55,807 [OK] POST /tareas/fdf270a5-76cd-4753-a686-850c671677d7/enviar responde 409 
+2026-11-24 19:33:55,840 POST /tareas/fdf270a5-76cd-4753-a686-850c671677d7/revision -> HTTP 200 (33.14 ms)
+2026-11-24 19:33:55,841 [OK] POST /tareas/fdf270a5-76cd-4753-a686-850c671677d7/revision responde 200 
+2026-11-24 19:33:55,841 [OK] MongoDB devuelve aprobada 
+2026-11-24 19:33:57,495 Spark: [Stage 59:===================>                                    (30 + 1) / 87]
+2026-11-24 19:33:57,696 Spark: [Stage 59:============================>                           (45 + 1) / 87]
+2026-11-24 19:33:57,896 Spark: [Stage 59:=======================================>                (61 + 1) / 87]
+2026-11-24 19:33:58,029 Spark: [Stage 59:================================================>       (76 + 1) / 87]
+2026-11-24 19:34:00,298 Spark: [Stage 61:>                                                         (0 + 1) / 4]
+2026-11-24 19:34:02,298 Spark: [Stage 61:==============>                                           (1 + 1) / 4]
+2026-11-24 19:34:04,502 Spark: [Stage 61:=============================>                            (2 + 1) / 4]
+2026-11-24 19:34:04,634 Spark: [Stage 63:=============================>                            (1 + 1) / 2]
+2026-11-24 19:34:05,493 Spark: [Stage 65:=============================>                            (1 + 1) / 2]
+2026-11-24 19:34:05,499 [OK] Spark observa revision_aprobada con estado aprobada [{"event_id": "fe5954a4-9e98-41af-84a4-42ed09b6148a", "tipo_evento": "revision_aprobada", "estado": "aprobada", "version": 9, "motivo_rechazo": null}]
+2026-11-24 19:34:05,501 Frescura HTTP 200 -> primera observacion Spark: tipo=revision_aprobada event_id=fe5954a4-9e98-41af-84a4-42ed09b6148a segundos=9.659 intentos=1 archivos=86
+2026-11-24 19:34:05,502 [OK] Ocho eventos de negocio; borradores y envios 409 no generan filas [{"event_id": "3e991351-88f8-4be3-9037-9bdf7d44ebad", "tipo_evento": "tarea_abierta", "estado": "abierta", "version": 2, "motivo_rechazo": null}, {"event_id": "39c51a87-ecae-4aa3-933c-5ec537839f03", "tipo_evento": "tarea_anotada", "estado": "anotada", "version": 3, "motivo_rechazo": null}, {"event_id": "fe890512-c43e-4b48-ad50-6ba37eca3394", "tipo_evento": "revision_iniciada", "estado": "en_revision", "version": 4, "motivo_rechazo": null}, {"event_id": "3fea3e10-431b-40ee-9a26-29c41065bcd4", "tipo_evento": "revision_rechazada", "estado": "rechazada", "version": 5, "motivo_rechazo": "caja_incompleta"}, {"event_id": "4b79d1c9-74f4-40ca-b0b5-663577d1d4b4", "tipo_evento": "tarea_abierta", "estado": "abierta", "version": 6, "motivo_rechazo": null}, {"event_id": "2a9ed68b-e96d-4e9d-86d4-6a3146460c5c", "tipo_evento": "tarea_anotada", "estado": "anotada", "version": 7, "motivo_rechazo": null}, {"event_id": "258be518-d168-44da-a4b1-3da48734134e", "tipo_evento": "revision_iniciada", "estado": "en_revision", "version": 8, "motivo_rechazo": null}, {"event_id": "fe5954a4-9e98-41af-84a4-42ed09b6148a", "tipo_evento": "revision_aprobada", "estado": "aprobada", "version": 9, "motivo_rechazo": null}]
+2026-11-24 19:34:05,502 Se conservan entidades y eventos del flujo real para trazabilidad; no se borran datos previos.
+2026-11-24 19:34:06,568 Latencia HTTP ms POST /proyectos: n=1; p50=27.917; p95=27.917; p99=27.917; muestras=[27.9169629993703] (rango mas cercano)
+2026-11-24 19:34:06,569 Latencia HTTP ms POST /proyectos/{id}/lotes: n=1; p50=11.098; p95=11.098; p99=11.098; muestras=[11.098316000243358] (rango mas cercano)
+2026-11-24 19:34:06,569 Latencia HTTP ms POST /tareas/siguiente: n=2; p50=31.032; p95=31.493; p99=31.493; muestras=[31.031948999952874, 31.493311999838625] (rango mas cercano)
+2026-11-24 19:34:06,569 Latencia HTTP ms PUT /tareas/{id}/borrador: n=2; p50=5.311; p95=5.890; p99=5.890; muestras=[5.889805999686359, 5.311115999575122] (rango mas cercano)
+2026-11-24 19:34:06,570 Latencia HTTP ms POST /tareas/{id}/enviar: n=4; p50=8.451; p95=25.399; p99=25.399; muestras=[25.35442799944576, 8.450811999864527, 25.3990649998741, 5.296092000207864] (rango mas cercano)
+2026-11-24 19:34:06,570 Latencia HTTP ms POST /tareas/{id}/revision: n=2; p50=33.143; p95=37.746; p99=37.746; muestras=[37.746129999504774, 33.143482000014046] (rango mas cercano)
+2026-11-24 19:34:06,570 Frescura de envios (s): n=2; p50=9.134; p95=10.080; p99=10.080; muestras=[10.079816739000307, 9.134410722999746] (rango mas cercano)
+2026-11-24 19:34:06,570 Limitaciones: fixture simula falla antes de XACK; no mata worker real. Pocas muestras; no es carga. Q1 no se midio; se observo event_id directo en Spark.
+2026-11-24 19:34:06,571 Resultado: 27/27 comprobaciones ejecutadas correctas; exit=0
+2026-11-24 19:34:06,571 Fin UTC: 2026-11-25T01:34:06.571245+00:00
+2026-11-24 19:34:06,571 Evidencia: /mnt/c/Users/jimmy/GitHub/proyecto2_BDA/proyecto2/evidence/p4_gateway_parquet.txt

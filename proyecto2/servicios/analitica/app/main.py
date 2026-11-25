@@ -38,7 +38,10 @@ def obtener_spark() -> SparkSession:
 
 
 @app.get("/salud")
-def salud() -> dict:
+async def salud() -> dict:
+    # async: corre en el event loop y no espera turno en el pool de hilos que
+    # ocupan las consultas Spark (sync). Así /salud responde aunque haya una
+    # cola de consultas pendientes (p. ej. al terminar P6).
     base = Path(RUTA_DATALAKE)
     existe = base.exists()
     n_archivos = sum(1 for _ in base.rglob("*.parquet")) if existe else 0

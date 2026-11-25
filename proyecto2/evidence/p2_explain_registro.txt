@@ -1,7 +1,7 @@
-Inicio UTC: 2026-11-25T00:39:04.408177+00:00
+Inicio UTC: 2026-11-25T01:18:47.164516+00:00
 Objetivo: planes de ejecución de las consultas del registro (explain executionStats)
 Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.41, CPU lógicos: 16
-MongoDB 8.0.38; tareas=60405, proyectos=138, anotadores=359
+MongoDB 8.0.38; tareas=60000, proyectos=120, anotadores=300
 Índices de tareas: _id_, tareas_proyecto_estado_prioridad, tareas_anotador_estado, tareas_batch
 
 consulta                                         índice                             SORT mem. devueltos  claves    docs   ms
@@ -17,19 +17,19 @@ Candidatas abiertas vencidas (/tareas/siguiente) tareas_proyecto_estado_priorida
 Tareas de un anotador                            tareas_anotador_estado             no                0       0       0    0
     etapas: FETCH -> IXSCAN
 [OK] Tareas de un anotador: usa tareas_anotador_estado — tareas_anotador_estado
-Tareas de un lote                                tareas_batch                       no               60      60      60    0
+Tareas de un lote                                tareas_batch                       no              100     100     100    0
     etapas: FETCH -> IXSCAN
 [OK] Tareas de un lote: usa tareas_batch — tareas_batch
-[OK] Tareas de un lote: no examina documentos de más (docs <= devueltos) — docs=60 devueltos=60
-Exportar aprobadas (orden por _id)               tareas_proyecto_estado_prioridad   sí                1       1       1    0
+[OK] Tareas de un lote: no examina documentos de más (docs <= devueltos) — docs=100 devueltos=100
+Exportar aprobadas (orden por _id)               tareas_proyecto_estado_prioridad   sí                0       0       0    0
     etapas: SORT -> FETCH -> IXSCAN
-    Nota: exportación usa tareas_proyecto_estado_prioridad y ordena en memoria; examinó 1 documentos para devolver 1.
-Proyectos de un cliente                          proyectos_cliente_estado           no               15      15      15    0
+    Nota: exportación usa tareas_proyecto_estado_prioridad y ordena en memoria; examinó 0 documentos para devolver 0.
+Proyectos de un cliente                          proyectos_cliente_estado           no                2       2       2    0
     etapas: FETCH -> IXSCAN
 [OK] Proyectos de un cliente: usa proyectos_cliente_estado — proyectos_cliente_estado
-[OK] Proyectos de un cliente: no examina documentos de más (docs <= devueltos) — docs=15 devueltos=15
+[OK] Proyectos de un cliente: no examina documentos de más (docs <= devueltos) — docs=2 devueltos=2
 Transición por _id + estado                      _id_                               no                1       1       1    0
     etapas: FETCH -> IXSCAN
 
 Resultado: 10/10 comprobaciones correctas
-Fin UTC: 2026-11-25T00:39:04.476269+00:00
+Fin UTC: 2026-11-25T01:18:47.217531+00:00

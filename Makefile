@@ -45,7 +45,7 @@ replica: ## Verifica réplica, mayoría e índices (deja evidencia)
 demo: ## Carga de demostración del registro
 	$(COMPOSE) run --rm registro python /dataset/cargar_demo.py
 
-smoke-registro: ## Smoke del registro (deja evidencia)
+smoke-registro: demo ## Smoke del registro (carga la demo antes; deja evidencia)
 	@mkdir -p $(EVIDENCIA)
 	set -o pipefail; $(COMPOSE) run --rm registro python /pruebas/p2_registro/smoke_registro.py \
 	  | tee $(EVIDENCIA)/p2_registro_smoke.txt
@@ -56,7 +56,7 @@ registro: up replica demo smoke-registro ## Flujo completo: up + réplica + demo
 salud: ## GET /salud del gateway desde el host
 	curl -s -i http://localhost:8000/salud
 
-smoke-gateway: ## Smoke del gateway básico (deja evidencia)
+smoke-gateway: demo ## Smoke del gateway básico (carga la demo antes; deja evidencia)
 	@mkdir -p $(EVIDENCIA)
 	set -o pipefail; $(COMPOSE) exec -T gateway python /pruebas/p1_gateway/smoke_gateway.py \
 	  | tee $(EVIDENCIA)/p1_gateway_smoke.txt

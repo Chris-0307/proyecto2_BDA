@@ -1,0 +1,6 @@
+Wed Nov 25 01:12:24 UTC 2026
+Linux 6.6.87.1-microsoft-standard-WSL2 x86_64
+CPU lógicos: 16
+               total        used        free      shared  buff/cache   available
+Mem:            15Gi       2.4Gi       6.9Gi       5.5Mi       6.5Gi        13Gi
+Docker: 16 CPU, 16680960000 bytes, 28.3.3

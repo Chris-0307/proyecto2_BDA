@@ -1,95 +1,95 @@
-2026-11-24 15:02:18,089 Objetivo: P3, borrador reciente, AOF, vencimiento natural y exclusion de propietarios
-2026-11-24 15:02:18,089 Inicio UTC: 2026-11-24T21:02:18.089685+00:00
-2026-11-24 15:02:18,218 Host: Windows-10-10.0.19045-SP0; CPU logicos: 12; Python: 3.12.3
-2026-11-24 15:02:18,218 Comando de prueba: proyecto2/pruebas/p3_sesion/p3_gateway_sesion.py
-2026-11-24 15:02:18,219 Comando: docker compose -f proyecto2/docker-compose.yml version
-2026-11-24 15:02:18,334 Docker Compose: Docker Compose version v5.3.1
-2026-11-24 15:02:19,400 Recursos del motor Docker: 12 CPU; RAM=8301330432 bytes; Docker=29.7.2
-2026-11-24 15:02:19,401 Comando: docker compose -f proyecto2/docker-compose.yml ps
-2026-11-24 15:02:19,614 Configuracion de servicios: NAME                               IMAGE                            COMMAND                  SERVICE            CREATED              STATUS                    PORTS
-bda-mongo-1                        mongo:8.0                        "docker-entrypoint.s…"   mongo-1            About a minute ago   Up 52 seconds (healthy)   27017/tcp
-bda-mongo-2                        mongo:8.0                        "docker-entrypoint.s…"   mongo-2            About a minute ago   Up 52 seconds (healthy)   27017/tcp
-bda-mongo-3                        mongo:8.0                        "docker-entrypoint.s…"   mongo-3            About a minute ago   Up 52 seconds (healthy)   27017/tcp
-bda-proyecto2-analitica-1          bda-proyecto2-analitica          "uvicorn app.main:ap…"   analitica          About a minute ago   Up 52 seconds             8004/tcp
-bda-proyecto2-gateway-1            bda-proyecto2-gateway            "uvicorn gateway_app…"   gateway            54 seconds ago       Up 16 seconds             0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
-bda-proyecto2-historial-1          bda-proyecto2-historial          "uvicorn app.main:ap…"   historial          57 seconds ago       Up 46 seconds             8002/tcp
-bda-proyecto2-historial-worker-1   bda-proyecto2-historial-worker   "python -m app.worker"   historial-worker   57 seconds ago       Up 46 seconds             8002/tcp
-bda-proyecto2-registro-1           bda-proyecto2-registro           "uvicorn registro_ap…"   registro           55 seconds ago       Up 18 seconds             8003/tcp
-bda-proyecto2-sesion-1             bda-proyecto2-sesion             "uvicorn app.main:ap…"   sesion             57 seconds ago       Up 46 seconds             8001/tcp
-bda-proyecto2-valkey-1             valkey/valkey:8.1.11-alpine      "tini -- docker-entr…"   valkey             About a minute ago   Up 52 seconds (healthy)   6379/tcp
-2026-11-24 15:02:19,615 Gateway: http://localhost:8000; TTL esperado: 120 s; borradores cada 2 s
-2026-11-24 15:02:19,618 Comando: docker compose -f proyecto2/docker-compose.yml exec -T valkey valkey-cli --raw CONFIG GET appendonly
-2026-11-24 15:02:19,837 [OK] AOF appendonly=yes appendonly
+2026-11-24 19:26:24,105 Objetivo: P3, borrador reciente, AOF, vencimiento natural y exclusion de propietarios
+2026-11-24 19:26:24,106 Inicio UTC: 2026-11-25T01:26:24.106421+00:00
+2026-11-24 19:26:24,108 Host: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.39; CPU logicos: 16; Python: 3.12.3
+2026-11-24 19:26:24,108 Comando de prueba: proyecto2/pruebas/p3_sesion/p3_gateway_sesion.py
+2026-11-24 19:26:24,109 Comando: docker compose -f proyecto2/docker-compose.yml version
+2026-11-24 19:26:24,154 Docker Compose: Docker Compose version v2.39.2-desktop.1
+2026-11-24 19:26:24,557 Recursos del motor Docker: 16 CPU; RAM=16680960000 bytes; Docker=28.3.3
+2026-11-24 19:26:24,558 Comando: docker compose -f proyecto2/docker-compose.yml ps
+2026-11-24 19:26:24,698 Configuracion de servicios: NAME                               IMAGE                            COMMAND                  SERVICE            CREATED          STATUS                    PORTS
+bda-mongo-1                        mongo:8.0                        "docker-entrypoint.s…"   mongo-1            13 minutes ago   Up 13 minutes (healthy)   27017/tcp
+bda-mongo-2                        mongo:8.0                        "docker-entrypoint.s…"   mongo-2            13 minutes ago   Up 13 minutes (healthy)   27017/tcp
+bda-mongo-3                        mongo:8.0                        "docker-entrypoint.s…"   mongo-3            13 minutes ago   Up 13 minutes (healthy)   27017/tcp
+bda-proyecto2-analitica-1          bda-proyecto2-analitica          "uvicorn app.main:ap…"   analitica          8 minutes ago    Up 8 minutes              8004/tcp
+bda-proyecto2-gateway-1            bda-proyecto2-gateway            "uvicorn gateway_app…"   gateway            13 minutes ago   Up 13 minutes             0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
+bda-proyecto2-historial-1          bda-proyecto2-historial          "uvicorn app.main:ap…"   historial          13 minutes ago   Up 13 minutes             8002/tcp
+bda-proyecto2-historial-worker-1   bda-proyecto2-historial-worker   "python -m app.worker"   historial-worker   13 minutes ago   Up 13 minutes             8002/tcp
+bda-proyecto2-registro-1           bda-proyecto2-registro           "uvicorn registro_ap…"   registro           13 minutes ago   Up 13 minutes             8003/tcp
+bda-proyecto2-sesion-1             bda-proyecto2-sesion             "uvicorn app.main:ap…"   sesion             13 minutes ago   Up 13 minutes             8001/tcp
+bda-proyecto2-valkey-1             valkey/valkey:8.1.11-alpine      "tini -- docker-entr…"   valkey             13 minutes ago   Up 13 minutes (healthy)   6379/tcp
+2026-11-24 19:26:24,698 Gateway: http://localhost:8000; TTL esperado: 120 s; borradores cada 2 s
+2026-11-24 19:26:24,698 Comando: docker compose -f proyecto2/docker-compose.yml exec -T valkey valkey-cli --raw CONFIG GET appendonly
+2026-11-24 19:26:24,873 [OK] AOF appendonly=yes appendonly
 yes
-2026-11-24 15:02:19,837 Comando: docker compose -f proyecto2/docker-compose.yml exec -T valkey valkey-cli --raw CONFIG GET appendfsync
-2026-11-24 15:02:20,049 [OK] AOF appendfsync=everysec appendfsync
+2026-11-24 19:26:24,873 Comando: docker compose -f proyecto2/docker-compose.yml exec -T valkey valkey-cli --raw CONFIG GET appendfsync
+2026-11-24 19:26:25,041 [OK] AOF appendfsync=everysec appendfsync
 everysec
-2026-11-24 15:02:20,050 Comando: docker compose -f proyecto2/docker-compose.yml exec -T registro python -c import sys,json; sys.path.insert(0,'/pruebas/p1_gateway'); from smoke_flujo import preparar; print(json.dumps(preparar()))
-2026-11-24 15:02:21,154 POST /proyectos -> HTTP 201 (131.82 ms)
-2026-11-24 15:02:21,155 [OK] POST /proyectos responde 201 HTTP 201
-2026-11-24 15:02:21,233 POST /proyectos/b53ba84a-eccb-4039-9db5-d700aef10453/lotes -> HTTP 201 (77.12 ms)
-2026-11-24 15:02:21,234 [OK] POST /proyectos/b53ba84a-eccb-4039-9db5-d700aef10453/lotes responde 201 HTTP 201
-2026-11-24 15:02:21,235 Proyecto de prueba: b53ba84a-eccb-4039-9db5-d700aef10453; tarea: 962191f4-4c66-4bda-b220-84d1f75e2422
-2026-11-24 15:02:21,358 POST /tareas/siguiente -> HTTP 200 (122.13 ms)
-2026-11-24 15:02:21,359 [OK] POST /tareas/siguiente responde 200 HTTP 200
-2026-11-24 15:02:21,360 [OK] A recibe la tarea y el TTL de 120 segundos 
-2026-11-24 15:02:21,370 POST /tareas/siguiente -> HTTP 204 (8.75 ms)
-2026-11-24 15:02:21,371 [OK] POST /tareas/siguiente responde 204 HTTP 204
-2026-11-24 15:02:21,401 PUT /tareas/962191f4-4c66-4bda-b220-84d1f75e2422/borrador -> HTTP 200 (29.65 ms)
-2026-11-24 15:02:21,401 [OK] PUT /tareas/962191f4-4c66-4bda-b220-84d1f75e2422/borrador responde 200 HTTP 200
-2026-11-24 15:02:23,424 PUT /tareas/962191f4-4c66-4bda-b220-84d1f75e2422/borrador -> HTTP 200 (21.96 ms)
-2026-11-24 15:02:23,424 [OK] PUT /tareas/962191f4-4c66-4bda-b220-84d1f75e2422/borrador responde 200 HTTP 200
-2026-11-24 15:02:25,447 PUT /tareas/962191f4-4c66-4bda-b220-84d1f75e2422/borrador -> HTTP 200 (20.23 ms)
-2026-11-24 15:02:25,447 [OK] PUT /tareas/962191f4-4c66-4bda-b220-84d1f75e2422/borrador responde 200 HTTP 200
-2026-11-24 15:02:27,468 POST /sesiones/recuperar -> HTTP 200 (19.42 ms)
-2026-11-24 15:02:27,468 [OK] POST /sesiones/recuperar responde 200 HTTP 200
-2026-11-24 15:02:27,470 [OK] Se recupera el ultimo borrador y su version 
-2026-11-24 15:02:27,471 [OK] Antiguedad del borrador <= 5 s antiguedad_ms=2036; reloj host frente a Valkey
-2026-11-24 15:02:29,972 Comando: docker compose -f proyecto2/docker-compose.yml restart valkey
-2026-11-24 15:02:31,136 Docker stderr: Container bda-proyecto2-valkey-1 Restarting 
- Container bda-proyecto2-valkey-1 Started
-2026-11-24 15:02:31,151 POST /sesiones/recuperar -> HTTP 200 (13.66 ms)
-2026-11-24 15:02:31,151 Tiempo restart hasta recuperacion HTTP 200: 1.179 s
-2026-11-24 15:02:31,152 [OK] AOF conserva el contenido y la version del ultimo borrador 
-2026-11-24 15:02:31,152 [OK] Lock permanece activo tras reinicio 
-2026-11-24 15:02:31,163 POST /tareas/siguiente -> HTTP 204 (10.08 ms)
-2026-11-24 15:02:31,163 [OK] POST /tareas/siguiente responde 204 HTTP 204
-2026-11-24 15:02:31,164 Esperando vencimiento natural 122.0 s sin latidos ni borradores
-2026-11-24 15:04:33,194 POST /sesiones/recuperar -> HTTP 200 (27.62 ms)
-2026-11-24 15:04:33,194 [OK] POST /sesiones/recuperar responde 200 HTTP 200
-2026-11-24 15:04:33,195 [OK] Lock vencido: borrador recuperable sin permiso de edicion 
-2026-11-24 15:04:33,224 PUT /tareas/962191f4-4c66-4bda-b220-84d1f75e2422/borrador -> HTTP 409 (26.64 ms)
-2026-11-24 15:04:33,224 [OK] PUT /tareas/962191f4-4c66-4bda-b220-84d1f75e2422/borrador responde 409 HTTP 409
-2026-11-24 15:04:33,344 POST /tareas/siguiente -> HTTP 200 (118.74 ms)
-2026-11-24 15:04:33,344 [OK] POST /tareas/siguiente responde 200 HTTP 200
-2026-11-24 15:04:33,345 [OK] B recibe la misma tarea con token distinto y nueva version 
-2026-11-24 15:04:33,347 [OK] B no recibe el borrador privado de A 
-2026-11-24 15:04:33,355 PUT /tareas/962191f4-4c66-4bda-b220-84d1f75e2422/borrador -> HTTP 409 (8.00 ms)
-2026-11-24 15:04:33,355 [OK] PUT /tareas/962191f4-4c66-4bda-b220-84d1f75e2422/borrador responde 409 HTTP 409
-2026-11-24 15:04:33,365 POST /tareas/962191f4-4c66-4bda-b220-84d1f75e2422/enviar -> HTTP 409 (9.31 ms)
-2026-11-24 15:04:33,366 [OK] POST /tareas/962191f4-4c66-4bda-b220-84d1f75e2422/enviar responde 409 HTTP 409
-2026-11-24 15:04:33,374 POST /sesiones/recuperar -> HTTP 409 (8.11 ms)
-2026-11-24 15:04:33,375 [OK] POST /sesiones/recuperar responde 409 HTTP 409
-2026-11-24 15:04:33,384 POST /tareas/siguiente -> HTTP 204 (8.06 ms)
-2026-11-24 15:04:33,384 [OK] POST /tareas/siguiente responde 204 HTTP 204
-2026-11-24 15:04:33,385 Comando: docker compose -f proyecto2/docker-compose.yml exec -T registro python -c import os,sys,json; from pymongo import MongoClient; d=MongoClient(os.environ['MONGO_URI']).plataforma.tareas.find_one({'_id':sys.argv[1]}); print(json.dumps({'estado':d['estado'],'asignacion':d['asignacion'],'version':d['version']},default=str)) 962191f4-4c66-4bda-b220-84d1f75e2422
-2026-11-24 15:04:34,241 [OK] MongoDB tiene un solo dueno vigente y coincide con B version=3
-2026-11-24 15:04:34,241 [OK] Version vigente en MongoDB 
-2026-11-24 15:04:34,267 PUT /tareas/962191f4-4c66-4bda-b220-84d1f75e2422/borrador -> HTTP 200 (25.17 ms)
-2026-11-24 15:04:34,267 [OK] PUT /tareas/962191f4-4c66-4bda-b220-84d1f75e2422/borrador responde 200 HTTP 200
-2026-11-24 15:04:34,268 Interpretacion: la tarea vuelve a ofrecerse tras vencer el lock y el token anterior no permite editar ni enviar.
-2026-11-24 15:04:34,292 POST /tareas/962191f4-4c66-4bda-b220-84d1f75e2422/liberar -> HTTP 200 (22.97 ms)
-2026-11-24 15:04:34,292 Restauracion: liberar tarea de prueba -> HTTP 200
-2026-11-24 15:04:34,293 Se conservan las entidades de prueba y su historial para trazabilidad; no se eliminan datos existentes.
-2026-11-24 15:04:34,293 Resultado: 29/29 comprobaciones ejecutadas correctas; exit=0
-2026-11-24 15:04:34,293 Latencias HTTP observadas (ms), incluyendo respuestas de error: {"POST /proyectos": [131.81810000241967], "POST /proyectos/b53ba84a-eccb-4039-9db5-d700aef10453/lotes": [77.11510000081034], "POST /tareas/siguiente": [122.12629999703495, 8.749799999350216, 10.079200001200661, 118.73639999976149, 8.059899999352638], "PUT /tareas/{id}/borrador": [29.650299999048002, 21.96420000109356, 20.228899997164262, 26.642600001650862, 8.000499998161104, 25.171100001898594], "POST /sesiones/recuperar": [19.42100000087521, 13.660199998412281, 27.624899998045294, 8.114000000205124], "POST /tareas/{id}/enviar": [9.307200001785532], "POST /tareas/{id}/liberar": [22.974100000283215]}
-2026-11-24 15:04:34,298 POST /proyectos: n=1; p50=131.82 ms; p95=131.82 ms; p99=131.82 ms (rango mas cercano)
-2026-11-24 15:04:34,298 POST /proyectos/b53ba84a-eccb-4039-9db5-d700aef10453/lotes: n=1; p50=77.12 ms; p95=77.12 ms; p99=77.12 ms (rango mas cercano)
-2026-11-24 15:04:34,299 POST /tareas/siguiente: n=5; p50=10.08 ms; p95=122.13 ms; p99=122.13 ms (rango mas cercano)
-2026-11-24 15:04:34,299 PUT /tareas/{id}/borrador: n=6; p50=21.96 ms; p95=29.65 ms; p99=29.65 ms (rango mas cercano)
-2026-11-24 15:04:34,302 POST /sesiones/recuperar: n=4; p50=13.66 ms; p95=27.62 ms; p99=27.62 ms (rango mas cercano)
-2026-11-24 15:04:34,302 POST /tareas/{id}/enviar: n=1; p50=9.31 ms; p95=9.31 ms; p99=9.31 ms (rango mas cercano)
-2026-11-24 15:04:34,303 POST /tareas/{id}/liberar: n=1; p50=22.97 ms; p95=22.97 ms; p99=22.97 ms (rango mas cercano)
-2026-11-24 15:04:34,303 P3 funcional: pocas muestras; no sustituye P6 de carga ni P8 de fallas abruptas.
-2026-11-24 15:04:34,304 Fin UTC: 2026-11-24T21:04:34.304532+00:00
-2026-11-24 15:04:34,304 Evidencia: C:\Users\chris\OneDrive\Documentos\GitHub\proyecto2_BDA\proyecto2\evidence\p3_gateway_sesion.txt
+2026-11-24 19:26:25,041 Comando: docker compose -f proyecto2/docker-compose.yml exec -T registro python -c import sys,json; sys.path.insert(0,'/pruebas/p1_gateway'); from smoke_flujo import preparar; print(json.dumps(preparar()))
+2026-11-24 19:26:25,979 POST /proyectos -> HTTP 201 (26.88 ms)
+2026-11-24 19:26:25,979 [OK] POST /proyectos responde 201 HTTP 201
+2026-11-24 19:26:25,996 POST /proyectos/da0ba051-4713-4ac8-a982-9434e4a79935/lotes -> HTTP 201 (16.27 ms)
+2026-11-24 19:26:25,996 [OK] POST /proyectos/da0ba051-4713-4ac8-a982-9434e4a79935/lotes responde 201 HTTP 201
+2026-11-24 19:26:25,996 Proyecto de prueba: da0ba051-4713-4ac8-a982-9434e4a79935; tarea: 91306629-0213-40a6-bbbc-09defdae747f
+2026-11-24 19:26:26,028 POST /tareas/siguiente -> HTTP 200 (31.72 ms)
+2026-11-24 19:26:26,029 [OK] POST /tareas/siguiente responde 200 HTTP 200
+2026-11-24 19:26:26,029 [OK] A recibe la tarea y el TTL de 120 segundos 
+2026-11-24 19:26:26,035 POST /tareas/siguiente -> HTTP 204 (6.01 ms)
+2026-11-24 19:26:26,036 [OK] POST /tareas/siguiente responde 204 HTTP 204
+2026-11-24 19:26:26,042 PUT /tareas/91306629-0213-40a6-bbbc-09defdae747f/borrador -> HTTP 200 (5.85 ms)
+2026-11-24 19:26:26,042 [OK] PUT /tareas/91306629-0213-40a6-bbbc-09defdae747f/borrador responde 200 HTTP 200
+2026-11-24 19:26:29,738 PUT /tareas/91306629-0213-40a6-bbbc-09defdae747f/borrador -> HTTP 200 (9.59 ms)
+2026-11-24 19:26:29,738 [OK] PUT /tareas/91306629-0213-40a6-bbbc-09defdae747f/borrador responde 200 HTTP 200
+2026-11-24 19:26:31,744 PUT /tareas/91306629-0213-40a6-bbbc-09defdae747f/borrador -> HTTP 200 (5.95 ms)
+2026-11-24 19:26:31,745 [OK] PUT /tareas/91306629-0213-40a6-bbbc-09defdae747f/borrador responde 200 HTTP 200
+2026-11-24 19:26:33,754 POST /sesiones/recuperar -> HTTP 200 (9.06 ms)
+2026-11-24 19:26:33,755 [OK] POST /sesiones/recuperar responde 200 HTTP 200
+2026-11-24 19:26:33,755 [OK] Se recupera el ultimo borrador y su version 
+2026-11-24 19:26:33,756 [OK] Antiguedad del borrador <= 5 s antiguedad_ms=2013; reloj host frente a Valkey
+2026-11-24 19:26:36,257 Comando: docker compose -f proyecto2/docker-compose.yml restart valkey
+2026-11-24 19:26:36,786 Docker stderr: Container bda-proyecto2-valkey-1  Restarting
+ Container bda-proyecto2-valkey-1  Started
+2026-11-24 19:26:36,794 POST /sesiones/recuperar -> HTTP 200 (7.17 ms)
+2026-11-24 19:26:36,794 Tiempo restart hasta recuperacion HTTP 200: 0.537 s
+2026-11-24 19:26:36,795 [OK] AOF conserva el contenido y la version del ultimo borrador 
+2026-11-24 19:26:36,795 [OK] Lock permanece activo tras reinicio 
+2026-11-24 19:26:36,802 POST /tareas/siguiente -> HTTP 204 (6.76 ms)
+2026-11-24 19:26:36,802 [OK] POST /tareas/siguiente responde 204 HTTP 204
+2026-11-24 19:26:36,803 Esperando vencimiento natural 122.0 s sin latidos ni borradores
+2026-11-24 19:28:45,625 POST /sesiones/recuperar -> HTTP 200 (6.46 ms)
+2026-11-24 19:28:45,626 [OK] POST /sesiones/recuperar responde 200 HTTP 200
+2026-11-24 19:28:45,626 [OK] Lock vencido: borrador recuperable sin permiso de edicion 
+2026-11-24 19:28:45,631 PUT /tareas/91306629-0213-40a6-bbbc-09defdae747f/borrador -> HTTP 409 (4.78 ms)
+2026-11-24 19:28:45,632 [OK] PUT /tareas/91306629-0213-40a6-bbbc-09defdae747f/borrador responde 409 HTTP 409
+2026-11-24 19:28:45,662 POST /tareas/siguiente -> HTTP 200 (30.37 ms)
+2026-11-24 19:28:45,663 [OK] POST /tareas/siguiente responde 200 HTTP 200
+2026-11-24 19:28:45,663 [OK] B recibe la misma tarea con token distinto y nueva version 
+2026-11-24 19:28:45,663 [OK] B no recibe el borrador privado de A 
+2026-11-24 19:28:45,671 PUT /tareas/91306629-0213-40a6-bbbc-09defdae747f/borrador -> HTTP 409 (6.84 ms)
+2026-11-24 19:28:45,671 [OK] PUT /tareas/91306629-0213-40a6-bbbc-09defdae747f/borrador responde 409 HTTP 409
+2026-11-24 19:28:45,677 POST /tareas/91306629-0213-40a6-bbbc-09defdae747f/enviar -> HTTP 409 (6.41 ms)
+2026-11-24 19:28:45,678 [OK] POST /tareas/91306629-0213-40a6-bbbc-09defdae747f/enviar responde 409 HTTP 409
+2026-11-24 19:28:45,685 POST /sesiones/recuperar -> HTTP 409 (6.37 ms)
+2026-11-24 19:28:45,685 [OK] POST /sesiones/recuperar responde 409 HTTP 409
+2026-11-24 19:28:45,692 POST /tareas/siguiente -> HTTP 204 (6.36 ms)
+2026-11-24 19:28:45,692 [OK] POST /tareas/siguiente responde 204 HTTP 204
+2026-11-24 19:28:45,692 Comando: docker compose -f proyecto2/docker-compose.yml exec -T registro python -c import os,sys,json; from pymongo import MongoClient; d=MongoClient(os.environ['MONGO_URI']).plataforma.tareas.find_one({'_id':sys.argv[1]}); print(json.dumps({'estado':d['estado'],'asignacion':d['asignacion'],'version':d['version']},default=str)) 91306629-0213-40a6-bbbc-09defdae747f
+2026-11-24 19:28:46,498 [OK] MongoDB tiene un solo dueno vigente y coincide con B version=3
+2026-11-24 19:28:46,499 [OK] Version vigente en MongoDB 
+2026-11-24 19:28:46,505 PUT /tareas/91306629-0213-40a6-bbbc-09defdae747f/borrador -> HTTP 200 (5.74 ms)
+2026-11-24 19:28:46,505 [OK] PUT /tareas/91306629-0213-40a6-bbbc-09defdae747f/borrador responde 200 HTTP 200
+2026-11-24 19:28:46,505 Interpretacion: la tarea vuelve a ofrecerse tras vencer el lock y el token anterior no permite editar ni enviar.
+2026-11-24 19:28:46,517 POST /tareas/91306629-0213-40a6-bbbc-09defdae747f/liberar -> HTTP 200 (10.90 ms)
+2026-11-24 19:28:46,517 Restauracion: liberar tarea de prueba -> HTTP 200
+2026-11-24 19:28:46,517 Se conservan las entidades de prueba y su historial para trazabilidad; no se eliminan datos existentes.
+2026-11-24 19:28:46,517 Resultado: 29/29 comprobaciones ejecutadas correctas; exit=0
+2026-11-24 19:28:46,517 Latencias HTTP observadas (ms), incluyendo respuestas de error: {"POST /proyectos": [26.87848700043105], "POST /proyectos/da0ba051-4713-4ac8-a982-9434e4a79935/lotes": [16.267611000330362], "POST /tareas/siguiente": [31.716583999696013, 6.01105700025073, 6.7629170007421635, 30.37183200012805, 6.355413000164845], "PUT /tareas/{id}/borrador": [5.845654000040668, 9.589418000359728, 5.949262000285671, 4.784654999639315, 6.838724999397527, 5.738755000493256], "POST /sesiones/recuperar": [9.058194000317599, 7.167681999817432, 6.463035000706441, 6.371504000526329], "POST /tareas/{id}/enviar": [6.407748000128777], "POST /tareas/{id}/liberar": [10.904611000114528]}
+2026-11-24 19:28:46,518 POST /proyectos: n=1; p50=26.88 ms; p95=26.88 ms; p99=26.88 ms (rango mas cercano)
+2026-11-24 19:28:46,518 POST /proyectos/da0ba051-4713-4ac8-a982-9434e4a79935/lotes: n=1; p50=16.27 ms; p95=16.27 ms; p99=16.27 ms (rango mas cercano)
+2026-11-24 19:28:46,518 POST /tareas/siguiente: n=5; p50=6.76 ms; p95=31.72 ms; p99=31.72 ms (rango mas cercano)
+2026-11-24 19:28:46,518 PUT /tareas/{id}/borrador: n=6; p50=5.85 ms; p95=9.59 ms; p99=9.59 ms (rango mas cercano)
+2026-11-24 19:28:46,518 POST /sesiones/recuperar: n=4; p50=6.46 ms; p95=9.06 ms; p99=9.06 ms (rango mas cercano)
+2026-11-24 19:28:46,518 POST /tareas/{id}/enviar: n=1; p50=6.41 ms; p95=6.41 ms; p99=6.41 ms (rango mas cercano)
+2026-11-24 19:28:46,519 POST /tareas/{id}/liberar: n=1; p50=10.90 ms; p95=10.90 ms; p99=10.90 ms (rango mas cercano)
+2026-11-24 19:28:46,519 P3 funcional: pocas muestras; no sustituye P6 de carga ni P8 de fallas abruptas.
+2026-11-24 19:28:46,519 Fin UTC: 2026-11-25T01:28:46.519302+00:00
+2026-11-24 19:28:46,519 Evidencia: /mnt/c/Users/jimmy/GitHub/proyecto2_BDA/proyecto2/evidence/p3_gateway_sesion.txt

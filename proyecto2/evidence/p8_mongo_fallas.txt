@@ -1,59 +1,62 @@
-Inicio UTC: 2026-11-22T07:48:58.572203+00:00
+Inicio UTC: 2026-11-25T02:03:42.344665+00:00
 Objetivo: P8 — fallas de MongoDB (secundario, primario, sin mayoría) vía gateway
 Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.39, CPU lógicos: 16
 Caída: SIGKILL sin reinicio automático; gateway: http://localhost:8000
 Configuración: rs-plataforma 3 nodos, w=majority, wtimeout 5 s, serverSelectionTimeout 3 s, retryWrites=false, electionTimeoutMillis 10000
-[OK] estado inicial: 1 PRIMARY + 2 SECONDARY y /salud operativo — {"mongo-1": "SECONDARY", "mongo-2": "SECONDARY", "mongo-3": "PRIMARY"}
+[OK] estado inicial: 1 PRIMARY + 2 SECONDARY y /salud operativo — {"mongo-1": "PRIMARY", "mongo-2": "SECONDARY", "mongo-3": "SECONDARY"}
 
 === A. Se detiene un secundario ===
-[    2.4s] caída (kill) de mongo-1
-[OK] /salud pasa a degradado (200) con un nodo caído — 6.4s hasta detectarlo
+[    2.4s] caída (kill) de mongo-2
+[OK] /salud pasa a degradado (200) con un nodo caído — 16.4s hasta detectarlo
 [OK] con un secundario caído se sigue escribiendo (10/10 siguiente+enviar) — 10/10
-[    9.4s] arranque de mongo-1
-[OK] el nodo vuelve como SECONDARY y /salud operativo — 3.5s
+[   19.3s] arranque de mongo-2
+[OK] el nodo vuelve como SECONDARY y /salud operativo — 5.5s
 
 === B. Se detiene el primario ===
-[   14.3s] primario actual: mongo-3; caída (kill) de mongo-3
-[   17.8s] ciclo 1: {'siguiente': 503}
-[   21.6s] ciclo 2: {'siguiente': 503}
-[   23.7s] ciclo 3: {'siguiente': 200, 'enviar': 200}
-[   23.8s] ciclo 4: {'siguiente': 200, 'enviar': 200}
-[   23.9s] ciclo 5: {'siguiente': 200, 'enviar': 200}
-[   23.9s] ciclo 6: {'siguiente': 200, 'enviar': 200}
-[   24.0s] ciclo 7: {'siguiente': 200, 'enviar': 200}
-[OK] se elige otro primario — mongo-1 en 9.3s
-[OK] las escrituras vuelven a responder 200 tras la elección — primer fallo 3.4s, RTO (parada -> primer 200) 9.4s
+[   26.0s] primario actual: mongo-1; caída (kill) de mongo-1
+[   29.3s] ciclo 1: {'siguiente': 503}
+[   32.9s] ciclo 2: {'siguiente': 503}
+[   36.6s] ciclo 3: {'siguiente': 503}
+[   37.2s] ciclo 4: {'siguiente': 200, 'enviar': 200}
+[   37.2s] ciclo 5: {'siguiente': 200, 'enviar': 200}
+[   37.3s] ciclo 6: {'siguiente': 200, 'enviar': 200}
+[   37.4s] ciclo 7: {'siguiente': 200, 'enviar': 200}
+[   37.4s] ciclo 8: {'siguiente': 200, 'enviar': 200}
+[OK] se elige otro primario — mongo-3 en 10.1s
+[OK] las escrituras vuelven a responder 200 tras la elección — primer fallo 3.4s, RTO (parada -> primer 200) 11.2s
 [OK] todo lo que respondió 200 sigue en MongoDB una vez, con su dueño y estado — 25 tareas verificadas, 0 distintas
-[   28.2s] arranque de mongo-3
-[OK] el antiguo primario vuelve como SECONDARY — mongo-3=SECONDARY en 3.1s
+[   41.5s] arranque de mongo-1
+[OK] el antiguo primario vuelve como SECONDARY — mongo-1=SECONDARY en 8.1s
 
 === C. Sin mayoría: se detienen los dos secundarios ===
-[   32.7s] caída (kill) de mongo-2 mongo-3
-[   38.5s] enviar sin mayoría -> 503
-[   42.3s] enviar sin mayoría -> 503
-[   45.7s] enviar sin mayoría -> 503
-[   49.1s] enviar sin mayoría -> 503
-[   52.3s] enviar sin mayoría -> 503
-[   55.5s] enviar sin mayoría -> 503
-[   58.7s] enviar sin mayoría -> 503
-[   68.2s] ciclos sin mayoría: [{'siguiente': 503}, {'siguiente': 503}, {'siguiente': 503}]
+[   51.1s] caída (kill) de mongo-1 mongo-2
+[   60.4s] enviar sin mayoría -> 503
+[   61.6s] enviar sin mayoría -> 503
+[   64.6s] enviar sin mayoría -> 503
+[   68.1s] enviar sin mayoría -> 503
+[   71.2s] enviar sin mayoría -> 503
+[   74.3s] enviar sin mayoría -> 503
+[   77.3s] enviar sin mayoría -> 503
+[   80.4s] enviar sin mayoría -> 503
+[   89.8s] ciclos sin mayoría: [{'siguiente': 503}, {'siguiente': 503}, {'siguiente': 503}]
 [OK] /salud responde 503 caído sin mayoría — (503, 'caido', 'caido')
 [OK] sin mayoría ninguna escritura responde 200 — enviar: [503]
-[OK] sin mayoría enviar responde 503 (sin reintento) — 7 respuestas 503
-[   68.2s] arranque de mongo-2 mongo-3
-[OK] el conjunto se recupera con 1 PRIMARY + 2 SECONDARY — 5.7s desde el arranque
+[OK] sin mayoría enviar responde 503 (sin reintento) — 8 respuestas 503
+[   89.8s] arranque de mongo-1 mongo-2
+[OK] el conjunto se recupera con 1 PRIMARY + 2 SECONDARY — 5.5s desde el arranque
 [OK] tras restaurar, el envío pendiente se resuelve (200 o 409) — 409: el 503 sí se había aplicado en el primario (ver limitaciones de w:majority)
-[   74.5s] recuperación (arranque -> sano): 6.3s; sin mayoría durante 35.4s
+[   95.9s] recuperación (arranque -> sano): 6.1s; sin mayoría durante 38.6s
 
 === Verificación final ===
 [OK] RPO de escrituras confirmadas: ninguna tarea con 200 se perdió — 26 tareas verificadas; diferencias: []
-Operaciones con 503 (resultado indeterminado del lado del cliente): 5
-  {'escenario': 'B', 'op': 'siguiente', 'anotador': 'e1dbae87-ba00-479b-892d-77c060c8f9d1'}
-  {'escenario': 'B', 'op': 'siguiente', 'anotador': '294a5cd3-077e-463f-a8a4-adccf34c04a0'}
-  {'escenario': 'C', 'op': 'siguiente', 'anotador': '257df1bd-d80e-4702-82a7-920518c6edc6'}
-  {'escenario': 'C', 'op': 'siguiente', 'anotador': '4198bf59-9b83-4687-8fea-354bb1e53cf7'}
-  {'escenario': 'C', 'op': 'siguiente', 'anotador': '552df072-97f7-4287-9ed4-28d91bcbd560'}
-Estado final del conjunto: {"mongo-1": "PRIMARY", "mongo-2": "SECONDARY", "mongo-3": "SECONDARY"}; /salud: (200, 'operativo', 'operativo')
+Operaciones con 503 (resultado indeterminado del lado del cliente): 6
+  {'escenario': 'B', 'op': 'siguiente', 'anotador': 'e777082d-b7e4-462a-9faa-1ac8229f2915'}
+  {'escenario': 'B', 'op': 'siguiente', 'anotador': 'b311153a-7097-402f-9d03-69a592d553a1'}
+  {'escenario': 'B', 'op': 'siguiente', 'anotador': '62197589-8b46-4f1a-b650-f733c128ccd9'}
+  {'escenario': 'C', 'op': 'siguiente', 'anotador': 'afd443fa-2eda-42f0-96cb-f26bf740f441'}
+  {'escenario': 'C', 'op': 'siguiente', 'anotador': '530981a5-fb5a-4b44-82e3-adc6c2fbf020'}
+  {'escenario': 'C', 'op': 'siguiente', 'anotador': 'b7ccaefd-d6bb-40b2-a94c-b6b7f5a4c24c'}
+Estado final del conjunto: {"mongo-1": "SECONDARY", "mongo-2": "SECONDARY", "mongo-3": "PRIMARY"}; /salud: (200, 'operativo', 'operativo')
 
 Resultado: 14/14 comprobaciones correctas
-Fin UTC: 2026-11-22T07:50:18.973272+00:00
+Fin UTC: 2026-11-25T02:05:25.661764+00:00

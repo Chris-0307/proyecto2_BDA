@@ -178,6 +178,97 @@ docker compose -f proyecto2/docker-compose.yml down
 > `down` conserva los volúmenes. **`down -v` borra los datos de MongoDB y los
 > borradores de Valkey**. Úselo solo para probar un arranque desde cero.
 
+### Corrida completa desde cero (todas las pruebas)
+
+Regenera los datos y toda la evidencia en `evidence/` con la máquina
+actual. Desde la raíz del repositorio, en este orden. Cada paso de prueba
+sobrescribe su archivo de evidencia. Duración total: ~45–60 min (P6 sola
+tarda ~20 min).
+
+**0. Máquina.** Deja registrada la máquina donde se mide:
+
+```bash
+{ date -u; uname -srm; echo "CPU lógicos: $(nproc)"; free -h | head -2; \
+  docker info --format 'Docker: {{.NCPU}} CPU, {{.MemTotal}} bytes, {{.ServerVersion}}'; } \
+  | tee proyecto2/evidence/maquina.txt
+```
+
+**1. Sistema limpio.** Borra los volúmenes de MongoDB y Valkey y levanta
+todo (pide confirmar con `s`). Esperar ~30 s a que la réplica elija
+primario:
+
+```bash
+make reset
+make ps          # todos "running" / "healthy"
+make salud       # "estado": "operativo"
+make replica     # 1 PRIMARY + 2 SECONDARY, w: majority, índices -> p2_replica.txt
+make aof         # appendonly yes / appendfsync everysec
+```
+
+**2. Datos.** Carga MongoDB y el datalake Parquet (~1 min):
+
+```bash
+make datos       # -> datos_generacion.txt
+```
+
+**3. Analítica (P5).** Va justo después de los datos, antes de las pruebas
+que escriben eventos nuevos: Q1 ancla su ventana de 90 días en el último
+evento del datalake.
+
+```bash
+make p5-validar  # Q1-Q5 contra valores a mano -> p5_validacion_consultas.txt
+make p5          # w=1 y w=2, tiempos y planes de Q1/Q3 -> p5_analitica.txt (~3 min)
+```
+
+**4. Registro y gateway (P1, P2).**
+
+`smoke-registro` y `smoke-gateway` cargan antes la demo (`make demo`: cliente y
+anotadores de demostración), porque `make datos` vacía el registro.
+
+```bash
+make explain-registro   # planes de las consultas del registro -> p2_explain_registro.txt
+make smoke-registro     # demo + smoke -> p2_registro_smoke.txt
+make smoke-gateway      # demo + smoke -> p1_gateway_smoke.txt
+make smoke-flujo        # -> p1_gateway_flujo.txt
+make p2-gateway         # 50 contra 10 -> p2_concurrencia_gateway.txt
+make write-concern      # w:1 frente a w:majority -> p2_write_concern.txt
+```
+
+**5. Sesión e historial (P3, P4).**
+
+```bash
+make p3          # -> p3_gateway_sesion.txt
+make p4          # -> p4_gateway_parquet.txt
+```
+
+**6. Carga (P6).** Primero se recarga el dataset para que P6 parta con el
+inventario completo de tareas (las pruebas anteriores consumen tareas):
+
+```bash
+make datos
+make p6          # 10, 40 y 100 usuarios, 30 s de calentamiento y 3 x 90 s -> p6_carga.txt
+```
+
+**7. Salud y fallas (P1, P8).** Detienen y reinician contenedores; van al
+final. Cada script deja el sistema como estaba:
+
+```bash
+make p1-salud    # /salud con cada capa caída, puertos y aislamiento -> p1_salud_aislamiento.txt
+make p8-mongo    # secundario, primario y sin mayoría -> p8_mongo_fallas.txt (~3-5 min)
+make p8-valkey   # reinicio, AOF, RTO y RPO -> p8_valkey_fallas.txt
+```
+
+**8. Cierre.**
+
+```bash
+make endpoints   # opcional: OpenAPI actualizado en endpoints/openapi/
+make down
+```
+
+Si un paso falla, revisar `make logs s=<servicio>` y repetir solo ese paso.
+Los pasos 4 a 7 no dependen entre sí salvo por el orden recomendado
+(P6 después de recargar datos; P1-salud y P8 al final).
+
 ### Entorno aislado de Sesión + Historial
 
 `compose.integrante2.yml` levanta solo Valkey, Sesión e Historial (proyecto
@@ -347,6 +438,7 @@ evidencia (formato en el apéndice A del informe).
 | Poca memoria / contenedores que se reinician | Cada `mongod` usa 300–500 MB; cierre el Compose aislado de Sesión + Historial |
 | Choque de nombres de paquete en pytest | Sesión e Historial usan el paquete `app`; los tests los cargan con nombres distintos. El registro usa `registro_app` |
 | `set: pipefail: invalid option name` en un `.sh` | El archivo tiene fin de línea CRLF (checkout en Windows). Conviértalo: `sed -i 's/\r$//' <archivo>` |
+| `/salud` marca `analitica: caido` justo después de P6 | Spark sigue procesando las consultas `/analitica` que P6 dejó en cola (el gateway ya cortó a los 120 s). Espere a que termine o `docker compose -f proyecto2/docker-compose.yml restart analitica` |
 | `make: getcwd: No such file or directory` | La terminal quedó en una carpeta que se borró y recreó: `cd ~ && cd <ruta del repo>` |
 
 ## 10. Documentación

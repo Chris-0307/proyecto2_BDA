@@ -1,4 +1,4 @@
-Inicio UTC: 2026-11-25T01:00:50.210180+00:00
+Inicio UTC: 2026-11-25T01:14:59.507640+00:00
 Objetivo: validar Q1–Q5 con un micro-dataset de resultado conocido (10 filas, 1 duplicada)
 Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.41, CPU lógicos: 16
 [OK] deduplicación: 10 filas físicas -> 9 eventos únicos — 9
@@ -14,4 +14,4 @@ q5: [{'cliente_id': 'C1', 'tareas_aprobadas': 3, 'p50_horas': 2.0, 'p95_horas': 
 [OK] Q5: toma -> aprobación por cliente y % fuera de SLA (T2: 48 h con SLA 24 h) — {'C1': (3, 2.0, 48.0, 33.33), 'C2': (1, 6.0, 6.0, 0.0)}
 
 Resultado: 6/6 comprobaciones correctas
-Fin UTC: 2026-11-25T01:00:59.271286+00:00
+Fin UTC: 2026-11-25T01:15:08.907192+00:00

@@ -1,146 +1,149 @@
-2026-11-24 15:41:23,400 Objetivo: P8 Valkey, reinicio ordenado, indisponibilidad, SIGKILL, RTO/RPO y restauracion
-2026-11-24 15:41:23,400 Inicio UTC: 2026-11-24T21:41:23.400470+00:00
-2026-11-24 15:41:23,463 Host: Windows-10-10.0.19045-SP0; CPU logicos=12; Python=3.12.3
-2026-11-24 15:41:23,463 Comando reproducible: python proyecto2/pruebas/p8_fallas/p8_valkey.py (make p8-valkey)
-2026-11-24 15:41:23,464 Comando Docker: docker compose -f proyecto2/docker-compose.yml version
-2026-11-24 15:41:23,568 Compose: Docker Compose version v5.3.1
-2026-11-24 15:41:23,843 Recursos Docker: 12 CPU; RAM=8301330432 bytes; Docker=29.7.2
-2026-11-24 15:41:23,844 Comando Docker: docker compose -f proyecto2/docker-compose.yml ps
-2026-11-24 15:41:24,041 Servicios iniciales:
+2026-11-24 20:05:31,347 Objetivo: P8 Valkey, reinicio ordenado, indisponibilidad, SIGKILL, RTO/RPO y restauracion
+2026-11-24 20:05:31,347 Inicio UTC: 2026-11-25T02:05:31.347320+00:00
+2026-11-24 20:05:31,348 Host: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.39; CPU logicos=16; Python=3.12.3
+2026-11-24 20:05:31,349 Comando reproducible: python proyecto2/pruebas/p8_fallas/p8_valkey.py (make p8-valkey)
+2026-11-24 20:05:31,349 Comando Docker: docker compose -f proyecto2/docker-compose.yml version
+2026-11-24 20:05:31,390 Compose: Docker Compose version v2.39.2-desktop.1
+2026-11-24 20:05:31,720 Recursos Docker: 16 CPU; RAM=16680960000 bytes; Docker=28.3.3
+2026-11-24 20:05:31,720 Comando Docker: docker compose -f proyecto2/docker-compose.yml ps
+2026-11-24 20:05:31,850 Servicios iniciales:
 NAME                               IMAGE                            COMMAND                  SERVICE            CREATED          STATUS                    PORTS
-bda-mongo-1                        mongo:8.0                        "docker-entrypoint.s…"   mongo-1            40 minutes ago   Up 39 minutes (healthy)   27017/tcp
-bda-mongo-2                        mongo:8.0                        "docker-entrypoint.s…"   mongo-2            40 minutes ago   Up 39 minutes (healthy)   27017/tcp
-bda-mongo-3                        mongo:8.0                        "docker-entrypoint.s…"   mongo-3            40 minutes ago   Up 39 minutes (healthy)   27017/tcp
-bda-proyecto2-analitica-1          bda-proyecto2-analitica          "uvicorn app.main:ap…"   analitica          40 minutes ago   Up 39 minutes             8004/tcp
-bda-proyecto2-gateway-1            bda-proyecto2-gateway            "uvicorn gateway_app…"   gateway            39 minutes ago   Up 39 minutes             0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
-bda-proyecto2-historial-1          bda-proyecto2-historial          "uvicorn app.main:ap…"   historial          40 minutes ago   Up 39 minutes             8002/tcp
-bda-proyecto2-historial-worker-1   bda-proyecto2-historial-worker   "python -m app.worker"   historial-worker   40 minutes ago   Up 39 minutes             8002/tcp
-bda-proyecto2-registro-1           bda-proyecto2-registro           "uvicorn registro_ap…"   registro           40 minutes ago   Up 39 minutes             8003/tcp
-bda-proyecto2-sesion-1             bda-proyecto2-sesion             "uvicorn app.main:ap…"   sesion             40 minutes ago   Up 39 minutes             8001/tcp
-bda-proyecto2-valkey-1             valkey/valkey:8.1.11-alpine      "tini -- docker-entr…"   valkey             40 minutes ago   Up 2 minutes (healthy)    6379/tcp
-2026-11-24 15:41:24,090 GET /salud -> HTTP 200 (47.975 ms)
-2026-11-24 15:41:24,090 Salud operativa: {"servicio": "gateway", "estado": "operativo", "fuente": "valkey", "capas": {"registro": {"estado": "operativo", "detalle": {"servicio": "registro", "estado": "operativo", "miembros": [{"nombre": "mongo-1:27017", "estado": "PRIMARY", "salud": 1.0}, {"nombre": "mongo-2:27017", "estado": "SECONDARY", "salud": 1.0}, {"nombre": "mongo-3:27017", "estado": "SECONDARY", "salud": 1.0}]}, "revisado_en": "2026-11-24T21:41:23.072699+00:00"}, "sesion": {"estado": "operativo", "detalle": {"servicio": "sesion", "estado": "operativo", "valkey": "disponible"}, "revisado_en": "2026-11-24T21:41:23.072699+00:00"}, "historial": {"estado": "operativo", "detalle": {"servicio": "historial", "estado": "operativo", "valkey": "disponible"}, "revisado_en": "2026-11-24T21:41:23.072699+00:00"}}}
-2026-11-24 15:41:24,127 Comando Docker: docker compose -f proyecto2/docker-compose.yml exec -T valkey valkey-cli --raw CONFIG GET appendonly
-2026-11-24 15:41:24,333 [OK] AOF appendonly=yes appendonly
+bda-mongo-1                        mongo:8.0                        "docker-entrypoint.s…"   mongo-1            52 minutes ago   Up 14 seconds (healthy)   27017/tcp
+bda-mongo-2                        mongo:8.0                        "docker-entrypoint.s…"   mongo-2            52 minutes ago   Up 14 seconds (healthy)   27017/tcp
+bda-mongo-3                        mongo:8.0                        "docker-entrypoint.s…"   mongo-3            52 minutes ago   Up 52 minutes (healthy)   27017/tcp
+bda-proyecto2-analitica-1          bda-proyecto2-analitica          "uvicorn app.main:ap…"   analitica          4 minutes ago    Up 3 minutes              8004/tcp
+bda-proyecto2-gateway-1            bda-proyecto2-gateway            "uvicorn gateway_app…"   gateway            3 minutes ago    Up 3 minutes              0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
+bda-proyecto2-historial-1          bda-proyecto2-historial          "uvicorn app.main:ap…"   historial          4 minutes ago    Up 3 minutes              8002/tcp
+bda-proyecto2-historial-worker-1   bda-proyecto2-historial-worker   "python -m app.worker"   historial-worker   4 minutes ago    Up 3 minutes              8002/tcp
+bda-proyecto2-registro-1           bda-proyecto2-registro           "uvicorn registro_ap…"   registro           4 minutes ago    Up 2 minutes              8003/tcp
+bda-proyecto2-sesion-1             bda-proyecto2-sesion             "uvicorn app.main:ap…"   sesion             4 minutes ago    Up 3 minutes              8001/tcp
+bda-proyecto2-valkey-1             valkey/valkey:8.1.11-alpine      "tini -- docker-entr…"   valkey             52 minutes ago   Up 2 minutes (healthy)    6379/tcp
+2026-11-24 20:05:31,867 GET /salud -> HTTP 200 (16.989 ms)
+2026-11-24 20:05:31,868 Salud operativa: {"servicio": "gateway", "estado": "operativo", "fuente": "valkey", "capas": {"registro": {"estado": "operativo", "detalle": {"servicio": "registro", "estado": "operativo", "miembros": [{"nombre": "mongo-1:27017", "estado": "SECONDARY", "salud": 1.0}, {"nombre": "mongo-2:27017", "estado": "SECONDARY", "salud": 1.0}, {"nombre": "mongo-3:27017", "estado": "PRIMARY", "salud": 1.0}]}, "revisado_en": "2026-11-25T02:05:27.286115+00:00"}, "sesion": {"estado": "operativo", "detalle": {"servicio": "sesion", "estado": "operativo", "valkey": "disponible"}, "revisado_en": "2026-11-25T02:05:27.286115+00:00"}, "historial": {"estado": "operativo", "detalle": {"servicio": "historial", "estado": "operativo", "valkey": "disponible"}, "revisado_en": "2026-11-25T02:05:27.286115+00:00"}, "analitica": {"estado": "operativo", "detalle": {"servicio": "analitica", "estado": "operativo", "ruta_datalake": "/datalake/eventos", "archivos_parquet": 1739, "spark_workers": 1}, "revisado_en": "2026-11-25T02:05:27.286115+00:00"}}}
+2026-11-24 20:05:31,868 Comando Docker: docker compose -f proyecto2/docker-compose.yml exec -T valkey valkey-cli --raw CONFIG GET appendonly
+2026-11-24 20:05:32,023 [OK] AOF appendonly=yes appendonly
 yes
-2026-11-24 15:41:24,333 Comando Docker: docker compose -f proyecto2/docker-compose.yml exec -T valkey valkey-cli --raw CONFIG GET appendfsync
-2026-11-24 15:41:24,560 [OK] AOF appendfsync=everysec appendfsync
+2026-11-24 20:05:32,023 Comando Docker: docker compose -f proyecto2/docker-compose.yml exec -T valkey valkey-cli --raw CONFIG GET appendfsync
+2026-11-24 20:05:32,183 [OK] AOF appendfsync=everysec appendfsync
 everysec
-2026-11-24 15:41:24,561 Comando Docker: docker compose -f proyecto2/docker-compose.yml exec -T registro python -c "import sys,json; sys.path.insert(0,'/pruebas/p1_gateway'); from smoke_flujo import preparar; print(json.dumps(preparar()))"
-2026-11-24 15:41:25,713 POST /proyectos -> HTTP 201 (38.760 ms)
-2026-11-24 15:41:25,714 [OK] POST /proyectos responde 201 
-2026-11-24 15:41:25,802 POST /proyectos/49eaa2d7-7efd-4091-aa96-54d54279a60e/lotes -> HTTP 201 (86.286 ms)
-2026-11-24 15:41:25,802 [OK] POST /proyectos/49eaa2d7-7efd-4091-aa96-54d54279a60e/lotes responde 201 
-2026-11-24 15:41:26,031 POST /tareas/siguiente -> HTTP 200 (226.699 ms)
-2026-11-24 15:41:26,031 [OK] POST /tareas/siguiente responde 200 
-2026-11-24 15:41:26,033 [OK] Tarea de prueba adquirida 
-2026-11-24 15:41:26,037 Proyecto=49eaa2d7-7efd-4091-aa96-54d54279a60e tarea=fc665da6-260e-4abb-8b79-5a2e767b5cc9
-2026-11-24 15:41:26,038 === A. Reinicio ordenado ===
-2026-11-24 15:41:26,051 PUT /tareas/fc665da6-260e-4abb-8b79-5a2e767b5cc9/borrador -> HTTP 200 (12.725 ms)
-2026-11-24 15:41:26,052 [OK] PUT /tareas/fc665da6-260e-4abb-8b79-5a2e767b5cc9/borrador responde 200 
-2026-11-24 15:41:26,052 Borrador confirmado: {"version": 1, "actualizado_en_ms": 1795556486047, "contenido": {"etiqueta": "auto", "avance": 1, "escenario": "A"}}
-2026-11-24 15:41:28,557 Comando Docker: docker compose -f proyecto2/docker-compose.yml restart valkey
-2026-11-24 15:41:29,838 Docker stderr: Container bda-proyecto2-valkey-1 Restarting 
- Container bda-proyecto2-valkey-1 Started
-2026-11-24 15:41:29,866 POST /sesiones/recuperar -> HTTP 200 (27.834 ms)
-2026-11-24 15:41:29,866 Borrador recuperado: {"estado": "activa", "tarea_id": "fc665da6-260e-4abb-8b79-5a2e767b5cc9", "anotador_id": "92959e17-d2b6-49dc-896f-689a3c54d890", "proyecto_id": "49eaa2d7-7efd-4091-aa96-54d54279a60e", "etapa": "anotacion", "ttl_ms": 120000, "borrador": {"etiqueta": "auto", "avance": 1, "escenario": "A"}, "version": 1, "actualizado_en_ms": 1795556486047}
-2026-11-24 15:41:29,866 A_reinicio RTO observado (inicio de interrupcion -> HTTP 200): 1.310 s; inicio de arranque -> HTTP 200: 1.310 s
-2026-11-24 15:41:29,867 [OK] Sesion recuperada y lock activo 
-2026-11-24 15:41:29,868 A_reinicio RPO observado: 0 versiones perdidas; 0 ms entre puntos confirmados; ultima=1 recuperada=1
-2026-11-24 15:41:29,868 [OK] Contenido y marca temporal coinciden con version confirmada 
-2026-11-24 15:41:29,869 [OK] Reinicio/parada ordenada conserva el ultimo borrador 
-2026-11-24 15:41:29,892 GET /salud -> HTTP 200 (22.703 ms)
-2026-11-24 15:41:29,893 Salud operativa: {"servicio": "gateway", "estado": "operativo", "fuente": "valkey", "capas": {"registro": {"estado": "operativo", "detalle": {"servicio": "registro", "estado": "operativo", "miembros": [{"nombre": "mongo-1:27017", "estado": "PRIMARY", "salud": 1.0}, {"nombre": "mongo-2:27017", "estado": "SECONDARY", "salud": 1.0}, {"nombre": "mongo-3:27017", "estado": "SECONDARY", "salud": 1.0}]}, "revisado_en": "2026-11-24T21:41:28.094482+00:00"}, "sesion": {"estado": "operativo", "detalle": {"servicio": "sesion", "estado": "operativo", "valkey": "disponible"}, "revisado_en": "2026-11-24T21:41:28.094482+00:00"}, "historial": {"estado": "operativo", "detalle": {"servicio": "historial", "estado": "operativo", "valkey": "disponible"}, "revisado_en": "2026-11-24T21:41:28.094482+00:00"}}}
-2026-11-24 15:41:29,894 === B. Indisponibilidad temporal controlada ===
-2026-11-24 15:41:29,908 PUT /tareas/fc665da6-260e-4abb-8b79-5a2e767b5cc9/borrador -> HTTP 200 (10.788 ms)
-2026-11-24 15:41:29,908 [OK] PUT /tareas/fc665da6-260e-4abb-8b79-5a2e767b5cc9/borrador responde 200 
-2026-11-24 15:41:29,909 Borrador confirmado: {"version": 2, "actualizado_en_ms": 1795556489905, "contenido": {"etiqueta": "auto", "avance": 2, "escenario": "B"}}
-2026-11-24 15:41:32,413 Comando Docker: docker compose -f proyecto2/docker-compose.yml stop valkey
-2026-11-24 15:41:33,570 Docker stderr: Container bda-proyecto2-valkey-1 Stopping 
- Container bda-proyecto2-valkey-1 Stopped
-2026-11-24 15:41:37,581 GET /salud -> HTTP 200 (4010.350 ms)
-2026-11-24 15:41:37,581 Salud durante parada: {"servicio": "gateway", "estado": "degradado", "fuente": "directo", "capas": {"registro": {"estado": "operativo", "detalle": {"servicio": "registro", "estado": "operativo", "miembros": [{"nombre": "mongo-1:27017", "estado": "PRIMARY", "salud": 1.0}, {"nombre": "mongo-2:27017", "estado": "SECONDARY", "salud": 1.0}, {"nombre": "mongo-3:27017", "estado": "SECONDARY", "salud": 1.0}]}, "revisado_en": "2026-11-24T21:41:34.575046+00:00"}, "sesion": {"estado": "caido", "detalle": {"error": "ReadTimeout"}, "revisado_en": "2026-11-24T21:41:34.575046+00:00"}, "historial": {"estado": "caido", "detalle": {"error": "ReadTimeout"}, "revisado_en": "2026-11-24T21:41:34.575046+00:00"}}}
-2026-11-24 15:41:37,582 [OK] Gateway responde 200 degradado con Valkey detenido 
-2026-11-24 15:41:40,904 PUT /tareas/fc665da6-260e-4abb-8b79-5a2e767b5cc9/borrador -> HTTP 503 (3319.599 ms)
-2026-11-24 15:41:40,905 [OK] PUT /tareas/fc665da6-260e-4abb-8b79-5a2e767b5cc9/borrador responde 503 
-2026-11-24 15:41:44,254 POST /tareas/fc665da6-260e-4abb-8b79-5a2e767b5cc9/enviar -> HTTP 503 (3348.102 ms)
-2026-11-24 15:41:44,254 [OK] POST /tareas/fc665da6-260e-4abb-8b79-5a2e767b5cc9/enviar responde 503 
-2026-11-24 15:41:44,255 Comando Docker: docker compose -f proyecto2/docker-compose.yml up -d --no-deps valkey
-2026-11-24 15:41:45,624 Docker stderr: Container bda-proyecto2-valkey-1 Starting 
- Container bda-proyecto2-valkey-1 Started
-2026-11-24 15:41:45,657 POST /sesiones/recuperar -> HTTP 200 (32.342 ms)
-2026-11-24 15:41:45,657 Borrador recuperado: {"estado": "activa", "tarea_id": "fc665da6-260e-4abb-8b79-5a2e767b5cc9", "anotador_id": "92959e17-d2b6-49dc-896f-689a3c54d890", "proyecto_id": "49eaa2d7-7efd-4091-aa96-54d54279a60e", "etapa": "anotacion", "ttl_ms": 120000, "borrador": {"etiqueta": "auto", "avance": 2, "escenario": "B"}, "version": 2, "actualizado_en_ms": 1795556489905}
-2026-11-24 15:41:45,659 B_parada RTO observado (inicio de interrupcion -> HTTP 200): 13.245 s; inicio de arranque -> HTTP 200: 1.403 s
-2026-11-24 15:41:45,660 [OK] Sesion recuperada y lock activo 
-2026-11-24 15:41:45,660 B_parada RPO observado: 0 versiones perdidas; 0 ms entre puntos confirmados; ultima=2 recuperada=2
-2026-11-24 15:41:45,661 [OK] Contenido y marca temporal coinciden con version confirmada 
-2026-11-24 15:41:45,661 [OK] Reinicio/parada ordenada conserva el ultimo borrador 
-2026-11-24 15:41:45,674 GET /salud -> HTTP 200 (12.152 ms)
-2026-11-24 15:41:45,674 Salud operativa: {"servicio": "gateway", "estado": "operativo", "fuente": "directo", "capas": {"registro": {"estado": "operativo", "detalle": {"servicio": "registro", "estado": "operativo", "miembros": [{"nombre": "mongo-1:27017", "estado": "PRIMARY", "salud": 1.0}, {"nombre": "mongo-2:27017", "estado": "SECONDARY", "salud": 1.0}, {"nombre": "mongo-3:27017", "estado": "SECONDARY", "salud": 1.0}]}, "revisado_en": "2026-11-24T21:41:45.667119+00:00"}, "sesion": {"estado": "operativo", "detalle": {"servicio": "sesion", "estado": "operativo", "valkey": "disponible"}, "revisado_en": "2026-11-24T21:41:45.667119+00:00"}, "historial": {"estado": "operativo", "detalle": {"servicio": "historial", "estado": "operativo", "valkey": "disponible"}, "revisado_en": "2026-11-24T21:41:45.667119+00:00"}}}
-2026-11-24 15:41:45,675 === C. Caida abrupta mediante SIGKILL ===
-2026-11-24 15:41:45,676 Comando Docker: docker compose -f proyecto2/docker-compose.yml ps -q valkey
-2026-11-24 15:41:45,830 Comando Docker: docker inspect --format {{.HostConfig.RestartPolicy.Name}} 33a7772643a45efc283e76b6c9d376415dcaa166370a95ea15fbcff21f235082
-2026-11-24 15:41:45,883 [OK] Politica original de Valkey: unless-stopped unless-stopped
-2026-11-24 15:41:45,884 Comando Docker: docker update --restart=no 33a7772643a45efc283e76b6c9d376415dcaa166370a95ea15fbcff21f235082
-2026-11-24 15:41:46,154 Comando Docker: docker inspect --format {{.HostConfig.RestartPolicy.Name}} 33a7772643a45efc283e76b6c9d376415dcaa166370a95ea15fbcff21f235082
-2026-11-24 15:41:46,207 [OK] Reinicio automatico desactivado temporalmente 
-2026-11-24 15:41:46,219 PUT /tareas/fc665da6-260e-4abb-8b79-5a2e767b5cc9/borrador -> HTTP 200 (11.888 ms)
-2026-11-24 15:41:46,220 [OK] PUT /tareas/fc665da6-260e-4abb-8b79-5a2e767b5cc9/borrador responde 200 
-2026-11-24 15:41:46,222 Borrador confirmado: {"version": 3, "actualizado_en_ms": 1795556506215, "contenido": {"etiqueta": "auto", "avance": 3, "escenario": "C-base"}}
-2026-11-24 15:41:48,749 PUT /tareas/fc665da6-260e-4abb-8b79-5a2e767b5cc9/borrador -> HTTP 200 (21.294 ms)
-2026-11-24 15:41:48,749 [OK] PUT /tareas/fc665da6-260e-4abb-8b79-5a2e767b5cc9/borrador responde 200 
-2026-11-24 15:41:48,750 Borrador confirmado: {"version": 4, "actualizado_en_ms": 1795556508733, "contenido": {"etiqueta": "auto", "avance": 4, "escenario": "C-ultimo"}}
-2026-11-24 15:41:48,751 Comando Docker: docker compose -f proyecto2/docker-compose.yml kill -s SIGKILL valkey
-2026-11-24 15:41:49,314 Docker stderr: Container bda-proyecto2-valkey-1 Killing 
- Container bda-proyecto2-valkey-1 Killed
-2026-11-24 15:41:49,315 Tiempo desde ultimo HTTP 200 (aprox.) hasta completar kill: 0.564 s
-2026-11-24 15:41:49,316 Comando Docker: docker wait 33a7772643a45efc283e76b6c9d376415dcaa166370a95ea15fbcff21f235082
-2026-11-24 15:41:49,572 [OK] Valkey termino mediante SIGKILL (137) 137
-2026-11-24 15:41:49,572 Comando Docker: docker inspect --format {{.State.Status}} 33a7772643a45efc283e76b6c9d376415dcaa166370a95ea15fbcff21f235082
-2026-11-24 15:41:49,621 [OK] Contenedor detenido antes de arrancar exited
-2026-11-24 15:41:49,622 Comando Docker: docker compose -f proyecto2/docker-compose.yml start valkey
-2026-11-24 15:41:50,488 Docker stderr: Container bda-proyecto2-valkey-1 Starting 
- Container bda-proyecto2-valkey-1 Started
-2026-11-24 15:41:50,516 POST /sesiones/recuperar -> HTTP 200 (27.538 ms)
-2026-11-24 15:41:50,516 Borrador recuperado: {"estado": "activa", "tarea_id": "fc665da6-260e-4abb-8b79-5a2e767b5cc9", "anotador_id": "92959e17-d2b6-49dc-896f-689a3c54d890", "proyecto_id": "49eaa2d7-7efd-4091-aa96-54d54279a60e", "etapa": "anotacion", "ttl_ms": 120000, "borrador": {"etiqueta": "auto", "avance": 4, "escenario": "C-ultimo"}, "version": 4, "actualizado_en_ms": 1795556508733}
-2026-11-24 15:41:50,517 C_sigkill RTO observado (inicio de interrupcion -> HTTP 200): 1.767 s; inicio de arranque -> HTTP 200: 0.895 s
-2026-11-24 15:41:50,517 [OK] Sesion recuperada y lock activo 
-2026-11-24 15:41:50,518 C_sigkill RPO observado: 0 versiones perdidas; 0 ms entre puntos confirmados; ultima=4 recuperada=4
-2026-11-24 15:41:50,518 [OK] Contenido y marca temporal coinciden con version confirmada 
-2026-11-24 15:41:50,519 Comando Docker: docker update --restart=unless-stopped 33a7772643a45efc283e76b6c9d376415dcaa166370a95ea15fbcff21f235082
-2026-11-24 15:41:50,636 Comando Docker: docker inspect --format {{.HostConfig.RestartPolicy.Name}} 33a7772643a45efc283e76b6c9d376415dcaa166370a95ea15fbcff21f235082
-2026-11-24 15:41:50,703 [OK] Politica de reinicio restaurada 
-2026-11-24 15:41:50,719 GET /salud -> HTTP 200 (16.429 ms)
-2026-11-24 15:41:50,720 Salud operativa: {"servicio": "gateway", "estado": "operativo", "fuente": "directo", "capas": {"registro": {"estado": "operativo", "detalle": {"servicio": "registro", "estado": "operativo", "miembros": [{"nombre": "mongo-1:27017", "estado": "PRIMARY", "salud": 1.0}, {"nombre": "mongo-2:27017", "estado": "SECONDARY", "salud": 1.0}, {"nombre": "mongo-3:27017", "estado": "SECONDARY", "salud": 1.0}]}, "revisado_en": "2026-11-24T21:41:50.710976+00:00"}, "sesion": {"estado": "operativo", "detalle": {"servicio": "sesion", "estado": "operativo", "valkey": "disponible"}, "revisado_en": "2026-11-24T21:41:50.710976+00:00"}, "historial": {"estado": "operativo", "detalle": {"servicio": "historial", "estado": "operativo", "valkey": "disponible"}, "revisado_en": "2026-11-24T21:41:50.710976+00:00"}}}
-2026-11-24 15:41:50,721 Comando Docker: docker compose -f proyecto2/docker-compose.yml exec -T valkey valkey-cli --raw CONFIG GET appendonly
-2026-11-24 15:41:50,950 [OK] AOF appendonly=yes appendonly
+2026-11-24 20:05:32,183 Comando Docker: docker compose -f proyecto2/docker-compose.yml exec -T registro python -c "import sys,json; sys.path.insert(0,'/pruebas/p1_gateway'); from smoke_flujo import preparar; print(json.dumps(preparar()))"
+2026-11-24 20:05:33,058 POST /proyectos -> HTTP 201 (7.588 ms)
+2026-11-24 20:05:33,058 [OK] POST /proyectos responde 201 
+2026-11-24 20:05:33,070 POST /proyectos/579fef69-59d1-41c7-bbca-9998480063c3/lotes -> HTTP 201 (11.185 ms)
+2026-11-24 20:05:33,070 [OK] POST /proyectos/579fef69-59d1-41c7-bbca-9998480063c3/lotes responde 201 
+2026-11-24 20:05:33,099 POST /tareas/siguiente -> HTTP 200 (28.785 ms)
+2026-11-24 20:05:33,100 [OK] POST /tareas/siguiente responde 200 
+2026-11-24 20:05:33,100 [OK] Tarea de prueba adquirida 
+2026-11-24 20:05:33,100 Proyecto=579fef69-59d1-41c7-bbca-9998480063c3 tarea=e7c98794-966f-44b2-b9f0-4d614d36dc49
+2026-11-24 20:05:33,100 === A. Reinicio ordenado ===
+2026-11-24 20:05:33,107 PUT /tareas/e7c98794-966f-44b2-b9f0-4d614d36dc49/borrador -> HTTP 200 (6.146 ms)
+2026-11-24 20:05:33,107 [OK] PUT /tareas/e7c98794-966f-44b2-b9f0-4d614d36dc49/borrador responde 200 
+2026-11-24 20:05:33,107 Borrador confirmado: {"version": 1, "actualizado_en_ms": 1795572333104, "contenido": {"etiqueta": "auto", "avance": 1, "escenario": "A"}}
+2026-11-24 20:05:35,608 Comando Docker: docker compose -f proyecto2/docker-compose.yml restart valkey
+2026-11-24 20:05:36,184 Docker stderr: Container bda-proyecto2-valkey-1  Restarting
+ Container bda-proyecto2-valkey-1  Started
+2026-11-24 20:05:36,194 POST /sesiones/recuperar -> HTTP 503 (9.532 ms)
+2026-11-24 20:05:36,701 POST /sesiones/recuperar -> HTTP 200 (6.422 ms)
+2026-11-24 20:05:36,701 Borrador recuperado: {"estado": "activa", "tarea_id": "e7c98794-966f-44b2-b9f0-4d614d36dc49", "anotador_id": "7c2ea98e-2453-4526-be1a-e5d388e99eea", "proyecto_id": "579fef69-59d1-41c7-bbca-9998480063c3", "etapa": "anotacion", "ttl_ms": 120000, "borrador": {"etiqueta": "auto", "avance": 1, "escenario": "A"}, "version": 1, "actualizado_en_ms": 1795572333104}
+2026-11-24 20:05:36,701 A_reinicio RTO observado (inicio de interrupcion -> HTTP 200): 1.094 s; inicio de arranque -> HTTP 200: 1.094 s
+2026-11-24 20:05:36,702 [OK] Sesion recuperada y lock activo 
+2026-11-24 20:05:36,702 A_reinicio RPO observado: 0 versiones perdidas; 0 ms entre puntos confirmados; ultima=1 recuperada=1
+2026-11-24 20:05:36,702 [OK] Contenido y marca temporal coinciden con version confirmada 
+2026-11-24 20:05:36,702 [OK] Reinicio/parada ordenada conserva el ultimo borrador 
+2026-11-24 20:05:36,706 GET /salud -> HTTP 200 (3.669 ms)
+2026-11-24 20:05:36,707 Salud operativa: {"servicio": "gateway", "estado": "operativo", "fuente": "valkey", "capas": {"registro": {"estado": "operativo", "detalle": {"servicio": "registro", "estado": "operativo", "miembros": [{"nombre": "mongo-1:27017", "estado": "SECONDARY", "salud": 1.0}, {"nombre": "mongo-2:27017", "estado": "SECONDARY", "salud": 1.0}, {"nombre": "mongo-3:27017", "estado": "PRIMARY", "salud": 1.0}]}, "revisado_en": "2026-11-25T02:05:32.401853+00:00"}, "sesion": {"estado": "operativo", "detalle": {"servicio": "sesion", "estado": "operativo", "valkey": "disponible"}, "revisado_en": "2026-11-25T02:05:32.401853+00:00"}, "historial": {"estado": "operativo", "detalle": {"servicio": "historial", "estado": "operativo", "valkey": "disponible"}, "revisado_en": "2026-11-25T02:05:32.401853+00:00"}, "analitica": {"estado": "operativo", "detalle": {"servicio": "analitica", "estado": "operativo", "ruta_datalake": "/datalake/eventos", "archivos_parquet": 1739, "spark_workers": 1}, "revisado_en": "2026-11-25T02:05:32.401853+00:00"}}}
+2026-11-24 20:05:36,707 === B. Indisponibilidad temporal controlada ===
+2026-11-24 20:05:36,713 PUT /tareas/e7c98794-966f-44b2-b9f0-4d614d36dc49/borrador -> HTTP 200 (6.387 ms)
+2026-11-24 20:05:36,714 [OK] PUT /tareas/e7c98794-966f-44b2-b9f0-4d614d36dc49/borrador responde 200 
+2026-11-24 20:05:36,714 Borrador confirmado: {"version": 2, "actualizado_en_ms": 1795572336711, "contenido": {"etiqueta": "auto", "avance": 2, "escenario": "B"}}
+2026-11-24 20:05:39,214 Comando Docker: docker compose -f proyecto2/docker-compose.yml stop valkey
+2026-11-24 20:05:41,501 Docker stderr: Container bda-proyecto2-valkey-1  Stopping
+ Container bda-proyecto2-valkey-1  Stopped
+2026-11-24 20:05:45,509 GET /salud -> HTTP 200 (4007.381 ms)
+2026-11-24 20:05:45,509 Salud durante parada: {"servicio": "gateway", "estado": "degradado", "fuente": "directo", "capas": {"registro": {"estado": "operativo", "detalle": {"servicio": "registro", "estado": "operativo", "miembros": [{"nombre": "mongo-1:27017", "estado": "SECONDARY", "salud": 1.0}, {"nombre": "mongo-2:27017", "estado": "SECONDARY", "salud": 1.0}, {"nombre": "mongo-3:27017", "estado": "PRIMARY", "salud": 1.0}]}, "revisado_en": "2026-11-25T02:05:42.503960+00:00"}, "sesion": {"estado": "caido", "detalle": {"error": "ReadTimeout"}, "revisado_en": "2026-11-25T02:05:42.503960+00:00"}, "historial": {"estado": "caido", "detalle": {"error": "ReadTimeout"}, "revisado_en": "2026-11-25T02:05:42.503960+00:00"}, "analitica": {"estado": "operativo", "detalle": {"servicio": "analitica", "estado": "operativo", "ruta_datalake": "/datalake/eventos", "archivos_parquet": 1740, "spark_workers": 1}, "revisado_en": "2026-11-25T02:05:42.503960+00:00"}}}
+2026-11-24 20:05:45,510 [OK] Gateway responde 200 degradado con Valkey detenido 
+2026-11-24 20:05:49,159 PUT /tareas/e7c98794-966f-44b2-b9f0-4d614d36dc49/borrador -> HTTP 503 (3648.559 ms)
+2026-11-24 20:05:49,159 [OK] PUT /tareas/e7c98794-966f-44b2-b9f0-4d614d36dc49/borrador responde 503 
+2026-11-24 20:05:52,785 POST /tareas/e7c98794-966f-44b2-b9f0-4d614d36dc49/enviar -> HTTP 503 (3625.041 ms)
+2026-11-24 20:05:52,785 [OK] POST /tareas/e7c98794-966f-44b2-b9f0-4d614d36dc49/enviar responde 503 
+2026-11-24 20:05:52,786 Comando Docker: docker compose -f proyecto2/docker-compose.yml up -d --no-deps valkey
+2026-11-24 20:05:53,175 Docker stderr: Container bda-proyecto2-valkey-1  Starting
+ Container bda-proyecto2-valkey-1  Started
+2026-11-24 20:05:53,183 POST /sesiones/recuperar -> HTTP 503 (8.032 ms)
+2026-11-24 20:05:53,690 POST /sesiones/recuperar -> HTTP 200 (6.642 ms)
+2026-11-24 20:05:53,691 Borrador recuperado: {"estado": "activa", "tarea_id": "e7c98794-966f-44b2-b9f0-4d614d36dc49", "anotador_id": "7c2ea98e-2453-4526-be1a-e5d388e99eea", "proyecto_id": "579fef69-59d1-41c7-bbca-9998480063c3", "etapa": "anotacion", "ttl_ms": 120000, "borrador": {"etiqueta": "auto", "avance": 2, "escenario": "B"}, "version": 2, "actualizado_en_ms": 1795572336711}
+2026-11-24 20:05:53,691 B_parada RTO observado (inicio de interrupcion -> HTTP 200): 12.649 s; inicio de arranque -> HTTP 200: 0.906 s
+2026-11-24 20:05:53,692 [OK] Sesion recuperada y lock activo 
+2026-11-24 20:05:53,692 B_parada RPO observado: 0 versiones perdidas; 0 ms entre puntos confirmados; ultima=2 recuperada=2
+2026-11-24 20:05:53,692 [OK] Contenido y marca temporal coinciden con version confirmada 
+2026-11-24 20:05:53,692 [OK] Reinicio/parada ordenada conserva el ultimo borrador 
+2026-11-24 20:05:53,694 GET /salud -> HTTP 200 (1.689 ms)
+2026-11-24 20:05:53,695 Salud operativa: {"servicio": "gateway", "estado": "operativo", "fuente": "valkey", "capas": {"registro": {"estado": "operativo", "detalle": {"servicio": "registro", "estado": "operativo", "miembros": [{"nombre": "mongo-1:27017", "estado": "SECONDARY", "salud": 1.0}, {"nombre": "mongo-2:27017", "estado": "SECONDARY", "salud": 1.0}, {"nombre": "mongo-3:27017", "estado": "PRIMARY", "salud": 1.0}]}, "revisado_en": "2026-11-25T02:05:53.461856+00:00"}, "sesion": {"estado": "operativo", "detalle": {"servicio": "sesion", "estado": "operativo", "valkey": "disponible"}, "revisado_en": "2026-11-25T02:05:53.461856+00:00"}, "historial": {"estado": "operativo", "detalle": {"servicio": "historial", "estado": "operativo", "valkey": "disponible"}, "revisado_en": "2026-11-25T02:05:53.461856+00:00"}, "analitica": {"estado": "operativo", "detalle": {"servicio": "analitica", "estado": "operativo", "ruta_datalake": "/datalake/eventos", "archivos_parquet": 1740, "spark_workers": 1}, "revisado_en": "2026-11-25T02:05:53.461856+00:00"}}}
+2026-11-24 20:05:53,695 === C. Caida abrupta mediante SIGKILL ===
+2026-11-24 20:05:53,695 Comando Docker: docker compose -f proyecto2/docker-compose.yml ps -q valkey
+2026-11-24 20:05:53,784 Comando Docker: docker inspect --format {{.HostConfig.RestartPolicy.Name}} c01ba58d8e14ccfcb7ecc7a370da4ba7e1ff59e8a876c943f73cfd8d95c57047
+2026-11-24 20:05:53,800 [OK] Politica original de Valkey: unless-stopped unless-stopped
+2026-11-24 20:05:53,800 Comando Docker: docker update --restart=no c01ba58d8e14ccfcb7ecc7a370da4ba7e1ff59e8a876c943f73cfd8d95c57047
+2026-11-24 20:05:53,826 Comando Docker: docker inspect --format {{.HostConfig.RestartPolicy.Name}} c01ba58d8e14ccfcb7ecc7a370da4ba7e1ff59e8a876c943f73cfd8d95c57047
+2026-11-24 20:05:53,849 [OK] Reinicio automatico desactivado temporalmente 
+2026-11-24 20:05:53,856 PUT /tareas/e7c98794-966f-44b2-b9f0-4d614d36dc49/borrador -> HTTP 200 (7.172 ms)
+2026-11-24 20:05:53,858 [OK] PUT /tareas/e7c98794-966f-44b2-b9f0-4d614d36dc49/borrador responde 200 
+2026-11-24 20:05:53,859 Borrador confirmado: {"version": 3, "actualizado_en_ms": 1795572353853, "contenido": {"etiqueta": "auto", "avance": 3, "escenario": "C-base"}}
+2026-11-24 20:05:56,366 PUT /tareas/e7c98794-966f-44b2-b9f0-4d614d36dc49/borrador -> HTTP 200 (6.710 ms)
+2026-11-24 20:05:56,366 [OK] PUT /tareas/e7c98794-966f-44b2-b9f0-4d614d36dc49/borrador responde 200 
+2026-11-24 20:05:56,367 Borrador confirmado: {"version": 4, "actualizado_en_ms": 1795572356363, "contenido": {"etiqueta": "auto", "avance": 4, "escenario": "C-ultimo"}}
+2026-11-24 20:05:56,367 Comando Docker: docker compose -f proyecto2/docker-compose.yml kill -s SIGKILL valkey
+2026-11-24 20:05:56,660 Docker stderr: Container bda-proyecto2-valkey-1  Killing
+ Container bda-proyecto2-valkey-1  Killed
+2026-11-24 20:05:56,661 Tiempo desde ultimo HTTP 200 (aprox.) hasta completar kill: 0.294 s
+2026-11-24 20:05:56,661 Comando Docker: docker wait c01ba58d8e14ccfcb7ecc7a370da4ba7e1ff59e8a876c943f73cfd8d95c57047
+2026-11-24 20:05:56,677 [OK] Valkey termino mediante SIGKILL (137) 137
+2026-11-24 20:05:56,677 Comando Docker: docker inspect --format {{.State.Status}} c01ba58d8e14ccfcb7ecc7a370da4ba7e1ff59e8a876c943f73cfd8d95c57047
+2026-11-24 20:05:56,696 [OK] Contenedor detenido antes de arrancar exited
+2026-11-24 20:05:56,696 Comando Docker: docker compose -f proyecto2/docker-compose.yml start valkey
+2026-11-24 20:05:57,003 Docker stderr: Container bda-proyecto2-valkey-1  Starting
+ Container bda-proyecto2-valkey-1  Started
+2026-11-24 20:05:57,014 POST /sesiones/recuperar -> HTTP 503 (10.637 ms)
+2026-11-24 20:05:57,521 POST /sesiones/recuperar -> HTTP 200 (6.074 ms)
+2026-11-24 20:05:57,521 Borrador recuperado: {"estado": "activa", "tarea_id": "e7c98794-966f-44b2-b9f0-4d614d36dc49", "anotador_id": "7c2ea98e-2453-4526-be1a-e5d388e99eea", "proyecto_id": "579fef69-59d1-41c7-bbca-9998480063c3", "etapa": "anotacion", "ttl_ms": 120000, "borrador": {"etiqueta": "auto", "avance": 4, "escenario": "C-ultimo"}, "version": 4, "actualizado_en_ms": 1795572356363}
+2026-11-24 20:05:57,522 C_sigkill RTO observado (inicio de interrupcion -> HTTP 200): 1.155 s; inicio de arranque -> HTTP 200: 0.826 s
+2026-11-24 20:05:57,522 [OK] Sesion recuperada y lock activo 
+2026-11-24 20:05:57,522 C_sigkill RPO observado: 0 versiones perdidas; 0 ms entre puntos confirmados; ultima=4 recuperada=4
+2026-11-24 20:05:57,522 [OK] Contenido y marca temporal coinciden con version confirmada 
+2026-11-24 20:05:57,523 Comando Docker: docker update --restart=unless-stopped c01ba58d8e14ccfcb7ecc7a370da4ba7e1ff59e8a876c943f73cfd8d95c57047
+2026-11-24 20:05:57,554 Comando Docker: docker inspect --format {{.HostConfig.RestartPolicy.Name}} c01ba58d8e14ccfcb7ecc7a370da4ba7e1ff59e8a876c943f73cfd8d95c57047
+2026-11-24 20:05:57,586 [OK] Politica de reinicio restaurada 
+2026-11-24 20:05:57,593 GET /salud -> HTTP 200 (5.908 ms)
+2026-11-24 20:05:57,593 Salud operativa: {"servicio": "gateway", "estado": "operativo", "fuente": "valkey", "capas": {"registro": {"estado": "operativo", "detalle": {"servicio": "registro", "estado": "operativo", "miembros": [{"nombre": "mongo-1:27017", "estado": "SECONDARY", "salud": 1.0}, {"nombre": "mongo-2:27017", "estado": "SECONDARY", "salud": 1.0}, {"nombre": "mongo-3:27017", "estado": "PRIMARY", "salud": 1.0}]}, "revisado_en": "2026-11-25T02:05:53.461856+00:00"}, "sesion": {"estado": "operativo", "detalle": {"servicio": "sesion", "estado": "operativo", "valkey": "disponible"}, "revisado_en": "2026-11-25T02:05:53.461856+00:00"}, "historial": {"estado": "operativo", "detalle": {"servicio": "historial", "estado": "operativo", "valkey": "disponible"}, "revisado_en": "2026-11-25T02:05:53.461856+00:00"}, "analitica": {"estado": "operativo", "detalle": {"servicio": "analitica", "estado": "operativo", "ruta_datalake": "/datalake/eventos", "archivos_parquet": 1740, "spark_workers": 1}, "revisado_en": "2026-11-25T02:05:53.461856+00:00"}}}
+2026-11-24 20:05:57,594 Comando Docker: docker compose -f proyecto2/docker-compose.yml exec -T valkey valkey-cli --raw CONFIG GET appendonly
+2026-11-24 20:05:57,794 [OK] AOF appendonly=yes appendonly
 yes
-2026-11-24 15:41:50,950 Comando Docker: docker compose -f proyecto2/docker-compose.yml exec -T valkey valkey-cli --raw CONFIG GET appendfsync
-2026-11-24 15:41:51,207 [OK] AOF appendfsync=everysec appendfsync
+2026-11-24 20:05:57,794 Comando Docker: docker compose -f proyecto2/docker-compose.yml exec -T valkey valkey-cli --raw CONFIG GET appendfsync
+2026-11-24 20:05:57,998 [OK] AOF appendfsync=everysec appendfsync
 everysec
-2026-11-24 15:41:51,260 PUT /tareas/fc665da6-260e-4abb-8b79-5a2e767b5cc9/borrador -> HTTP 200 (52.031 ms)
-2026-11-24 15:41:51,260 [OK] PUT /tareas/fc665da6-260e-4abb-8b79-5a2e767b5cc9/borrador responde 200 
-2026-11-24 15:41:51,261 Borrador confirmado: {"version": 5, "actualizado_en_ms": 1795556511223, "contenido": {"etiqueta": "auto", "avance": 5, "escenario": "restaurado"}}
-2026-11-24 15:41:51,269 POST /sesiones/recuperar -> HTTP 200 (7.609 ms)
-2026-11-24 15:41:51,269 Borrador recuperado: {"estado": "activa", "tarea_id": "fc665da6-260e-4abb-8b79-5a2e767b5cc9", "anotador_id": "92959e17-d2b6-49dc-896f-689a3c54d890", "proyecto_id": "49eaa2d7-7efd-4091-aa96-54d54279a60e", "etapa": "anotacion", "ttl_ms": 120000, "borrador": {"etiqueta": "auto", "avance": 5, "escenario": "restaurado"}, "version": 5, "actualizado_en_ms": 1795556511223}
-2026-11-24 15:41:51,270 [OK] Edicion funcional despues de las fallas 
-2026-11-24 15:41:51,271 Comando Docker: docker compose -f proyecto2/docker-compose.yml up -d --no-deps valkey
-2026-11-24 15:41:51,550 Docker stderr: Container bda-proyecto2-valkey-1 Running
-2026-11-24 15:41:51,559 GET /salud -> HTTP 200 (8.735 ms)
-2026-11-24 15:41:51,560 Salud operativa: {"servicio": "gateway", "estado": "operativo", "fuente": "directo", "capas": {"registro": {"estado": "operativo", "detalle": {"servicio": "registro", "estado": "operativo", "miembros": [{"nombre": "mongo-1:27017", "estado": "PRIMARY", "salud": 1.0}, {"nombre": "mongo-2:27017", "estado": "SECONDARY", "salud": 1.0}, {"nombre": "mongo-3:27017", "estado": "SECONDARY", "salud": 1.0}]}, "revisado_en": "2026-11-24T21:41:51.554999+00:00"}, "sesion": {"estado": "operativo", "detalle": {"servicio": "sesion", "estado": "operativo", "valkey": "disponible"}, "revisado_en": "2026-11-24T21:41:51.554999+00:00"}, "historial": {"estado": "operativo", "detalle": {"servicio": "historial", "estado": "operativo", "valkey": "disponible"}, "revisado_en": "2026-11-24T21:41:51.554999+00:00"}}}
-2026-11-24 15:41:51,634 POST /tareas/fc665da6-260e-4abb-8b79-5a2e767b5cc9/liberar -> HTTP 200 (72.407 ms)
-2026-11-24 15:41:51,635 [OK] Restauracion: liberar tarea de prueba HTTP 200
-2026-11-24 15:41:51,636 Estado final: servicios operativos; entidades de prueba conservadas para trazabilidad
-2026-11-24 15:41:51,636 Metricas observadas: {"A_reinicio": {"rto_s": 1.309627, "arranque_a_recuperacion_s": 1.309627, "version_confirmada": 1, "version_recuperada": 1, "versiones_perdidas": 0, "rpo_observado_ms": 0}, "B_parada": {"rto_s": 13.245271, "arranque_a_recuperacion_s": 1.402994, "version_confirmada": 2, "version_recuperada": 2, "versiones_perdidas": 0, "rpo_observado_ms": 0}, "C_sigkill": {"rto_s": 1.766525, "arranque_a_recuperacion_s": 0.895467, "version_confirmada": 4, "version_recuperada": 4, "versiones_perdidas": 0, "rpo_observado_ms": 0}}
-2026-11-24 15:41:51,638 Latencia HTTP GET /salud: n=6; p50=16.429 ms; p95=4010.350 ms; p99=4010.350 ms; muestras=[47.97520000283839, 22.702599999320228, 4010.3503999998793, 12.152200000855373, 16.428800001449417, 8.73469999714871] (rango mas cercano)
-2026-11-24 15:41:51,638 Latencia HTTP POST /proyectos: n=1; p50=38.760 ms; p95=38.760 ms; p99=38.760 ms; muestras=[38.75950000292505] (rango mas cercano)
-2026-11-24 15:41:51,641 Latencia HTTP POST /proyectos/{id}/lotes: n=1; p50=86.286 ms; p95=86.286 ms; p99=86.286 ms; muestras=[86.28640000097221] (rango mas cercano)
-2026-11-24 15:41:51,641 Latencia HTTP POST /tareas/siguiente: n=1; p50=226.699 ms; p95=226.699 ms; p99=226.699 ms; muestras=[226.6988000010315] (rango mas cercano)
-2026-11-24 15:41:51,642 Latencia HTTP PUT /tareas/{id}/borrador: n=6; p50=12.725 ms; p95=3319.599 ms; p99=3319.599 ms; muestras=[12.725299999146955, 10.78840000263881, 3319.598699999915, 11.887799999385606, 21.29369999966002, 52.03059999985271] (rango mas cercano)
-2026-11-24 15:41:51,642 Latencia HTTP POST /sesiones/recuperar: n=4; p50=27.538 ms; p95=32.342 ms; p99=32.342 ms; muestras=[27.8336000010313, 32.342200000130106, 27.538099999219412, 7.60920000175247] (rango mas cercano)
-2026-11-24 15:41:51,643 Latencia HTTP POST /tareas/{id}/enviar: n=1; p50=3348.102 ms; p95=3348.102 ms; p99=3348.102 ms; muestras=[3348.1016000005184] (rango mas cercano)
-2026-11-24 15:41:51,644 Latencia HTTP POST /tareas/{id}/liberar: n=1; p50=72.407 ms; p95=72.407 ms; p99=72.407 ms; muestras=[72.40660000024945] (rango mas cercano)
-2026-11-24 15:41:51,644 Limitaciones: un ensayo por escenario; RTO incluye comandos Docker y sondeo (B incluye parada controlada); RPO compara versiones de borrador, no garantiza perdida maxima ni durabilidad de todo el historial. SIGKILL no equivale a perdida de energia del host. Latencias incluyen respuestas HTTP de error, no fallas sin respuesta.
-2026-11-24 15:41:51,646 Resultado: 31/31 comprobaciones ejecutadas correctas; P8=PASS; exit=0
-2026-11-24 15:41:51,646 Fin UTC: 2026-11-24T21:41:51.646579+00:00
-2026-11-24 15:41:51,647 Evidencia: C:\Users\chris\OneDrive\Documentos\GitHub\proyecto2_BDA\proyecto2\evidence\p8_valkey_fallas.txt
+2026-11-24 20:05:58,005 PUT /tareas/e7c98794-966f-44b2-b9f0-4d614d36dc49/borrador -> HTTP 200 (6.755 ms)
+2026-11-24 20:05:58,005 [OK] PUT /tareas/e7c98794-966f-44b2-b9f0-4d614d36dc49/borrador responde 200 
+2026-11-24 20:05:58,006 Borrador confirmado: {"version": 5, "actualizado_en_ms": 1795572358002, "contenido": {"etiqueta": "auto", "avance": 5, "escenario": "restaurado"}}
+2026-11-24 20:05:58,012 POST /sesiones/recuperar -> HTTP 200 (6.451 ms)
+2026-11-24 20:05:58,013 Borrador recuperado: {"estado": "activa", "tarea_id": "e7c98794-966f-44b2-b9f0-4d614d36dc49", "anotador_id": "7c2ea98e-2453-4526-be1a-e5d388e99eea", "proyecto_id": "579fef69-59d1-41c7-bbca-9998480063c3", "etapa": "anotacion", "ttl_ms": 120000, "borrador": {"etiqueta": "auto", "avance": 5, "escenario": "restaurado"}, "version": 5, "actualizado_en_ms": 1795572358002}
+2026-11-24 20:05:58,013 [OK] Edicion funcional despues de las fallas 
+2026-11-24 20:05:58,013 Comando Docker: docker compose -f proyecto2/docker-compose.yml up -d --no-deps valkey
+2026-11-24 20:05:58,220 Docker stderr: Container bda-proyecto2-valkey-1  Running
+2026-11-24 20:05:58,222 GET /salud -> HTTP 200 (1.926 ms)
+2026-11-24 20:05:58,222 Salud operativa: {"servicio": "gateway", "estado": "operativo", "fuente": "valkey", "capas": {"registro": {"estado": "operativo", "detalle": {"servicio": "registro", "estado": "operativo", "miembros": [{"nombre": "mongo-1:27017", "estado": "SECONDARY", "salud": 1.0}, {"nombre": "mongo-2:27017", "estado": "SECONDARY", "salud": 1.0}, {"nombre": "mongo-3:27017", "estado": "PRIMARY", "salud": 1.0}]}, "revisado_en": "2026-11-25T02:05:53.461856+00:00"}, "sesion": {"estado": "operativo", "detalle": {"servicio": "sesion", "estado": "operativo", "valkey": "disponible"}, "revisado_en": "2026-11-25T02:05:53.461856+00:00"}, "historial": {"estado": "operativo", "detalle": {"servicio": "historial", "estado": "operativo", "valkey": "disponible"}, "revisado_en": "2026-11-25T02:05:53.461856+00:00"}, "analitica": {"estado": "operativo", "detalle": {"servicio": "analitica", "estado": "operativo", "ruta_datalake": "/datalake/eventos", "archivos_parquet": 1740, "spark_workers": 1}, "revisado_en": "2026-11-25T02:05:53.461856+00:00"}}}
+2026-11-24 20:05:58,235 POST /tareas/e7c98794-966f-44b2-b9f0-4d614d36dc49/liberar -> HTTP 200 (12.000 ms)
+2026-11-24 20:05:58,235 [OK] Restauracion: liberar tarea de prueba HTTP 200
+2026-11-24 20:05:58,235 Estado final: servicios operativos; entidades de prueba conservadas para trazabilidad
+2026-11-24 20:05:58,236 Metricas observadas: {"A_reinicio": {"rto_s": 1.093773, "arranque_a_recuperacion_s": 1.093773, "version_confirmada": 1, "version_recuperada": 1, "versiones_perdidas": 0, "rpo_observado_ms": 0}, "B_parada": {"rto_s": 12.649457, "arranque_a_recuperacion_s": 0.905933, "version_confirmada": 2, "version_recuperada": 2, "versiones_perdidas": 0, "rpo_observado_ms": 0}, "C_sigkill": {"rto_s": 1.15502, "arranque_a_recuperacion_s": 0.825946, "version_confirmada": 4, "version_recuperada": 4, "versiones_perdidas": 0, "rpo_observado_ms": 0}}
+2026-11-24 20:05:58,236 Latencia HTTP GET /salud: n=6; p50=3.669 ms; p95=4007.381 ms; p99=4007.381 ms; muestras=[16.989466000268294, 3.6691449995487346, 4007.3811249994833, 1.6890150000108406, 5.907507000301848, 1.9264599995949538] (rango mas cercano)
+2026-11-24 20:05:58,236 Latencia HTTP POST /proyectos: n=1; p50=7.588 ms; p95=7.588 ms; p99=7.588 ms; muestras=[7.587936999698286] (rango mas cercano)
+2026-11-24 20:05:58,236 Latencia HTTP POST /proyectos/{id}/lotes: n=1; p50=11.185 ms; p95=11.185 ms; p99=11.185 ms; muestras=[11.185104000105639] (rango mas cercano)
+2026-11-24 20:05:58,236 Latencia HTTP POST /tareas/siguiente: n=1; p50=28.785 ms; p95=28.785 ms; p99=28.785 ms; muestras=[28.785274999791] (rango mas cercano)
+2026-11-24 20:05:58,237 Latencia HTTP PUT /tareas/{id}/borrador: n=6; p50=6.710 ms; p95=3648.559 ms; p99=3648.559 ms; muestras=[6.146265000097628, 6.387103000633942, 3648.5593999996127, 7.171870999627572, 6.709944000249379, 6.754848000127822] (rango mas cercano)
+2026-11-24 20:05:58,237 Latencia HTTP POST /sesiones/recuperar: n=7; p50=6.642 ms; p95=10.637 ms; p99=10.637 ms; muestras=[9.531897000670142, 6.421795000278507, 8.03169299979345, 6.64180999956443, 10.636771999998018, 6.0739700002159225, 6.450955000218528] (rango mas cercano)
+2026-11-24 20:05:58,237 Latencia HTTP POST /tareas/{id}/enviar: n=1; p50=3625.041 ms; p95=3625.041 ms; p99=3625.041 ms; muestras=[3625.0414280002587] (rango mas cercano)
+2026-11-24 20:05:58,237 Latencia HTTP POST /tareas/{id}/liberar: n=1; p50=12.000 ms; p95=12.000 ms; p99=12.000 ms; muestras=[12.00025900016044] (rango mas cercano)
+2026-11-24 20:05:58,237 Limitaciones: un ensayo por escenario; RTO incluye comandos Docker y sondeo (B incluye parada controlada); RPO compara versiones de borrador, no garantiza perdida maxima ni durabilidad de todo el historial. SIGKILL no equivale a perdida de energia del host. Latencias incluyen respuestas HTTP de error, no fallas sin respuesta.
+2026-11-24 20:05:58,238 Resultado: 31/31 comprobaciones ejecutadas correctas; P8=PASS; exit=0
+2026-11-24 20:05:58,238 Fin UTC: 2026-11-25T02:05:58.238334+00:00
+2026-11-24 20:05:58,238 Evidencia: /mnt/c/Users/jimmy/GitHub/proyecto2_BDA/proyecto2/evidence/p8_valkey_fallas.txt
