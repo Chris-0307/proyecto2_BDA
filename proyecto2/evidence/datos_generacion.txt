@@ -1,0 +1,43 @@
+{
+  "generado_en": "2026-11-25T01:00:05.127538+00:00",
+  "mongo": {
+    "semilla": 20261122,
+    "clientes": 60,
+    "anotadores": 300,
+    "revisores": 30,
+    "equipos": 30,
+    "proyectos": 120,
+    "lotes": 600,
+    "tareas": 60000,
+    "tareas_por_modalidad": {
+      "imagen": 18038,
+      "lidar": 11965,
+      "texto": 18065,
+      "video": 11932
+    }
+  }
+}
+{
+  "generado_en": "2026-11-25T01:00:16.653279+00:00",
+  "parquet": {
+    "semilla": 20261122,
+    "tareas_historial": 100000,
+    "proyectos_historial": 180,
+    "eventos_generados": 830256,
+    "archivos_generados": 60,
+    "meses": [
+      "2025-11",
+      "2025-12",
+      "2026-01",
+      "2026-02",
+      "2026-03",
+      "2026-04",
+      "2026-05",
+      "2026-06",
+      "2026-07",
+      "2026-08",
+      "2026-09",
+      "2026-10"
+    ]
+  }
+}

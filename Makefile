@@ -14,7 +14,7 @@ s ?= registro mongo-init sesion historial historial-worker
         replica aof demo smoke-registro registro smoke-gateway salud smoke-flujo \
         p2-gateway p8-mongo p8-valkey write-concern explain-registro p1-salud endpoints \
         i2-up i2-down i2-smoke i2-pytest p3-p4 p3 p4 \
-        datos simulador p5 p6
+        datos simulador p5 p5-validar p6
 
 help: ## Lista los objetivos
 	@grep -hE '^[a-zA-Z0-9_-]+:.*## ' $(MAKEFILE_LIST) | \
@@ -136,10 +136,12 @@ p4: ## P4: materializacion, reprocesamiento, deduplicacion y frescura Parquet
 	
 ## ---- Datos, analítica Spark, simulador y carga (Emmanuel) ----
 # Parquet se genera en historial-worker: tiene app.parquet_writer, pyarrow y el datalake con escritura.
-datos: ## Genera dataset en MongoDB y datalake Parquet (semilla fija)
-	$(COMPOSE) run --rm registro python /dataset/generar_dataset.py --solo mongo
-	$(COMPOSE) run --rm -v "$(CURDIR)/proyecto2/dataset:/dataset:ro" historial-worker \
-	  python /dataset/generar_dataset.py --solo parquet --dir-eventos /datalake/eventos
+datos: ## Genera dataset en MongoDB y datalake Parquet (semilla fija; deja los conteos en evidencia)
+	@mkdir -p $(EVIDENCIA)
+	set -o pipefail; ( $(COMPOSE) run --rm registro python /dataset/generar_dataset.py --solo mongo && \
+	  $(COMPOSE) run --rm -v "$(CURDIR)/proyecto2/dataset:/dataset:ro" historial-worker \
+	  python /dataset/generar_dataset.py --solo parquet --dir-eventos /datalake/eventos ) \
+	  | tee $(EVIDENCIA)/datos_generacion.txt
 
 simulador: ## Ejecuta el simulador HTTP contra el gateway
 	python3 proyecto2/simulador/simulador_http.py
@@ -148,6 +150,11 @@ p5: ## P5: analítica Spark Q1-Q5 y planes explain (deja evidencia)
 	@mkdir -p $(EVIDENCIA)
 	set -o pipefail; python3 proyecto2/pruebas/p5_analitica/run_p5.py \
 	  | tee $(EVIDENCIA)/p5_analitica.txt
+
+p5-validar: ## P5: valida Q1-Q5 con un micro-dataset de resultado conocido (deja evidencia)
+	@mkdir -p $(EVIDENCIA)
+	set -o pipefail; $(COMPOSE) run --rm -v "$(CURDIR)/proyecto2/pruebas:/pruebas:ro" analitica \
+	  python /pruebas/p5_analitica/validar_consultas.py | tee $(EVIDENCIA)/p5_validacion_consultas.txt
 
 p6: ## P6: carga HTTP 10, 40 y 100 usuarios contra el gateway (deja evidencia)
 	@mkdir -p $(EVIDENCIA)

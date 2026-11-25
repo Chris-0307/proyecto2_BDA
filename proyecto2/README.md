@@ -119,6 +119,7 @@ siguen abajo.
 | `make datos` | Carga el dataset reproducible en MongoDB y genera Parquet mensuales con semilla fija | `datalake/eventos/` |
 | `make simulador` | Ejecuta el simulador HTTP (`simulador_http.py`) contra el gateway | — |
 | `make p5` | Ejecuta Q1–Q5 en Spark (1.ª vs. 2.ª corrida y planes `explain` de Q1/Q3) | `evidence/p5_analitica.txt` |
+| `make p5-validar` | Valida Q1–Q5 con un micro-dataset de resultado conocido | `evidence/p5_validacion_consultas.txt` |
 | `make p6` | Ejecuta pruebas de carga HTTP (10, 40 y 100 usuarios) contra el gateway | `evidence/p6_carga.txt` |
 
 **Sesión e Historial (P3/P4, Christian)**
@@ -215,9 +216,14 @@ docker compose -f proyecto2/docker-compose.yml run --rm registro python /dataset
 
 **Dataset oficial** (generador reproducible, semilla fija `20261122`): 60
 clientes, 300 anotadores en 30 equipos (10 % revisores), 120 proyectos, 600
-lotes y 60 000 tareas en MongoDB; ~800 000 eventos de 100 000 tareas en el
-datalake Parquet, particionados por mes. Volver a correrlo reemplaza los datos
-que genera.
+lotes y 60 000 tareas en MongoDB; ~800 000 eventos de 100 000 tareas de 180
+proyectos (los 120 activos y 60 cerrados) en el datalake Parquet, en los 12
+meses previos al 2026-11-01. Clientes, proyectos y equipos tienen los mismos
+ids en ambos lados.
+
+> **`make datos` vacía las colecciones del registro** (clientes, anotadores,
+> proyectos, lotes y tareas) antes de cargar, y reemplaza los Parquet que
+> generó antes; conserva los que publicó el worker.
 
 ```bash
 make datos
@@ -240,6 +246,12 @@ Q3):
 
 ```bash
 make p5
+```
+
+Validación de Q1–Q5 con un micro-dataset de resultado conocido:
+
+```bash
+make p5-validar
 ```
 
 Una consulta individual, por el gateway:

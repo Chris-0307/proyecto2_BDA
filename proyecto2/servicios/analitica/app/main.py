@@ -11,7 +11,7 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException, Query
 from pyspark.sql import SparkSession
 
-from .consultas import CONSULTAS, df_eventos_limpios
+from .consultas import CONSULTAS, df_eventos_limpios, ejecutar
 
 RUTA_DATALAKE = os.getenv("DATALAKE_EVENTOS", "/datalake/eventos")
 SPARK_WORKERS = int(os.getenv("SPARK_WORKERS", "1"))
@@ -30,6 +30,7 @@ def obtener_spark() -> SparkSession:
             .master(master)
             .config("spark.sql.shuffle.partitions", str(max(2, SPARK_WORKERS * 2)))
             .config("spark.ui.enabled", "false")
+            .config("spark.sql.session.timeZone", "UTC")
             .getOrCreate()
         )
         _spark.sparkContext.setLogLevel("WARN")
@@ -63,16 +64,22 @@ def correr_consulta(
 
     t0 = time.perf_counter()
     spark = obtener_spark()
-    df_base = df_eventos_limpios(spark, RUTA_DATALAKE, conjunto=conjunto)
+    try:
+        df_base = df_eventos_limpios(spark, RUTA_DATALAKE, conjunto=conjunto)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from None
 
+    res = fn(df_base)
     plan_texto = None
     if incluir_plan:
+        # Plan físico completo de la consulta: lectura, deduplicación, filtro,
+        # agregación y ordenamiento.
         buf = io.StringIO()
         with redirect_stdout(buf):
-            df_base.explain(mode="simple")
+            res.explain(mode="formatted")
         plan_texto = buf.getvalue()
 
-    filas = fn(df_base)
+    filas = ejecutar(res)
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
 
     respuesta = {

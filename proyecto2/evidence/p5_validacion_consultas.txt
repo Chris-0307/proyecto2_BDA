@@ -1,0 +1,17 @@
+Inicio UTC: 2026-11-25T01:00:50.210180+00:00
+Objetivo: validar Q1–Q5 con un micro-dataset de resultado conocido (10 filas, 1 duplicada)
+Máquina: Linux-6.6.87.1-microsoft-standard-WSL2-x86_64-with-glibc2.41, CPU lógicos: 16
+[OK] deduplicación: 10 filas físicas -> 9 eventos únicos — 9
+q1: [{'dia': '2026-10-10', 'modalidad': 'imagen', 'tareas_aprobadas': 1}, {'dia': '2026-10-10', 'modalidad': 'lidar', 'tareas_aprobadas': 1}, {'dia': '2026-10-12', 'modalidad': 'imagen', 'tareas_aprobadas': 1}]
+q2: [{'equipo_id': 'E1', 'mes': '2026-10', 'revisadas': 2, 'aprobadas': 2, 'proporcion_aprobadas': 1.0}, {'equipo_id': 'E2', 'mes': '2026-06', 'revisadas': 1, 'aprobadas': 1, 'proporcion_aprobadas': 1.0}, {'equipo_id': 'E2', 'mes': '2026-10', 'revisadas': 2, 'aprobadas': 1, 'proporcion_aprobadas': 0.5}]
+q3: [{'modalidad': 'imagen', 'tipo_tarea': 'bbox', 'muestras': 2, 'media_duracion_ms': 2000.0, 'p95_duracion_ms': 3000}, {'modalidad': 'lidar', 'tipo_tarea': 'cuboide_3d', 'muestras': 1, 'media_duracion_ms': 4000.0, 'p95_duracion_ms': 4000}, {'modalidad': 'texto', 'tipo_tarea': 'span', 'muestras': 1, 'media_duracion_ms': 500.0, 'p95_duracion_ms': 500}]
+q4: [{'cliente_id': 'C1', 'proyecto_id': 'P1', 'revisadas': 2, 'rechazadas': 0, 'proporcion_rechazo': 0.0}, {'cliente_id': 'C1', 'proyecto_id': 'P2', 'revisadas': 2, 'rechazadas': 1, 'proporcion_rechazo': 0.5}, {'cliente_id': 'C2', 'proyecto_id': 'P3', 'revisadas': 1, 'rechazadas': 0, 'proporcion_rechazo': 0.0}]
+q5: [{'cliente_id': 'C1', 'tareas_aprobadas': 3, 'p50_horas': 2.0, 'p95_horas': 48.0, 'pct_fuera_sla': 33.33}, {'cliente_id': 'C2', 'tareas_aprobadas': 1, 'p50_horas': 6.0, 'p95_horas': 6.0, 'pct_fuera_sla': 0.0}]
+[OK] Q1: aprobadas por día y modalidad (el duplicado cuenta una vez, junio fuera de la ventana) — {('2026-10-10', 'imagen'): 1, ('2026-10-10', 'lidar'): 1, ('2026-10-12', 'imagen'): 1}
+[OK] Q2: aprobadas / revisadas por equipo y mes — {('E1', '2026-10'): (2, 2, 1.0), ('E2', '2026-06'): (1, 1, 1.0), ('E2', '2026-10'): (2, 1, 0.5)}
+[OK] Q3: media y p95 por modalidad y tipo de tarea — {('imagen', 'bbox'): (2, 2000.0, 3000), ('lidar', 'cuboide_3d'): (1, 4000.0, 4000), ('texto', 'span'): (1, 500.0, 500)}
+[OK] Q4: rechazadas / revisadas por cliente y proyecto — {('C1', 'P1'): (2, 0, 0.0), ('C1', 'P2'): (2, 1, 0.5), ('C2', 'P3'): (1, 0, 0.0)}
+[OK] Q5: toma -> aprobación por cliente y % fuera de SLA (T2: 48 h con SLA 24 h) — {'C1': (3, 2.0, 48.0, 33.33), 'C2': (1, 6.0, 6.0, 0.0)}
+
+Resultado: 6/6 comprobaciones correctas
+Fin UTC: 2026-11-25T01:00:59.271286+00:00

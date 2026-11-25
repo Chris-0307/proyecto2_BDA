@@ -1,20 +1,20 @@
-=== P5 Analítica Spark — Inicio UTC: 2026-11-24T21:58:56.762255+00:00 ===
+=== P5 Analítica Spark — Inicio UTC: 2026-11-25T01:01:03.033966+00:00 ===
 
 --- Configurando SPARK_WORKERS=1 ---
-Salud: {"servicio": "analitica", "estado": "operativo", "ruta_datalake": "/datalake/eventos", "archivos_parquet": 145, "spark_workers": 1}
-Q1 (w=1): 1ra=53362.02 ms (srv=53333.09 ms) | 2da=24282.85 ms (srv=24253.95 ms) | filas=60
-Q2 (w=1): 1ra=29364.12 ms (srv=29330.32 ms) | 2da=26617.58 ms (srv=26577.27 ms) | filas=120
-Q3 (w=1): 1ra=28206.96 ms (srv=28180.87 ms) | 2da=23760.64 ms (srv=23726.95 ms) | filas=4
-Q4 (w=1): 1ra=25008.4 ms (srv=24980.67 ms) | 2da=27282.06 ms (srv=27249.64 ms) | filas=180
-Q5 (w=1): 1ra=25851.09 ms (srv=25824.45 ms) | 2da=23368.76 ms (srv=23330.18 ms) | filas=60
+Salud: {"servicio": "analitica", "estado": "operativo", "ruta_datalake": "/datalake/eventos", "archivos_parquet": 60, "spark_workers": 1}
+Q1 (w=1): 1ra=17623.82 ms (srv=17605.77 ms) | 2da=11266.67 ms (srv=11251.22 ms) | filas=359
+Q2 (w=1): 1ra=7777.16 ms (srv=7762.11 ms) | 2da=6768.88 ms (srv=6750.06 ms) | filas=360
+Q3 (w=1): 1ra=6857.69 ms (srv=6840.88 ms) | 2da=7146.24 ms (srv=7132.89 ms) | filas=5
+Q4 (w=1): 1ra=7021.02 ms (srv=7005.12 ms) | 2da=6290.77 ms (srv=6277.3 ms) | filas=180
+Q5 (w=1): 1ra=6623.32 ms (srv=6608.88 ms) | 2da=6402.71 ms (srv=6389.2 ms) | filas=60
 
 --- Configurando SPARK_WORKERS=2 ---
-Salud: {"servicio": "analitica", "estado": "operativo", "ruta_datalake": "/datalake/eventos", "archivos_parquet": 145, "spark_workers": 2}
-Q1 (w=2): 1ra=37851.87 ms (srv=37819.14 ms) | 2da=18637.7 ms (srv=18604.26 ms) | filas=60
-Q2 (w=2): 1ra=18657.03 ms (srv=18616.71 ms) | 2da=15988.97 ms (srv=15959.84 ms) | filas=120
-Q3 (w=2): 1ra=17581.89 ms (srv=17547.24 ms) | 2da=16120.31 ms (srv=16089.96 ms) | filas=4
-Q4 (w=2): 1ra=16362.99 ms (srv=16333.45 ms) | 2da=16065.22 ms (srv=15990.3 ms) | filas=180
-Q5 (w=2): 1ra=16377.97 ms (srv=16337.65 ms) | 2da=15583.54 ms (srv=15558.64 ms) | filas=60
+Salud: {"servicio": "analitica", "estado": "operativo", "ruta_datalake": "/datalake/eventos", "archivos_parquet": 60, "spark_workers": 2}
+Q1 (w=2): 1ra=13457.2 ms (srv=13440.2 ms) | 2da=6074.9 ms (srv=6060.15 ms) | filas=359
+Q2 (w=2): 1ra=3898.85 ms (srv=3883.92 ms) | 2da=3467.56 ms (srv=3453.33 ms) | filas=360
+Q3 (w=2): 1ra=4375.89 ms (srv=4361.69 ms) | 2da=3664.93 ms (srv=3651.69 ms) | filas=5
+Q4 (w=2): 1ra=3729.25 ms (srv=3715.63 ms) | 2da=3511.55 ms (srv=3497.62 ms) | filas=180
+Q5 (w=2): 1ra=4037.58 ms (srv=4023.02 ms) | 2da=3661.07 ms (srv=3648.45 ms) | filas=60
 
 --- Restaurando SPARK_WORKERS=1 ---
 
@@ -26,45 +26,45 @@ Q5 (w=2): 1ra=16377.97 ms (srv=16337.65 ms) | 2da=15583.54 ms (srv=15558.64 ms) 
         "servicio": "analitica",
         "estado": "operativo",
         "ruta_datalake": "/datalake/eventos",
-        "archivos_parquet": 145,
+        "archivos_parquet": 60,
         "spark_workers": 1
       },
       "consultas": {
         "q1": {
-          "primera_ejecucion_wall_ms": 53362.02,
-          "primera_ejecucion_srv_ms": 53333.09,
-          "segunda_ejecucion_wall_ms": 24282.85,
-          "segunda_ejecucion_srv_ms": 24253.95,
-          "total_filas": 60,
-          "plan_explain": "== Physical Plan ==\nAdaptiveSparkPlan isFinalPlan=false\n+- SortAggregate(key=[event_id#0], functions=[first(tipo_evento#1, false), first(estado#2, false), first(ocurrido_en#3, false), first(tarea_id#4, false), first(proyecto_id#5, false), first(cliente_id#6, false), first(batch_id#7, false), first(anotador_id#8, false), first(revisor_id#9, false), first(equipo_id#10, false), first(modalidad#11, false), first(tipo_tarea#12, false), first(version#13L, false), first(tomada_en#14, false), first(aprobada_en#15, false), first(duracion_ms#16L, false), first(sla_horas#17, false), first(motivo_rechazo#18, false), first(datos_extra_json#19, false)])\n   +- Sort [event_id#0 ASC NULLS FIRST], false, 0\n      +- Exchange hashpartitioning(event_id#0, 2), ENSURE_REQUIREMENTS, [plan_id=20]\n         +- SortAggregate(key=[event_id#0], functions=[partial_first(tipo_evento#1, false), partial_first(estado#2, false), partial_first(ocurrido_en#3, false), partial_first(tarea_id#4, false), partial_first(proyecto_id#5, false), partial_first(cliente_id#6, false), partial_first(batch_id#7, false), partial_first(anotador_id#8, false), partial_first(revisor_id#9, false), partial_first(equipo_id#10, false), partial_first(modalidad#11, false), partial_first(tipo_tarea#12, false), partial_first(version#13L, false), partial_first(tomada_en#14, false), partial_first(aprobada_en#15, false), partial_first(duracion_ms#16L, false), partial_first(sla_horas#17, false), partial_first(motivo_rechazo#18, false), partial_first(datos_extra_json#19, false)])\n            +- Sort [event_id#0 ASC NULLS FIRST], false, 0\n               +- Filter ((isnotnull(ocurrido_en#3) AND (ocurrido_en#3 >= 2025-01-01 00:00:00)) AND (ocurrido_en#3 < 2026-01-01 00:00:00))\n                  +- FileScan parquet [event_id#0,tipo_evento#1,estado#2,ocurrido_en#3,tarea_id#4,proyecto_id#5,cliente_id#6,batch_id#7,anotador_id#8,revisor_id#9,equipo_id#10,modalidad#11,tipo_tarea#12,version#13L,tomada_en#14,aprobada_en#15,duracion_ms#16L,sla_horas#17,motivo_rechazo#18,datos_extra_json#19] Batched: true, DataFilters: [isnotnull(ocurrido_en#3), (ocurrido_en#3 >= 2025-01-01 00:00:00), (ocurrido_en#3 < 2026-01-01 00..., Format: Parquet, Location: InMemoryFileIndex(145 paths)[file:/datalake/eventos/mes=2025-01/gen-20261122-2025-01-p000.parquet..., PartitionFilters: [], PushedFilters: [IsNotNull(ocurrido_en), GreaterThanOrEqual(ocurrido_en,2025-01-01 00:00:00.0), LessThan(ocurrido..., ReadSchema: struct<event_id:string,tipo_evento:string,estado:string,ocurrido_en:timestamp,tarea_id:string,pro...\n\n\n"
+          "primera_ejecucion_wall_ms": 17623.82,
+          "primera_ejecucion_srv_ms": 17605.77,
+          "segunda_ejecucion_wall_ms": 11266.67,
+          "segunda_ejecucion_srv_ms": 11251.22,
+          "total_filas": 359,
+          "plan_explain": "== Physical Plan ==\nAdaptiveSparkPlan (17)\n+- Sort (16)\n   +- Exchange (15)\n      +- HashAggregate (14)\n         +- Exchange (13)\n            +- HashAggregate (12)\n               +- HashAggregate (11)\n                  +- Exchange (10)\n                     +- HashAggregate (9)\n                        +- Project (8)\n                           +- Filter (7)\n                              +- SortAggregate (6)\n                                 +- Sort (5)\n                                    +- Exchange (4)\n                                       +- SortAggregate (3)\n                                          +- Sort (2)\n                                             +- Scan parquet  (1)\n\n\n(1) Scan parquet \nOutput [5]: [event_id#0, tipo_evento#1, ocurrido_en#3, tarea_id#4, modalidad#11]\nBatched: true\nLocation: InMemoryFileIndex [file:/datalake/eventos/mes=2025-11/gen-20261122-2025-11-p000.parquet, ... 59 entries]\nReadSchema: struct<event_id:string,tipo_evento:string,ocurrido_en:timestamp,tarea_id:string,modalidad:string>\n\n(2) Sort\nInput [5]: [event_id#0, tipo_evento#1, ocurrido_en#3, tarea_id#4, modalidad#11]\nArguments: [event_id#0 ASC NULLS FIRST], false, 0\n\n(3) SortAggregate\nInput [5]: [event_id#0, tipo_evento#1, ocurrido_en#3, tarea_id#4, modalidad#11]\nKeys [1]: [event_id#0]\nFunctions [4]: [partial_first(tipo_evento#1, false), partial_first(ocurrido_en#3, false), partial_first(tarea_id#4, false), partial_first(modalidad#11, false)]\nAggregate Attributes [8]: [first#188, valueSet#189, first#190, valueSet#191, first#192, valueSet#193, first#194, valueSet#195]\nResults [9]: [event_id#0, first#196, valueSet#197, first#198, valueSet#199, first#200, valueSet#201, first#202, valueSet#203]\n\n(4) Exchange\nInput [9]: [event_id#0, first#196, valueSet#197, first#198, valueSet#199, first#200, valueSet#201, first#202, valueSet#203]\nArguments: hashpartitioning(event_id#0, 2), ENSURE_REQUIREMENTS, [plan_id=129]\n\n(5) Sort\nInput [9]: [event_id#0, first#196, valueSet#197, first#198, valueSet#199, first#200, valueSet#201, first#202, valueSet#203]\nArguments: [event_id#0 ASC NULLS FIRST], false, 0\n\n(6) SortAggregate\nInput [9]: [event_id#0, first#196, valueSet#197, first#198, valueSet#199, first#200, valueSet#201, first#202, valueSet#203]\nKeys [1]: [event_id#0]\nFunctions [4]: [first(tipo_evento#1, false), first(ocurrido_en#3, false), first(tarea_id#4, false), first(modalidad#11, false)]\nAggregate Attributes [4]: [first(tipo_evento#1)()#146, first(ocurrido_en#3)()#150, first(tarea_id#4)()#152, first(modalidad#11)()#166]\nResults [4]: [first(tipo_evento#1)()#146 AS tipo_evento#147, first(ocurrido_en#3)()#150 AS ocurrido_en#151, first(tarea_id#4)()#152 AS tarea_id#153, first(modalidad#11)()#166 AS modalidad#167]\n\n(7) Filter\nInput [4]: [tipo_evento#147, ocurrido_en#151, tarea_id#153, modalidad#167]\nCondition : ((isnotnull(tipo_evento#147) AND isnotnull(ocurrido_en#151)) AND ((tipo_evento#147 = revision_aprobada) AND (ocurrido_en#151 > 2026-07-31 19:38:26.569)))\n\n(8) Project\nOutput [3]: [tarea_id#153, modalidad#167, cast(ocurrido_en#151 as date) AS _groupingexpression#145]\nInput [4]: [tipo_evento#147, ocurrido_en#151, tarea_id#153, modalidad#167]\n\n(9) HashAggregate\nInput [3]: [tarea_id#153, modalidad#167, _groupingexpression#145]\nKeys [3]: [_groupingexpression#145, modalidad#167, tarea_id#153]\nFunctions: []\nAggregate Attributes: []\nResults [3]: [_groupingexpression#145, modalidad#167, tarea_id#153]\n\n(10) Exchange\nInput [3]: [_groupingexpression#145, modalidad#167, tarea_id#153]\nArguments: hashpartitioning(_groupingexpression#145, modalidad#167, tarea_id#153, 2), ENSURE_REQUIREMENTS, [plan_id=136]\n\n(11) HashAggregate\nInput [3]: [_groupingexpression#145, modalidad#167, tarea_id#153]\nKeys [3]: [_groupingexpression#145, modalidad#167, tarea_id#153]\nFunctions: []\nAggregate Attributes: []\nResults [3]: [_groupingexpression#145, modalidad#167, tarea_id#153]\n\n(12) HashAggregate\nInput [3]: [_groupingexpression#145, modalidad#167, tarea_id#153]\nKeys [2]: [_groupingexpression#145, modalidad#167]\nFunctions [1]: [partial_count(distinct tarea_id#153)]\nAggregate Attributes [1]: [count(tarea_id#153)#141L]\nResults [3]: [_groupingexpression#145, modalidad#167, count#186L]\n\n(13) Exchange\nInput [3]: [_groupingexpression#145, modalidad#167, count#186L]\nArguments: hashpartitioning(_groupingexpression#145, modalidad#167, 2), ENSURE_REQUIREMENTS, [plan_id=140]\n\n(14) HashAggregate\nInput [3]: [_groupingexpression#145, modalidad#167, count#186L]\nKeys [2]: [_groupingexpression#145, modalidad#167]\nFunctions [1]: [count(distinct tarea_id#153)]\nAggregate Attributes [1]: [count(tarea_id#153)#141L]\nResults [3]: [_groupingexpression#145 AS dia#119, modalidad#167, count(tarea_id#153)#141L AS tareas_aprobadas#140L]\n\n(15) Exchange\nInput [3]: [dia#119, modalidad#167, tareas_aprobadas#140L]\nArguments: rangepartitioning(dia#119 ASC NULLS FIRST, modalidad#167 ASC NULLS FIRST, 2), ENSURE_REQUIREMENTS, [plan_id=143]\n\n(16) Sort\nInput [3]: [dia#119, modalidad#167, tareas_aprobadas#140L]\nArguments: [dia#119 ASC NULLS FIRST, modalidad#167 ASC NULLS FIRST], true, 0\n\n(17) AdaptiveSparkPlan\nOutput [3]: [dia#119, modalidad#167, tareas_aprobadas#140L]\nArguments: isFinalPlan=false\n\n\n"
         },
         "q2": {
-          "primera_ejecucion_wall_ms": 29364.12,
-          "primera_ejecucion_srv_ms": 29330.32,
-          "segunda_ejecucion_wall_ms": 26617.58,
-          "segunda_ejecucion_srv_ms": 26577.27,
-          "total_filas": 120
+          "primera_ejecucion_wall_ms": 7777.16,
+          "primera_ejecucion_srv_ms": 7762.11,
+          "segunda_ejecucion_wall_ms": 6768.88,
+          "segunda_ejecucion_srv_ms": 6750.06,
+          "total_filas": 360
         },
         "q3": {
-          "primera_ejecucion_wall_ms": 28206.96,
-          "primera_ejecucion_srv_ms": 28180.87,
-          "segunda_ejecucion_wall_ms": 23760.64,
-          "segunda_ejecucion_srv_ms": 23726.95,
-          "total_filas": 4,
-          "plan_explain": "== Physical Plan ==\nAdaptiveSparkPlan isFinalPlan=false\n+- SortAggregate(key=[event_id#5076], functions=[first(tipo_evento#5077, false), first(estado#5078, false), first(ocurrido_en#5079, false), first(tarea_id#5080, false), first(proyecto_id#5081, false), first(cliente_id#5082, false), first(batch_id#5083, false), first(anotador_id#5084, false), first(revisor_id#5085, false), first(equipo_id#5086, false), first(modalidad#5087, false), first(tipo_tarea#5088, false), first(version#5089L, false), first(tomada_en#5090, false), first(aprobada_en#5091, false), first(duracion_ms#5092L, false), first(sla_horas#5093, false), first(motivo_rechazo#5094, false), first(datos_extra_json#5095, false)])\n   +- Sort [event_id#5076 ASC NULLS FIRST], false, 0\n      +- Exchange hashpartitioning(event_id#5076, 2), ENSURE_REQUIREMENTS, [plan_id=761]\n         +- SortAggregate(key=[event_id#5076], functions=[partial_first(tipo_evento#5077, false), partial_first(estado#5078, false), partial_first(ocurrido_en#5079, false), partial_first(tarea_id#5080, false), partial_first(proyecto_id#5081, false), partial_first(cliente_id#5082, false), partial_first(batch_id#5083, false), partial_first(anotador_id#5084, false), partial_first(revisor_id#5085, false), partial_first(equipo_id#5086, false), partial_first(modalidad#5087, false), partial_first(tipo_tarea#5088, false), partial_first(version#5089L, false), partial_first(tomada_en#5090, false), partial_first(aprobada_en#5091, false), partial_first(duracion_ms#5092L, false), partial_first(sla_horas#5093, false), partial_first(motivo_rechazo#5094, false), partial_first(datos_extra_json#5095, false)])\n            +- Sort [event_id#5076 ASC NULLS FIRST], false, 0\n               +- Filter ((isnotnull(ocurrido_en#5079) AND (ocurrido_en#5079 >= 2025-01-01 00:00:00)) AND (ocurrido_en#5079 < 2026-01-01 00:00:00))\n                  +- FileScan parquet [event_id#5076,tipo_evento#5077,estado#5078,ocurrido_en#5079,tarea_id#5080,proyecto_id#5081,cliente_id#5082,batch_id#5083,anotador_id#5084,revisor_id#5085,equipo_id#5086,modalidad#5087,tipo_tarea#5088,version#5089L,tomada_en#5090,aprobada_en#5091,duracion_ms#5092L,sla_horas#5093,motivo_rechazo#5094,datos_extra_json#5095] Batched: true, DataFilters: [isnotnull(ocurrido_en#5079), (ocurrido_en#5079 >= 2025-01-01 00:00:00), (ocurrido_en#5079 < 2026..., Format: Parquet, Location: InMemoryFileIndex(145 paths)[file:/datalake/eventos/mes=2025-01/gen-20261122-2025-01-p000.parquet..., PartitionFilters: [], PushedFilters: [IsNotNull(ocurrido_en), GreaterThanOrEqual(ocurrido_en,2025-01-01 00:00:00.0), LessThan(ocurrido..., ReadSchema: struct<event_id:string,tipo_evento:string,estado:string,ocurrido_en:timestamp,tarea_id:string,pro...\n\n\n"
+          "primera_ejecucion_wall_ms": 6857.69,
+          "primera_ejecucion_srv_ms": 6840.88,
+          "segunda_ejecucion_wall_ms": 7146.24,
+          "segunda_ejecucion_srv_ms": 7132.89,
+          "total_filas": 5,
+          "plan_explain": "== Physical Plan ==\nAdaptiveSparkPlan (14)\n+- Sort (13)\n   +- Exchange (12)\n      +- ObjectHashAggregate (11)\n         +- Exchange (10)\n            +- ObjectHashAggregate (9)\n               +- Project (8)\n                  +- Filter (7)\n                     +- SortAggregate (6)\n                        +- Sort (5)\n                           +- Exchange (4)\n                              +- SortAggregate (3)\n                                 +- Sort (2)\n                                    +- Scan parquet  (1)\n\n\n(1) Scan parquet \nOutput [5]: [event_id#852, tipo_evento#853, modalidad#863, tipo_tarea#864, duracion_ms#868L]\nBatched: true\nLocation: InMemoryFileIndex [file:/datalake/eventos/mes=2025-11/gen-20261122-2025-11-p000.parquet, ... 59 entries]\nReadSchema: struct<event_id:string,tipo_evento:string,modalidad:string,tipo_tarea:string,duracion_ms:bigint>\n\n(2) Sort\nInput [5]: [event_id#852, tipo_evento#853, modalidad#863, tipo_tarea#864, duracion_ms#868L]\nArguments: [event_id#852 ASC NULLS FIRST], false, 0\n\n(3) SortAggregate\nInput [5]: [event_id#852, tipo_evento#853, modalidad#863, tipo_tarea#864, duracion_ms#868L]\nKeys [1]: [event_id#852]\nFunctions [4]: [partial_first(tipo_evento#853, false), partial_first(modalidad#863, false), partial_first(tipo_tarea#864, false), partial_first(duracion_ms#868L, false)]\nAggregate Attributes [8]: [first#970, valueSet#971, first#972, valueSet#973, first#974, valueSet#975, first#976L, valueSet#977]\nResults [9]: [event_id#852, first#978, valueSet#979, first#980, valueSet#981, first#982, valueSet#983, first#984L, valueSet#985]\n\n(4) Exchange\nInput [9]: [event_id#852, first#978, valueSet#979, first#980, valueSet#981, first#982, valueSet#983, first#984L, valueSet#985]\nArguments: hashpartitioning(event_id#852, 2), ENSURE_REQUIREMENTS, [plan_id=1217]\n\n(5) Sort\nInput [9]: [event_id#852, first#978, valueSet#979, first#980, valueSet#981, first#982, valueSet#983, first#984L, valueSet#985]\nArguments: [event_id#852 ASC NULLS FIRST], false, 0\n\n(6) SortAggregate\nInput [9]: [event_id#852, first#978, valueSet#979, first#980, valueSet#981, first#982, valueSet#983, first#984L, valueSet#985]\nKeys [1]: [event_id#852]\nFunctions [4]: [first(tipo_evento#853, false), first(modalidad#863, false), first(tipo_tarea#864, false), first(duracion_ms#868L, false)]\nAggregate Attributes [4]: [first(tipo_evento#853)()#924, first(modalidad#863)()#944, first(tipo_tarea#864)()#946, first(duracion_ms#868L)()#954L]\nResults [4]: [first(tipo_evento#853)()#924 AS tipo_evento#925, first(modalidad#863)()#944 AS modalidad#945, first(tipo_tarea#864)()#946 AS tipo_tarea#947, first(duracion_ms#868L)()#954L AS duracion_ms#955L]\n\n(7) Filter\nInput [4]: [tipo_evento#925, modalidad#945, tipo_tarea#947, duracion_ms#955L]\nCondition : (isnotnull(tipo_evento#925) AND ((tipo_evento#925 = tarea_anotada) AND isnotnull(duracion_ms#955L)))\n\n(8) Project\nOutput [3]: [modalidad#945, tipo_tarea#947, duracion_ms#955L]\nInput [4]: [tipo_evento#925, modalidad#945, tipo_tarea#947, duracion_ms#955L]\n\n(9) ObjectHashAggregate\nInput [3]: [modalidad#945, tipo_tarea#947, duracion_ms#955L]\nKeys [2]: [modalidad#945, tipo_tarea#947]\nFunctions [3]: [partial_count(1), partial_avg(duracion_ms#955L), partial_percentile_approx(duracion_ms#955L, 0.95, 10000, 0, 0)]\nAggregate Attributes [4]: [count#962L, sum#963, count#964L, buf#965]\nResults [6]: [modalidad#945, tipo_tarea#947, count#966L, sum#967, count#968L, buf#969]\n\n(10) Exchange\nInput [6]: [modalidad#945, tipo_tarea#947, count#966L, sum#967, count#968L, buf#969]\nArguments: hashpartitioning(modalidad#945, tipo_tarea#947, 2), ENSURE_REQUIREMENTS, [plan_id=1224]\n\n(11) ObjectHashAggregate\nInput [6]: [modalidad#945, tipo_tarea#947, count#966L, sum#967, count#968L, buf#969]\nKeys [2]: [modalidad#945, tipo_tarea#947]\nFunctions [3]: [count(1), avg(duracion_ms#955L), percentile_approx(duracion_ms#955L, 0.95, 10000, 0, 0)]\nAggregate Attributes [3]: [count(1)#913L, avg(duracion_ms#955L)#915, percentile_approx(duracion_ms#955L, 0.95, 10000, 0, 0)#918L]\nResults [5]: [modalidad#945, tipo_tarea#947, count(1)#913L AS muestras#914L, round(avg(duracion_ms#955L)#915, 2) AS media_duracion_ms#916, percentile_approx(duracion_ms#955L, 0.95, 10000, 0, 0)#918L AS p95_duracion_ms#917L]\n\n(12) Exchange\nInput [5]: [modalidad#945, tipo_tarea#947, muestras#914L, media_duracion_ms#916, p95_duracion_ms#917L]\nArguments: rangepartitioning(modalidad#945 ASC NULLS FIRST, tipo_tarea#947 ASC NULLS FIRST, 2), ENSURE_REQUIREMENTS, [plan_id=1227]\n\n(13) Sort\nInput [5]: [modalidad#945, tipo_tarea#947, muestras#914L, media_duracion_ms#916, p95_duracion_ms#917L]\nArguments: [modalidad#945 ASC NULLS FIRST, tipo_tarea#947 ASC NULLS FIRST], true, 0\n\n(14) AdaptiveSparkPlan\nOutput [5]: [modalidad#945, tipo_tarea#947, muestras#914L, media_duracion_ms#916, p95_duracion_ms#917L]\nArguments: isFinalPlan=false\n\n\n"
         },
         "q4": {
-          "primera_ejecucion_wall_ms": 25008.4,
-          "primera_ejecucion_srv_ms": 24980.67,
-          "segunda_ejecucion_wall_ms": 27282.06,
-          "segunda_ejecucion_srv_ms": 27249.64,
+          "primera_ejecucion_wall_ms": 7021.02,
+          "primera_ejecucion_srv_ms": 7005.12,
+          "segunda_ejecucion_wall_ms": 6290.77,
+          "segunda_ejecucion_srv_ms": 6277.3,
           "total_filas": 180
         },
         "q5": {
-          "primera_ejecucion_wall_ms": 25851.09,
-          "primera_ejecucion_srv_ms": 25824.45,
-          "segunda_ejecucion_wall_ms": 23368.76,
-          "segunda_ejecucion_srv_ms": 23330.18,
+          "primera_ejecucion_wall_ms": 6623.32,
+          "primera_ejecucion_srv_ms": 6608.88,
+          "segunda_ejecucion_wall_ms": 6402.71,
+          "segunda_ejecucion_srv_ms": 6389.2,
           "total_filas": 60
         }
       }
@@ -74,47 +74,47 @@ Q5 (w=2): 1ra=16377.97 ms (srv=16337.65 ms) | 2da=15583.54 ms (srv=15558.64 ms) 
         "servicio": "analitica",
         "estado": "operativo",
         "ruta_datalake": "/datalake/eventos",
-        "archivos_parquet": 145,
+        "archivos_parquet": 60,
         "spark_workers": 2
       },
       "consultas": {
         "q1": {
-          "primera_ejecucion_wall_ms": 37851.87,
-          "primera_ejecucion_srv_ms": 37819.14,
-          "segunda_ejecucion_wall_ms": 18637.7,
-          "segunda_ejecucion_srv_ms": 18604.26,
-          "total_filas": 60
+          "primera_ejecucion_wall_ms": 13457.2,
+          "primera_ejecucion_srv_ms": 13440.2,
+          "segunda_ejecucion_wall_ms": 6074.9,
+          "segunda_ejecucion_srv_ms": 6060.15,
+          "total_filas": 359
         },
         "q2": {
-          "primera_ejecucion_wall_ms": 18657.03,
-          "primera_ejecucion_srv_ms": 18616.71,
-          "segunda_ejecucion_wall_ms": 15988.97,
-          "segunda_ejecucion_srv_ms": 15959.84,
-          "total_filas": 120
+          "primera_ejecucion_wall_ms": 3898.85,
+          "primera_ejecucion_srv_ms": 3883.92,
+          "segunda_ejecucion_wall_ms": 3467.56,
+          "segunda_ejecucion_srv_ms": 3453.33,
+          "total_filas": 360
         },
         "q3": {
-          "primera_ejecucion_wall_ms": 17581.89,
-          "primera_ejecucion_srv_ms": 17547.24,
-          "segunda_ejecucion_wall_ms": 16120.31,
-          "segunda_ejecucion_srv_ms": 16089.96,
-          "total_filas": 4
+          "primera_ejecucion_wall_ms": 4375.89,
+          "primera_ejecucion_srv_ms": 4361.69,
+          "segunda_ejecucion_wall_ms": 3664.93,
+          "segunda_ejecucion_srv_ms": 3651.69,
+          "total_filas": 5
         },
         "q4": {
-          "primera_ejecucion_wall_ms": 16362.99,
-          "primera_ejecucion_srv_ms": 16333.45,
-          "segunda_ejecucion_wall_ms": 16065.22,
-          "segunda_ejecucion_srv_ms": 15990.3,
+          "primera_ejecucion_wall_ms": 3729.25,
+          "primera_ejecucion_srv_ms": 3715.63,
+          "segunda_ejecucion_wall_ms": 3511.55,
+          "segunda_ejecucion_srv_ms": 3497.62,
           "total_filas": 180
         },
         "q5": {
-          "primera_ejecucion_wall_ms": 16377.97,
-          "primera_ejecucion_srv_ms": 16337.65,
-          "segunda_ejecucion_wall_ms": 15583.54,
-          "segunda_ejecucion_srv_ms": 15558.64,
+          "primera_ejecucion_wall_ms": 4037.58,
+          "primera_ejecucion_srv_ms": 4023.02,
+          "segunda_ejecucion_wall_ms": 3661.07,
+          "segunda_ejecucion_srv_ms": 3648.45,
           "total_filas": 60
         }
       }
     }
   }
 }
-=== Fin UTC: 2026-11-24T22:07:25.947988+00:00 ===
+=== Fin UTC: 2026-11-25T01:03:45.767922+00:00 ===

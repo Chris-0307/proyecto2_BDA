@@ -116,9 +116,8 @@ flowchart TB
   `*.parquet` publicados en `datalake/eventos/mes=AAAA-MM/` (montaje
   `ro`), sin consultar MongoDB ni Historial. Como el consumo es *al
   menos una vez*, ejecuta `dropDuplicates(["event_id"])` antes de
-  Q1–Q5. Levantar la JVM y planificar la lectura de 145 archivos tiene
-  un costo inicial alto (hasta 53,36 s en Q1,
-  sección 9);
+  Q1–Q5. Levantar la JVM y planificar la lectura de todos los meses
+  publicados tiene un costo inicial alto (17,6 s en la primera Q1, sección 9);
   compensa con volúmenes históricos grandes (de cientos de miles a
   millones de eventos), pero no es adecuado para consultas puntuales de
   baja latencia.
@@ -568,27 +567,42 @@ rendimiento bajo carga.
 *Responsable: Emmanuel.*
 
 Generador reproducible en `proyecto2/dataset/generar_dataset.py`, con
-semilla fija (`20261122`, `random.Random`). Carga directamente en
-MongoDB (base `plataforma`) con `pymongo` y materializa Parquet mensual
-en `datalake/eventos/mes=AAAA-MM/` siguiendo el esquema de
-`servicios/historial/app/parquet_writer.py` (145 archivos publicados).
-Respeta el documento de tarea de la sección 5.1 (incluidas las
-geometrías válidas por modalidad) y el esquema estricto de eventos.
+semilla fija (`20261122`, `random.Random`). Todos los identificadores se
+derivan de la semilla con `uuid5`, así que el mismo cliente, proyecto,
+equipo y tarea tiene el mismo id en MongoDB y en los eventos Parquet.
+Carga MongoDB (base `plataforma`) con `pymongo`, vaciando antes las
+colecciones del registro para que la carga sea repetible, y materializa
+Parquet mensual en `datalake/eventos/mes=AAAA-MM/` con el esquema de
+`servicios/historial/app/parquet_writer.py` (publicación vía `.staging`
+y `os.replace`, archivos `gen-20261122-AAAA-MM-pNNN.parquet`). Respeta
+el documento de tarea de la sección 5.1 (incluidas las geometrías
+válidas por modalidad) y el esquema estricto de eventos.
+
+**Realismo del historial.** Cada tarea histórica sigue el flujo real:
+`tarea_abierta` -> `tarea_anotada` -> `revision_iniciada` -> (`revision_rechazada`
+-> retrabajo)\* -> `revision_aprobada`, con hasta 4 rechazos, versión
+creciente y `tomada_en` igual a la toma de la ronda vigente. Cada
+proyecto tiene su propia probabilidad de rechazo (0,35–0,70), su cola de
+revisión (2–60 h) y un SLA de 24, 48 o 72 h, por lo que Q4 y Q5
+muestran diferencias reales entre clientes y proyectos. La carga
+publicó 830.256 eventos de 100.000 tareas y 180 proyectos en 60 archivos
+Parquet (`mes=2025-11` a `mes=2026-10`); en una simulación local con la
+misma semilla, ~8,6 % de las tareas quedó fuera de SLA y el rechazo por
+proyecto quedó entre 0,33 y 0,65.
 
 | Entidad | Volumen del enunciado | Generado |
 |---|---|---|
 | Clientes | 60 | 60 |
 | Proyectos | 180: 120 en el registro y 60 cerrados solo en el historial | 180 (120 activos en MongoDB y 60 cerrados solo en Parquet) |
 | Batches | 600 | 600 |
-| Tareas del registro | 60.000: 30 % texto, 30 % imagen, 20 % video, 20 % LiDAR | 60.000 con esa distribución |
-| Anotadores | 300 en 30 equipos; 10 % revisores | 300 en 30 equipos, 10 % revisores |
-| Eventos históricos | ~800.000 en doce meses y 100.000 tareas | ~800.000 eventos en 12 meses (`mes=2025-01` a `mes=2025-12`), 145 archivos Parquet (`p5_analitica.txt`) |
+| Tareas del registro | 60.000: 30 % texto, 30 % imagen, 20 % video, 20 % LiDAR | 60.000: 18.065 texto, 18.038 imagen, 11.932 video, 11.965 LiDAR |
+| Anotadores | 300 en 30 equipos; 10 % revisores | 300 en 30 equipos, 30 revisores (10 %) |
+| Eventos históricos | ~800.000 en doce meses y 100.000 tareas | 830.256 eventos de 100.000 tareas en 12 meses (`mes=2025-11` a `mes=2026-10`), 60 archivos Parquet |
 | `eventos_grande` (opcional) | Hasta ~10 millones de filas | No generado (medición no disponible) |
 
-Los volúmenes de clientes, proyectos, batches, tareas y anotadores
-corresponden a la configuración de `generar_dataset.py`; el conteo
-exacto en MongoDB no se volcó a `evidence/`. Solo el conteo de archivos
-Parquet y de meses tiene evidencia directa (`p5_analitica.txt`).
+Los conteos de la tabla son los que el generador reportó al insertar en
+MongoDB y al publicar Parquet (`datos_generacion.txt`, 2026-11-25
+01:00:05 UTC).
 
 **Comandos de carga:**
 
@@ -602,11 +616,13 @@ docker compose -f proyecto2/docker-compose.yml run --rm -v "$(pwd)/proyecto2/dat
   python /dataset/generar_dataset.py --solo parquet --dir-eventos /datalake/eventos
 ```
 
-**Regeneraciones:** se ejecutó una única carga inicial limpia con
-semilla 20261122 antes de P5 y P6. En P6 se utilizó el Proyecto 084
-(`600d1c8a-fc7b-5126-81a0-8775bd5adb36`), con un inventario finito de
-tareas disponibles, por lo que al subir la concurrencia a 40 y 100
-usuarios se produjo el agotamiento progresivo de las tareas disponibles.
+**Regeneraciones:** el generador se corrigió después de la primera
+medición (ids compartidos entre MongoDB y Parquet, flujo de eventos
+realista y meses 2025-11 a 2026-10). P6 se ejecutó con la versión
+anterior del dataset; el Proyecto 084 que usó
+(`600d1c8a-fc7b-5126-81a0-8775bd5adb36`) tenía un inventario finito de
+tareas, por lo que al subir la concurrencia a 40 y 100 usuarios se
+agotaron las tareas disponibles. P5 se midió con el dataset corregido.
 
 ---
 
@@ -617,113 +633,116 @@ usuarios se produjo el agotamiento progresivo de las tareas disponibles.
 Servicio interno `analitica` (`servicios/analitica/`, puerto interno
 8004, sin exposición al host) implementado con FastAPI + PySpark
 (`local[N]`), montando `./datalake` en solo lectura (`ro`) y filtrando
-exclusivamente los `*.parquet` publicados, ignorando `.staging/`. Todas
-las consultas parten de `dropDuplicates(["event_id"])`. El gateway
+exclusivamente los `*.parquet` publicados (`mes=*/*.parquet`),
+ignorando `.staging/`. Todas las consultas parten de
+`dropDuplicates(["event_id"])` sobre todo el conjunto, sin filtro fijo
+de año, y la sesión Spark usa zona horaria UTC. `conjunto=grande` lee
+`datalake/eventos_grande`; si no existe responde 404. El gateway
 expone la ruta `GET /analitica/{q}` (timeout de 120 s y sin reintento)
 que reenvía a este servicio.
 
-| Consulta | Pregunta de negocio (enunciado) | Definición / implementación | Filas retornadas (`p5_analitica.txt`) |
+| Consulta | Pregunta de negocio (enunciado) | Definición / implementación | Filas (`p5_analitica.txt`) |
 |---|---|---|---|
-| Q1 | Tareas aprobadas por día y modalidad, últimos 90 días | Deduplicación por `event_id`, filtro `tipo_evento = revision_aprobada` en ventana de 90 días, agrupación por fecha (`ocurrido_en`) y `modalidad` | 60 |
-| Q2 | Aprobadas / revisadas, por equipo y mes | Deduplicación por `event_id`, conteo de `revision_aprobada` sobre total de revisiones (`revision_aprobada` + `revision_rechazada`) agrupado por `equipo_id` y mes | 120 |
-| Q3 | Duración media y p95, por modalidad y tipo de tarea | Deduplicación por `event_id`, filtro `tipo_evento = tarea_anotada`, promedio y percentil 95 de `duracion_ms` por `modalidad` y `tipo_tarea` | 4 |
-| Q4 | Rechazadas / revisadas, por cliente y proyecto | Deduplicación por `event_id`, eventos `revision_aprobada` y `revision_rechazada`; proporción de rechazadas sobre revisadas por `cliente_id` y `proyecto_id` | 180 (una por proyecto) |
-| Q5 | Toma -> aprobación: p50 y p95 por cliente y % fuera de SLA | Deduplicación por `event_id`, filtro `tipo_evento = revision_aprobada`; p50 y p95 de (`aprobada_en` − `tomada_en`) en horas y porcentaje con horas > `sla_horas`, por `cliente_id` | 60 (una por cliente) |
+| Q1 | Tareas aprobadas por día y modalidad, últimos 90 días | `revision_aprobada` en los 90 días anteriores al último `ocurrido_en` del conjunto; `countDistinct(tarea_id)` por día (`to_date(ocurrido_en)`) y `modalidad` | 359 |
+| Q2 | Aprobadas / revisadas, por equipo y mes | `revision_aprobada` + `revision_rechazada` por `equipo_id` y mes (`yyyy-MM`); `aprobadas / revisadas` | 360 |
+| Q3 | Duración media y p95, por modalidad y tipo de tarea | `tarea_anotada` con `duracion_ms`; `avg` y `percentile_approx(0.95)` por `modalidad` y `tipo_tarea` | 5 |
+| Q4 | Rechazadas / revisadas, por cliente y proyecto | `revision_aprobada` + `revision_rechazada` por `cliente_id` y `proyecto_id`; `rechazadas / revisadas` | 180 |
+| Q5 | Toma -> aprobación: p50 y p95 por cliente y % fuera de SLA | `revision_aprobada`; horas = `aprobada_en` − `tomada_en`; p50, p95 y % con horas > `sla_horas`, por `cliente_id` | 60 |
 
-**Validación.** Las cinco consultas se ejecutaron sobre los 145 archivos
-del conjunto principal y devolvieron resultados, aunque para Q1, Q2 y Q3
-sobre el conjunto completo no se comprobó que el número de filas
-coincida con el máximo teórico de su agrupación. Asimismo, se ejecutó
-una prueba aislada controlada con 6 filas y 1 duplicado de `event_id`
-(`2026-11-24T23:20:38Z`), obteniendo `UNICO_COUNT: 5` tras
-`dropDuplicates(["event_id"])` y los resultados esperados: Q1
-(`2025-05-04` / `imagen`: 1; `2025-05-01` / `lidar`: 1), Q2 (`eq2` /
-`2025-05`: 1; `eq1` / `2025-05`: 2), Q3 (`avg(duracion_ms)`: `2000.0`),
-Q4 (`c1` / `p1`: 1 rechazo) y Q5 (1 de 2 aprobadas fuera de SLA). Q4 y
-Q5 se corrigieron antes de la medición reportada, porque su primera
-versión no respondía la pregunta del enunciado (devolvía conteos por
-proyecto y motivo de rechazo, y promedios por proyecto); la versión
-actual calcula la proporción de rechazo por cliente y proyecto, y los
-percentiles y el porcentaje fuera de SLA por cliente. El conjunto
-principal se limita a los eventos con `ocurrido_en` entre 2025-01-01 y
-2026-01-01 (filtro visible en el plan); los eventos de `mes=2026-11` son
-residuos de pruebas y no entran. Cómo se ancla la ventana de 90 días de
-Q1 dentro de 2025 no se verificó.
+**Validación.** `pruebas/p5_analitica/validar_consultas.py` ejecuta las
+mismas funciones de `app/consultas.py` sobre un micro-dataset de 10
+filas con un `event_id` duplicado y compara contra valores calculados a
+mano: deduplicación 10 -> 9 y resultados esperados de Q1–Q5 (ventana de
+90 días, proporciones, media y p95, percentiles y % fuera de SLA).
+Evidencia: `p5_validacion_consultas.txt` (`make p5-validar`), 6/6.
 
-**Planes de ejecución (`explain`) de Q1 y Q3.** A partir del plan
-formateado capturado en `p5_explain_q1_q3_completo.txt`, ambas consultas
-comparten la lectura y la deduplicación global por `event_id`, y luego
-siguen sus propias etapas de agregación y ordenamiento:
+Sobre el conjunto principal las filas coinciden con lo esperado para
+cada agrupación: Q2 da 360 = 30 equipos × 12 meses; Q3 da 5, una por
+combinación de modalidad y tipo de tarea; Q4 da 180, una por proyecto;
+Q5 da 60, una por cliente; y Q1 da 359 de un máximo de 364 (91 días
+tocados por la ventana × 4 modalidades).
 
-- **Lectura y deduplicación:** `FileScan parquet` sobre los archivos en
-  `/datalake/eventos` con *pushdown* de predicados y `SortAggregate` por
-  `event_id` (agregación parcial,
-  `Exchange hashpartitioning(event_id, ...)` y `SortAggregate` final).
+Versiones anteriores de Q1–Q3 no respondían el enunciado (Q1 agrupaba
+por mes y tipo de evento, Q2 y Q3 por otras claves) y el conjunto
+principal se limitaba con un filtro fijo a 2025; se reescribieron en
+`app/consultas.py`. Los tiempos y planes de esta sección se vuelven a
+midieron con el código y el dataset corregidos.
 
-- **Agrupamiento y ordenamiento (Q1 y Q3):** tras filtrar `tipo_evento`,
-  Spark ejecuta agregación parcial (`HashAggregate` /
-  `ObjectHashAggregate`), redistribuye por claves de agrupación mediante
-  `Exchange hashpartitioning(..., 200)`, completa la agregación final, y
-  para el ordenamiento realiza `Exchange rangepartitioning(..., 200)`
-  seguido de `Sort` (en Q1, la agrupación por mes se expresa en la clave
-  temporal de agregación junto con la fecha/modalidad; en Q3, el
-  ordenamiento se ejecuta por `modalidad` y `tipo_tarea`).
+**Planes de ejecución (`explain`) de Q1 y Q3** (`p5_analitica.txt`,
+`plan_explain` con `w=1`):
 
-**Tiempos** (`p5_analitica.txt`, 145 archivos Parquet, ventana
-`2026-11-24T21:58:56Z` a `22:07:25Z`). Tiempo medido en el cliente, en
-ms; el tiempo del servidor difiere en menos de 0,08 s. P5 mide el
-servicio `analitica` directamente, no por el gateway:
+- **Lectura:** `Scan parquet` sobre los 60 archivos
+  (`InMemoryFileIndex`), leyendo solo las columnas que usa cada consulta
+  (5 de 20 en Q1 y Q3). No hay `PushedFilters` ni `PartitionFilters`: el
+  filtro va después de la deduplicación y la lectura con
+  `mes=*/*.parquet` no expone `mes` como columna, así que se leen todas
+  las filas.
+
+- **Deduplicación por `event_id`:** `Sort` + `SortAggregate` parcial,
+  `Exchange hashpartitioning(event_id, N)`, `Sort` + `SortAggregate`
+  final (con `first(...)` por columna). Es la parte común a las cinco
+  consultas.
+
+- **Q1:** `Filter` (`revision_aprobada` y `ocurrido_en > 2026-07-31
+  19:38:26`, la ventana de 90 días ya resuelta), `countDistinct` en dos
+  fases (`HashAggregate` por día, modalidad y tarea; `Exchange`;
+  `HashAggregate` por día y modalidad; `Exchange`; final) y
+  `Exchange rangepartitioning` + `Sort` por día y modalidad.
+
+- **Q3:** `Filter` (`tarea_anotada` y `duracion_ms` no nulo),
+  `ObjectHashAggregate` parcial con `count`, `avg` y
+  `percentile_approx(0.95)`, `Exchange hashpartitioning(modalidad,
+  tipo_tarea)`, agregación final y `rangepartitioning` + `Sort`.
+
+**Tiempos** (`p5_analitica.txt`, 60 archivos Parquet, 2026-11-25
+01:01:03 a 01:03:45 UTC). Tiempo medido en el cliente, en ms; el del
+servidor difiere en menos de 20 ms. P5 mide el servicio `analitica`
+directamente, no por el gateway:
 
 | Consulta | `w=1`, 1.ª ejec. | `w=1`, 2.ª ejec. | `w=2`, 1.ª ejec. | `w=2`, 2.ª ejec. | Filas |
 |---|---|---|---|---|---|
-| Q1 | 53.362,02 | 24.282,85 | 37.851,87 | 18.637,70 | 60 |
-| Q2 | 29.364,12 | 26.617,58 | 18.657,03 | 15.988,97 | 120 |
-| Q3 | 28.206,96 | 23.760,64 | 17.581,89 | 16.120,31 | 4 |
-| Q4 | 25.008,40 | 27.282,06 | 16.362,99 | 16.065,22 | 180 |
-| Q5 | 25.851,09 | 23.368,76 | 16.377,97 | 15.583,54 | 60 |
+| Q1 | 17.623,82 | 11.266,67 | 13.457,20 | 6.074,90 | 359 |
+| Q2 | 7.777,16 | 6.768,88 | 3.898,85 | 3.467,56 | 360 |
+| Q3 | 6.857,69 | 7.146,24 | 4.375,89 | 3.664,93 | 5 |
+| Q4 | 7.021,02 | 6.290,77 | 3.729,25 | 3.511,55 | 180 |
+| Q5 | 6.623,32 | 6.402,71 | 4.037,58 | 3.661,07 | 60 |
 
-**Primera frente a segunda ejecución.** La diferencia grande aparece en
-Q1: 53,36 s frente a 24,28 s con `w=1` y 37,85 s frente a 18,64 s con
-`w=2`. Q1 es la primera consulta que se ejecuta tras recrear el
-servicio, por lo que su primera ejecución incluye el arranque de la JVM
-y de la sesión de Spark; la explicación es consistente con los datos,
-pero no se aisló con una medición aparte. En Q2 a Q5 la diferencia entre
-la primera y la segunda ejecución es de pocos segundos (hasta 4,4 s) o
-negativa (Q4 con `w=1`: 25,01 s la primera y 27,28 s la segunda), lo que
-se interpreta como ruido de medición.
+**Primera frente a segunda ejecución.** La diferencia grande está en Q1
+(17,62 s frente a 11,27 s con `w=1`; 13,46 s frente a 6,07 s con
+`w=2`). Q1 es la primera consulta tras recrear el servicio, así que su
+primera ejecución incluye el arranque de la sesión Spark y la primera
+lectura de los archivos; no se aisló con una medición aparte. En Q2–Q5
+la diferencia es de hasta 1 s, o negativa (Q3 con `w=1`), y se toma como
+ruido de medición.
 
-**Comparativa de 1 frente a 2 trabajadores.** Tras recrear `analitica`
-con `SPARK_WORKERS=1` y luego con `2`, `/salud` reportó
-`spark_workers: 1` y `spark_workers: 2` (`local[2]` dentro del mismo
-contenedor en WSL2, no un clúster multi-nodo). En las segundas
-ejecuciones los tiempos van de 23,37–27,28 s (`w=1`) a 15,58–18,64 s
-(`w=2`), una mejora de 1,30× a 1,70×, inferior a
-2×. Con `w=2` las cinco consultas quedan en un rango estrecho
-pese a calcular cosas distintas, lo que es consistente con que la
-deduplicación global, común a todas, domine el costo; no se aisló
-midiendo una consulta sin deduplicar. Limitaciones: hay una sola muestra
-por celda y `w=1` se ejecutó siempre antes que `w=2`, con la caché del
-sistema operativo ya caliente para este último, lo que puede inflar la
-mejora. Por eso se reporta como diferencia observada y no como medida de
-escalabilidad.
+**Comparativa de 1 frente a 2 trabajadores.** Se recreó `analitica`
+con `SPARK_WORKERS=1` y luego con `2`; `/salud` reportó
+`spark_workers: 1` y `2` (`local[N]` dentro del mismo contenedor en
+WSL2, no un clúster multi-nodo). En las segundas ejecuciones los tiempos
+bajan de 6,29–11,27 s (`w=1`) a 3,47–6,07 s (`w=2`), una mejora de
+1,75× a 1,95×, cerca de 2×. Q2–Q5 quedan en un rango estrecho
+(3,5–3,7 s con `w=2`) pese a calcular cosas distintas, consistente con
+que la lectura y la deduplicación comunes dominen el costo; Q1 cuesta
+más por el `countDistinct` en dos fases. Limitaciones: una sola muestra
+por celda y `w=1` siempre antes que `w=2`, con la caché del sistema
+operativo ya caliente.
 
-El conjunto ampliado `eventos_grande` (~10
-millones de filas) no está generado y se declara **no disponible**.
+El conjunto ampliado `eventos_grande` (~10 millones de filas) no está
+generado y se declara **no disponible**.
 
 **Limitaciones de Spark en el entorno utilizado.**
 
 - Ejecución local dentro de un contenedor en WSL2 (`local[1]` y
   `local[2]`), sin distribución multi-nodo real.
 
-- La deduplicación global `dropDuplicates(["event_id"])` sobre 145
-  archivos exige un `Sort` y un `Exchange` completo de todas las
-  columnas antes de agregar; es el costo común a todas las consultas y
-  el candidato principal a dominar el tiempo, aunque no se midió por
-  separado.
+- La deduplicación global `dropDuplicates(["event_id"])` exige un
+  `Exchange` de todas las filas antes de agregar; es el costo común a
+  todas las consultas.
 
-- En los planes físicos de Q1 y Q3 `PartitionFilters: []` aparece vacío
-  porque el filtro se aplicó sobre `ocurrido_en` y no sobre la columna
-  de partición `mes`, por lo que se leen los 145 archivos.
+- Los filtros se aplican sobre `ocurrido_en` y no sobre la columna de
+  partición `mes`, así que no hay poda de particiones: se leen todos los
+  meses publicados.
+
 
 ---
 
@@ -740,7 +759,7 @@ apéndice A).
 | P2. Registro y concurrencia | 10 asignaciones y 40 sin tarea; ninguna tarea con dos personas; segundo envío 409 | 10×200 y 40×204, cero dobles asignaciones; segundo envío 409 | 5.2 |
 | P3. Sesión | Borrador ≤ 5 s; sigue tras reiniciar Valkey; ninguna tarea con dos dueños | 29/29 comprobaciones correctas; borrador de 2,036 s; recuperación tras reinicio en 1,179 s; sin dobles asignaciones observadas | 6 |
 | P4. Historial | Materialización Parquet, reprocesamiento, publicación atómica, deduplicación y frescura | 27/27 comprobaciones correctas; 3 filas físicas reducidas a 2 eventos únicos; frescura de envíos entre 2,177 y 2,366 s | 7 |
-| P5. Analítica | Resultados validados, planes de Q1 y Q3, limitaciones | Q1–Q5 sobre 145 archivos Parquet, con `spark_workers=1` y `spark_workers=2`, primera frente a segunda ejecución, y planes `explain` de Q1 y Q3 capturados; conjunto grande no disponible | 9 |
+| P5. Analítica | Resultados validados, planes de Q1 y Q3, limitaciones | Q1–Q5 validadas contra valores a mano, 6/6; sobre 830.256 eventos (60 archivos), segundas ejecuciones de 6,3–11,3 s con `w=1` y 3,5–6,1 s con `w=2` (1,75×–1,95×); planes `explain` de Q1 y Q3 capturados; conjunto grande no disponible | 9 |
 | P6. Carga | p50/p95/p99 por endpoint, envíos por minuto, errores, `docker stats` | 10, 40 y 100 usuarios, 3 repeticiones de 90 s por nivel sobre Proyecto 084: latencias promedio/p50/p95/p99, códigos HTTP, acciones, agotamiento a 0 tareas y `docker stats` cada 15 s | 11 |
 | P8. Fallas | Con un nodo caído se escribe; sin mayoría no; lo confirmado sigue tras la elección; el borrador sobrevive al reinicio de Valkey | MongoDB 14/14; Valkey 31/31 comprobaciones correctas. RTO de 1,310 s en reinicio ordenado, 13,245 s en parada controlada y 1,767 s en caída abrupta. Sin pérdida de versiones de borrador observada. | 12 |
 
@@ -1029,13 +1048,11 @@ aproximadamente 10 millones de filas, no fue generado y su medición se
 declara no disponible.
 
 La deduplicación global por `event_id` y la falta de poda de particiones
-por mes producen un costo elevado de lectura, ordenamiento e intercambio
-entre particiones. En Q1 y Q3, `PartitionFilters: []` permanece vacío
-porque el filtro se realiza sobre `ocurrido_en` y no directamente sobre
-la columna de partición `mes`, por lo que se leen los 145 archivos
-Parquet.
+por mes producen un costo elevado de lectura e intercambio entre
+particiones: los filtros van sobre `ocurrido_en` y no sobre `mes`, así
+que se leen todos los meses publicados.
 
-P6 se ejecutó con 10, 40 y 100 usuarios, tres repeticiones de 90 s por
+P6 se ejecutó con la versión anterior del dataset, con 10, 40 y 100 usuarios, tres repeticiones de 90 s por
 nivel y muestreo de `docker stats` cada 15 s. Los resultados están
 condicionados por el inventario finito del Proyecto 084: las tareas
 disponibles se agotaron durante la prueba, por lo que las repeticiones
@@ -1059,8 +1076,9 @@ Además, `GET /analitica/{q}` alcanzó aproximadamente 120 s y devolvió
 | `p2_explain_registro.txt` | Planes `explain` de las consultas del registro | 2026-11-25 00:39:04 | `make explain-registro` | 10/10 |
 | `p8_mongo_fallas.txt` | Fallas de MongoDB | 2026-11-22 07:48:58 | `make p8-mongo` | 14/14 |
 | `smoke_integrante2_20261122T055742Z.txt` | Sesión + Historial aislado (sin gateway) | 2026-11-22 05:57:42 | `make i2-smoke` | Borrador tras reinicio de Valkey y Parquet publicado |
-| `p5_analitica.txt` | Analítica Q1–Q5, `w=1`/`w=2` y `explain` Q1/Q3 | 2026-11-24 14:46:18 | `make p5` | Tabla de la sección 9 (145 archivos) |
-| `p5_explain_q1_q3_completo.txt` | Planes `explain` de Q1 y Q3 (Spark) | 2026-11-24 23:42:00 | `ejecución manual/no registrado` | Planes físicos de Q1 y Q3; análisis en la sección 9 |
+| `datos_generacion.txt` | Conteos del generador (MongoDB y Parquet) | 2026-11-25 01:00:05 | `make datos` | 60.000 tareas en MongoDB; 830.256 eventos en 60 archivos Parquet |
+| `p5_validacion_consultas.txt` | Validación de Q1–Q5 contra valores a mano | 2026-11-25 01:00:50 | `make p5-validar` | 6/6 |
+| `p5_analitica.txt` | Analítica Q1–Q5, `w=1`/`w=2` y `explain` Q1/Q3 | 2026-11-25 01:01:03 | `make p5` | Tabla de la sección 9 (60 archivos) |
 | `p6_carga.txt` | Carga HTTP (10, 40 y 100 usuarios, 3 repeticiones de 90 s) | 2026-11-24 16:34:31 | `make p6` | Tabla de la sección 11, con p50/p95/p99 y `docker stats` |
 | `p3_gateway_sesion.txt` | Sesión, recuperación, AOF y vencimiento de locks | 2026-11-24 21:02:18 | `make p3` | 29/29 comprobaciones correctas |
 | `p4_gateway_parquet.txt` | Materialización, reprocesamiento, deduplicación y frescura Parquet | 2026-11-24 21:26:13 | `make p4` | 27/27 comprobaciones correctas |
@@ -1101,13 +1119,15 @@ latencia de `w:1` con un hilo) y a cambio ninguna escritura confirmada
 se perdió ante la caída del primario (RPO 0, RTO de escritura entre 7,3
 y 9,4 s).
 
-La analítica con Spark ejecutó Q1–Q5 sobre 145 archivos Parquet, con
-`local[1]` y `local[2]`, y los planes `explain` de Q1 y Q3 permitieron
-identificar la deduplicación global por `event_id` como uno de los
-principales costos. En las segundas ejecuciones, los tiempos pasaron de
-23,37–27,28 s con un trabajador a 15,58–18,64 s con dos trabajadores
-en el mismo contenedor, aunque no se evaluó un clúster multi-nodo ni el
-conjunto ampliado de aproximadamente 10 millones de filas.
+La analítica con Spark calcula Q1–Q5 tal como las pide el enunciado,
+validadas contra valores calculados a mano, sobre un historial generado
+con los mismos ids que el registro y un flujo de revisión realista. La
+deduplicación global por `event_id` es el costo común a todas las
+consultas; la comparación entre `local[1]` y `local[2]` en el mismo
+contenedor no equivale a un clúster multi-nodo, y el conjunto ampliado
+de ~10 millones de filas no se evaluó. Sobre 830.256 eventos, las
+segundas ejecuciones tardaron 6,3–11,3 s con un trabajador y 3,5–6,1 s
+con dos (1,75×–1,95×).
 
 La prueba de carga P6 se ejecutó con 10, 40 y 100 usuarios, tres
 repeticiones de 90 s por nivel y medición de recursos. El aumento de

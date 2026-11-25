@@ -1,4 +1,30 @@
-"""Generador reproducible del dataset oficial (MongoDB + Datalake Parquet)."""
+"""Generador reproducible del dataset oficial (MongoDB + datalake Parquet).
+
+Volúmenes del enunciado:
+- MongoDB: 60 clientes, 300 anotadores en 30 equipos (10 % revisores),
+  120 proyectos activos, 600 lotes y 60 000 tareas
+  (30 % texto, 30 % imagen, 20 % video, 20 % LiDAR).
+- Parquet: 100 000 tareas históricas de los 180 proyectos (los 120 activos y
+  60 cerrados que solo existen en el historial), ~800 000 eventos en los 12
+  meses previos a FIN_HISTORIAL, particionados por mes.
+
+Clientes, proyectos, equipos y anotadores tienen los MISMOS ids en MongoDB y
+en Parquet (se derivan de la semilla con uuid5), así que las consultas por
+cliente, proyecto o equipo cruzan ambos lados.
+
+Cada tarea histórica sigue el flujo real del sistema:
+  abierta -> anotada -> en_revision -> (rechazada -> abierta -> ...) -> aprobada
+El número de rechazos y la espera de revisión dependen del proyecto, por lo
+que Q2, Q4 y Q5 dan resultados distintos entre equipos, proyectos y clientes.
+
+Uso:
+  python generar_dataset.py --solo mongo      # en el contenedor del registro
+  python generar_dataset.py --solo parquet --dir-eventos /datalake/eventos   # en historial-worker
+
+`--solo mongo` vacía las colecciones del registro antes de cargar (carga desde
+cero); `--solo parquet` reemplaza los archivos que generó antes (gen-*.parquet)
+y conserva los que publicó el worker.
+"""
 
 from __future__ import annotations
 
@@ -14,362 +40,257 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from uuid import NAMESPACE_DNS, uuid5
 
-SEED_DEFECTO = 20261122
-MODALIDADES_PESOS = [
-    ("texto", "span", "text/plain", 0.30),
-    ("imagen", "bbox", "image/png", 0.15),
-    ("imagen", "poligono", "image/png", 0.15),
-    ("video", "bbox_video", "video/mp4", 0.20),
-    ("lidar", "cuboide_3d", "application/octet-stream", 0.20),
+SEMILLA = 20261122
+FIN_HISTORIAL = datetime(2026, 11, 1, tzinfo=timezone.utc)
+INICIO_HISTORIAL = FIN_HISTORIAL - timedelta(days=365)
+N_CLIENTES, N_EQUIPOS, POR_EQUIPO = 60, 30, 10           # 1 revisor + 9 anotadores por equipo
+N_PROY_ACTIVOS, N_PROY_CERRADOS = 120, 60
+LOTES_POR_PROYECTO, TAREAS_POR_LOTE = 5, 100             # 600 lotes, 60 000 tareas
+N_TAREAS_HIST = 100_000
+
+# (modalidad, tipo_tarea, mime, peso, duración de anotación en s: mín, máx)
+MODALIDADES = [
+    ("texto", "span", "text/plain", 0.30, 20, 180),
+    ("imagen", "bbox", "image/png", 0.15, 30, 300),
+    ("imagen", "poligono", "image/png", 0.15, 60, 480),
+    ("video", "bbox_video", "video/mp4", 0.20, 120, 900),
+    ("lidar", "cuboide_3d", "application/octet-stream", 0.20, 180, 1500),
 ]
-MOTIVOS_RECHAZO = [
-    "Etiqueta fuera de taxonomía",
-    "Geometría imprecisa o incompleta",
-    "Oclusión mal clasificada",
-    "Borde mal ajustado",
-]
-TAXONOMIA_BASE = [
+MOTIVOS = ["etiqueta_fuera_taxonomia", "geometria_imprecisa", "oclusion_mal_clasificada",
+           "borde_mal_ajustado"]
+TAXONOMIA = [
     {"etiqueta": "objeto#principal", "instruccion": "Objeto principal válido de la escena."},
     {"etiqueta": "objeto#secundario", "instruccion": "Objeto secundario o parcial visible."},
     {"etiqueta": "contexto#fondo", "instruccion": "Elemento de contexto sin etiqueta específica."},
 ]
 
 
-def uid(rng: random.Random, etiqueta: str) -> str:
-    return str(uuid5(NAMESPACE_DNS, f"{etiqueta}-{rng.getrandbits(128):032x}"))
+def gid(semilla: int, tipo: str, i) -> str:
+    """Id determinista: el mismo en MongoDB y en Parquet para la misma semilla."""
+    return str(uuid5(NAMESPACE_DNS, f"bda-{semilla}-{tipo}-{i}"))
 
 
-def elegir_modalidad(rng: random.Random) -> tuple[str, str, str]:
-    r = rng.random()
-    acum = 0.0
-    for mod, geom, mime, peso in MODALIDADES_PESOS:
-        acum += peso
+def elegir_modalidad(rng: random.Random):
+    r, acum = rng.random(), 0.0
+    for m in MODALIDADES:
+        acum += m[3]
         if r <= acum:
-            return mod, geom, mime
-    return "lidar", "cuboide_3d", "application/octet-stream"
+            return m
+    return MODALIDADES[-1]
 
+
+def catalogo(semilla: int) -> dict:
+    """Clientes, equipos, anotadores y proyectos compartidos por ambos lados."""
+    rng = random.Random(semilla)
+    clientes = [{"_id": gid(semilla, "cliente", i), "nombre": f"Cliente {i + 1:02d}",
+                 "creado_en": INICIO_HISTORIAL + timedelta(days=i)} for i in range(N_CLIENTES)]
+    equipos = [gid(semilla, "equipo", e) for e in range(N_EQUIPOS)]
+    anotadores, revisores, miembros = [], {}, defaultdict(list)
+    for e, eq in enumerate(equipos):
+        for m in range(POR_EQUIPO):
+            es_rev = m == 0
+            a = {"_id": gid(semilla, "anotador", f"{e}-{m}"), "equipo_id": eq, "es_revisor": es_rev,
+                 "nombre": f"{'Revisor' if es_rev else 'Anotador'} E{e + 1:02d}-{m + 1:02d}"}
+            anotadores.append(a)
+            if es_rev:
+                revisores[eq] = a["_id"]
+            else:
+                miembros[eq].append(a["_id"])
+    proyectos = []
+    for p in range(N_PROY_ACTIVOS + N_PROY_CERRADOS):
+        proyectos.append({
+            "_id": gid(semilla, "proyecto", p),
+            "cliente_id": clientes[p % N_CLIENTES]["_id"],
+            "nombre": f"Proyecto {p + 1:03d}",
+            "sla_horas": float(rng.choice([24, 48, 72])),
+            "estado": "activo" if p < N_PROY_ACTIVOS else "cerrado",
+            # Comportamiento del proyecto en el historial:
+            "p_rechazo": rng.uniform(0.35, 0.70),        # probabilidad de rechazo por revisión
+            "cola_revision_h": rng.uniform(2.0, 60.0),    # espera máxima hasta la revisión
+        })
+    return {"clientes": clientes, "equipos": equipos, "anotadores": anotadores,
+            "revisores": revisores, "miembros": miembros, "proyectos": proyectos}
+
+
+# ---------------------------------------------------------------- MongoDB
 
 def generar_mongo(semilla: int, mongo_uri: str, db_nombre: str) -> dict:
     from pymongo import MongoClient
 
-    rng = random.Random(semilla)
-    cliente_mongo = MongoClient(mongo_uri, w="majority", serverSelectionTimeoutMS=5000)
-    db = cliente_mongo[db_nombre]
-    base_dt = datetime(2026, 1, 1, 0, 0, tzinfo=timezone.utc)
+    cat = catalogo(semilla)
+    rng = random.Random(semilla + 1)
+    db = MongoClient(mongo_uri, w="majority", serverSelectionTimeoutMS=5000)[db_nombre]
 
-    clientes = [
-        {
-            "_id": uid(rng, f"cliente-{i}"),
-            "nombre": f"Cliente {i + 1:02d}",
-            "creado_en": base_dt + timedelta(days=i * 2),
-        }
-        for i in range(60)
-    ]
-    db.clientes.delete_many({"_id": {"$in": [c["_id"] for c in clientes]}})
-    db.clientes.insert_many(clientes)
+    # Carga desde cero: el registro queda solo con el dataset.
+    for col in ("tareas", "batches", "proyectos", "anotadores", "clientes"):
+        db[col].delete_many({})
 
-    equipos = [uid(rng, f"equipo-{e}") for e in range(30)]
-    anotadores = []
-    for idx_eq, eq_id in enumerate(equipos):
-        for m in range(10):
-            es_revisor = m == 0
-            anotadores.append({
-                "_id": uid(rng, f"anotador-{idx_eq}-{m}"),
-                "nombre": f"{'Revisor' if es_revisor else 'Anotador'} E{idx_eq + 1:02d}-{m + 1:02d}",
-                "equipo_id": eq_id,
-                "es_revisor": es_revisor,
-            })
-    db.anotadores.delete_many({"_id": {"$in": [a["_id"] for a in anotadores]}})
-    db.anotadores.insert_many(anotadores)
+    db.clientes.insert_many(cat["clientes"])
+    db.anotadores.insert_many(cat["anotadores"])
+    activos = [p for p in cat["proyectos"] if p["estado"] == "activo"]
+    db.proyectos.insert_many([
+        {"_id": p["_id"], "cliente_id": p["cliente_id"], "nombre": p["nombre"],
+         "taxonomia": TAXONOMIA, "sla_horas": p["sla_horas"], "estado": "activo",
+         "creado_en": FIN_HISTORIAL - timedelta(days=30)}
+        for p in activos
+    ])
 
-    proyectos_mongo = [
-        {
-            "_id": uid(rng, f"proy-reg-{p}"),
-            "cliente_id": clientes[p % len(clientes)]["_id"],
-            "nombre": f"Proyecto {p + 1:03d}",
-            "taxonomia": TAXONOMIA_BASE,
-            "sla_horas": rng.choice([24.0, 48.0, 72.0]),
-            "estado": "activo",
-            "creado_en": base_dt + timedelta(days=p),
-        }
-        for p in range(120)
-    ]
-    db.proyectos.delete_many({"_id": {"$in": [pr["_id"] for pr in proyectos_mongo]}})
-    db.proyectos.insert_many(proyectos_mongo)
-
-    lotes = [
-        {
-            "_id": uid(rng, f"lote-{l}"),
-            "proyecto_id": proyectos_mongo[l % len(proyectos_mongo)]["_id"],
-            "nombre": f"Lote {l + 1:03d}",
-            "n_tareas": 100,
-            "creado_en": proyectos_mongo[l % len(proyectos_mongo)]["creado_en"]
-            + timedelta(hours=(l // 120) * 6),
-        }
-        for l in range(600)
-    ]
-    db.batches.delete_many({"_id": {"$in": [b["_id"] for b in lotes]}})
+    lotes, total, buffer = [], 0, []
+    for ip, p in enumerate(activos):
+        for l in range(LOTES_POR_PROYECTO):
+            lote_id = gid(semilla, "lote", f"{ip}-{l}")
+            lotes.append({"_id": lote_id, "proyecto_id": p["_id"], "nombre": f"Lote {l + 1}",
+                          "n_tareas": TAREAS_POR_LOTE, "creado_en": FIN_HISTORIAL})
+            for t in range(TAREAS_POR_LOTE):
+                mod, geom, mime, *_ = elegir_modalidad(rng)
+                uri = f"s3://dataset/{mod}/{lote_id}/{t:03d}"
+                buffer.append({
+                    "_id": gid(semilla, "tarea", f"{ip}-{l}-{t}"),
+                    "proyecto_id": p["_id"], "batch_id": lote_id, "cliente_id": p["cliente_id"],
+                    "modalidad": mod, "tipo_tarea": geom, "prioridad": rng.randint(0, 10),
+                    "estado": "disponible", "version": 1, "sla_horas": p["sla_horas"],
+                    "archivo": {"uri": uri, "sha256": hashlib.sha256(uri.encode()).hexdigest(),
+                                "bytes": rng.randint(512, 50_000_000), "mime": mime,
+                                "meta": {"muestra": t}},
+                    "asignacion": None, "anotacion": None, "revision": None,
+                    "ultimo_evento_id": None, "eventos_pendientes": [], "creado_en": FIN_HISTORIAL,
+                })
+                if len(buffer) >= 5000:
+                    db.tareas.insert_many(buffer, ordered=False)
+                    total += len(buffer)
+                    buffer.clear()
+    if buffer:
+        db.tareas.insert_many(buffer, ordered=False)
+        total += len(buffer)
     db.batches.insert_many(lotes)
-
-    proy_por_id = {pr["_id"]: pr for pr in proyectos_mongo}
-    # Volver a correr el generador reemplaza las tareas de sus lotes (evita claves duplicadas).
-    db.tareas.delete_many({"batch_id": {"$in": [b["_id"] for b in lotes]}})
-    tareas_batch = []
-    total_tareas = 0
-    for lote in lotes:
-        proy = proy_por_id[lote["proyecto_id"]]
-        for t in range(100):
-            mod, geom, mime = elegir_modalidad(rng)
-            uri = f"s3://dataset/{mod}/{lote['_id']}/{t:03d}"
-            sha = hashlib.sha256(f"{semilla}:{uri}".encode()).hexdigest()
-            tareas_batch.append({
-                "_id": uid(rng, f"tarea-{lote['_id']}-{t}"),
-                "proyecto_id": proy["_id"],
-                "batch_id": lote["_id"],
-                "cliente_id": proy["cliente_id"],
-                "modalidad": mod,
-                "tipo_tarea": geom,
-                "prioridad": rng.randint(0, 10),
-                "estado": "disponible",
-                "version": 1,
-                "sla_horas": proy["sla_horas"],
-                "archivo": {
-                    "uri": uri,
-                    "sha256": sha,
-                    "bytes": rng.randint(512, 50_000_000),
-                    "mime": mime,
-                    "meta": {"muestra": t},
-                },
-                "asignacion": None,
-                "anotacion": None,
-                "revision": None,
-                "ultimo_evento_id": None,
-                "eventos_pendientes": [],
-                "creado_en": lote["creado_en"],
-            })
-            if len(tareas_batch) >= 5000:
-                db.tareas.insert_many(tareas_batch, ordered=False)
-                total_tareas += len(tareas_batch)
-                tareas_batch.clear()
-
-    if tareas_batch:
-        db.tareas.insert_many(tareas_batch, ordered=False)
-        total_tareas += len(tareas_batch)
 
     return {
         "semilla": semilla,
-        "clientes": len(clientes),
-        "anotadores": len(anotadores),
-        "revisores": sum(1 for a in anotadores if a["es_revisor"]),
-        "equipos": len(equipos),
-        "proyectos_mongo": len(proyectos_mongo),
-        "proyectos_solo_historial_previstos": 60,
-        "lotes": len(lotes),
-        "tareas_mongo": total_tareas,
+        "clientes": db.clientes.count_documents({}),
+        "anotadores": db.anotadores.count_documents({}),
+        "revisores": db.anotadores.count_documents({"es_revisor": True}),
+        "equipos": len(cat["equipos"]),
+        "proyectos": db.proyectos.count_documents({}),
+        "lotes": db.batches.count_documents({}),
+        "tareas": db.tareas.count_documents({}),
+        "tareas_por_modalidad": {
+            r["_id"]: r["n"] for r in db.tareas.aggregate(
+                [{"$group": {"_id": "$modalidad", "n": {"$sum": 1}}}, {"$sort": {"_id": 1}}])
+        },
     }
 
 
+# ---------------------------------------------------------------- Parquet
+
+def eventos_tarea(semilla: int, idx: int, p: dict, cat: dict, rng: random.Random) -> list[dict]:
+    """Eventos de una tarea histórica, en el mismo orden y formato que el sistema."""
+    mod, geom, _, _, dmin, dmax = elegir_modalidad(rng)
+    eq = rng.choice(cat["equipos"])
+    anotador, revisor = rng.choice(cat["miembros"][eq]), cat["revisores"][eq]
+    tarea_id = gid(semilla, "tarea-hist", idx)
+    base = {"tarea_id": tarea_id, "proyecto_id": p["_id"], "cliente_id": p["cliente_id"],
+            "batch_id": gid(semilla, "lote-hist", idx // TAREAS_POR_LOTE), "anotador_id": anotador,
+            "equipo_id": eq, "modalidad": mod, "tipo_tarea": geom, "sla_horas": p["sla_horas"],
+            "revisor_id": None, "aprobada_en": None, "duracion_ms": None, "motivo_rechazo": None,
+            "datos_extra_json": "{}"}
+    eventos, version = [], 1
+    t = INICIO_HISTORIAL + timedelta(seconds=rng.randint(0, int(timedelta(days=355).total_seconds())))
+
+    def ev(tipo, estado, cuando, tomada, **extra):
+        nonlocal version
+        version += 1
+        eventos.append({**base, **extra, "event_id": gid(semilla, "evento", f"{idx}-{version}"),
+                        "tipo_evento": tipo, "estado": estado, "ocurrido_en": cuando,
+                        "tomada_en": tomada, "version": version})
+
+    rechazos = 0
+    while True:
+        tomada = t
+        ev("tarea_abierta", "abierta", tomada, tomada)
+        dur_ms = rng.randint(dmin, dmax) * 1000
+        anotada = tomada + timedelta(milliseconds=dur_ms)
+        ev("tarea_anotada", "anotada", anotada, tomada, duracion_ms=dur_ms)
+        inicio_rev = anotada + timedelta(hours=rng.uniform(0.1, p["cola_revision_h"]))
+        ev("revision_iniciada", "en_revision", inicio_rev, tomada, revisor_id=revisor)
+        decision = inicio_rev + timedelta(minutes=rng.uniform(2, 20))
+        if rechazos < 4 and rng.random() < p["p_rechazo"]:
+            rechazos += 1
+            ev("revision_rechazada", "rechazada", decision, tomada, revisor_id=revisor,
+               motivo_rechazo=rng.choice(MOTIVOS))
+            t = decision + timedelta(hours=rng.uniform(0.2, 12))   # retrabajo: nueva toma
+            continue
+        ev("revision_aprobada", "aprobada", decision, tomada, revisor_id=revisor, aprobada_en=decision)
+        return eventos
+
+
 def generar_parquet(semilla: int, dir_eventos: Path) -> dict:
-    if "/app" not in sys.path:
-        sys.path.insert(0, "/app")
+    sys.path.insert(0, "/app")  # esquema del worker de Historial (historial-worker)
     import pyarrow as pa
     import pyarrow.parquet as pq
     from app.parquet_writer import ESQUEMA
 
-    rng = random.Random(semilla + 999)
-    equipos = [uid(rng, f"eq-hist-{e}") for e in range(30)]
-    anotadores_por_eq = {
-        eq_id: [uid(rng, f"ant-{idx_eq}-{m}") for m in range(9)]
-        for idx_eq, eq_id in enumerate(equipos)
-    }
-    revisores_por_eq = {
-        eq_id: [uid(rng, f"rev-{idx_eq}-0")]
-        for idx_eq, eq_id in enumerate(equipos)
-    }
+    cat = catalogo(semilla)
+    rng = random.Random(semilla + 2)
+    dir_eventos.mkdir(parents=True, exist_ok=True)
+    # Reemplaza solo lo que generó antes este script; conserva lo publicado por el worker.
+    for viejo in list(dir_eventos.glob("mes=*/gen-*.parquet")) + list(dir_eventos.glob("mes=*/dataset-*.parquet")):
+        viejo.unlink()
 
-    clientes_ids = [uid(rng, f"cli-hist-{c}") for c in range(60)]
-    proyectos_hist = [
-        {
-            "proyecto_id": uid(rng, f"proy-hist-{p}"),
-            "cliente_id": clientes_ids[p % len(clientes_ids)],
-            "sla_horas": float(rng.choice([24, 48, 72])),
-        }
-        for p in range(180)
-    ]
-
-    # Limpia ejecuciones previas del generador para evitar duplicados o residuos de otros meses
-    for mes_dir in dir_eventos.glob("mes=*"):
-        for old_f in mes_dir.glob(f"dataset-{semilla}-*.parquet"):
-            old_f.unlink()
-        for old_p in mes_dir.glob(f"gen-{semilla}-*.parquet"):
-            old_p.unlink()
-
-    inicio_12m = datetime(2025, 1, 1, 0, 0, tzinfo=timezone.utc)
-    span_segundos = int(timedelta(days=362).total_seconds())
-
-    n_tareas = 100_000
+    staging = dir_eventos / ".staging"
+    staging.mkdir(exist_ok=True)
+    partes: dict[str, int] = defaultdict(int)
     por_mes: dict[str, list[dict]] = defaultdict(list)
-    parte_por_mes: dict[str, int] = defaultdict(int)
+    total = 0
 
-    def escribir_parte(mes: str, filas: list[dict]) -> None:
-        if not filas:
-            return
-        carpeta = dir_eventos / f"mes={mes}"
-        carpeta.mkdir(parents=True, exist_ok=True)
-        staging = dir_eventos / ".staging"
-        staging.mkdir(parents=True, exist_ok=True)
-        idx_parte = parte_por_mes[mes]
-        parte_por_mes[mes] += 1
+    def volcar():
+        nonlocal total
+        for mes, filas in por_mes.items():
+            if not filas:
+                continue
+            carpeta = dir_eventos / f"mes={mes}"
+            carpeta.mkdir(exist_ok=True)
+            fd, tmp = tempfile.mkstemp(prefix="gen-", suffix=".tmp", dir=staging)
+            os.close(fd)
+            try:
+                pq.write_table(pa.Table.from_pylist(filas, schema=ESQUEMA), tmp, compression="snappy")
+                os.replace(tmp, carpeta / f"gen-{semilla}-{mes}-p{partes[mes]:03d}.parquet")
+            finally:
+                Path(tmp).unlink(missing_ok=True)
+            partes[mes] += 1
+            total += len(filas)
+            filas.clear()
 
-        fd, tmp_name = tempfile.mkstemp(prefix="gen-", suffix=".tmp", dir=staging)
-        os.close(fd)
-        tmp_path = Path(tmp_name)
-        try:
-            tabla = pa.Table.from_pylist(filas, schema=ESQUEMA)
-            pq.write_table(tabla, tmp_path, compression="snappy")
-            destino = carpeta / f"gen-{semilla}-{mes}-p{idx_parte:03d}.parquet"
-            os.replace(tmp_path, destino)
-        finally:
-            tmp_path.unlink(missing_ok=True)
-
-    for t_idx in range(n_tareas):
-        proy = proyectos_hist[t_idx % len(proyectos_hist)]
-        batch_id = uid(rng, f"batch-hist-{t_idx // 100}")
-        tarea_id = uid(rng, f"tarea-hist-{t_idx}")
-        eq_id = equipos[t_idx % len(equipos)]
-        ant_id = rng.choice(anotadores_por_eq[eq_id])
-        rev_id = rng.choice(revisores_por_eq[eq_id])
-        mod, geom, _ = elegir_modalidad(rng)
-
-        t0 = inicio_12m + timedelta(seconds=rng.randint(0, span_segundos))
-        version = 1
-
-        for ronda in range(2):
-            dur_ms = rng.randint(15_000, 180_000)
-            t_abierta = t0 + timedelta(seconds=ronda * 600)
-            t_anotada = t_abierta + timedelta(milliseconds=dur_ms)
-            t_rev_ini = t_anotada + timedelta(seconds=10)
-
-            for tipo_ev, estado, ocur_dt, extra_dur, extra_rev, extra_aprob, extra_motivo in [
-                ("tarea_abierta", "abierta", t_abierta, None, None, None, None),
-                ("tarea_anotada", "anotada", t_anotada, dur_ms, None, None, None),
-                ("revision_iniciada", "en_revision", t_rev_ini, None, rev_id, None, None),
-            ]:
-                por_mes[ocur_dt.strftime("%Y-%m")].append({
-                    "event_id": uid(rng, f"ev-{tarea_id}-{version}"),
-                    "tipo_evento": tipo_ev,
-                    "estado": estado,
-                    "ocurrido_en": ocur_dt,
-                    "tarea_id": tarea_id,
-                    "proyecto_id": proy["proyecto_id"],
-                    "cliente_id": proy["cliente_id"],
-                    "batch_id": batch_id,
-                    "anotador_id": ant_id,
-                    "revisor_id": extra_rev,
-                    "equipo_id": eq_id,
-                    "modalidad": mod,
-                    "tipo_tarea": geom,
-                    "version": version,
-                    "tomada_en": t_abierta,
-                    "aprobada_en": extra_aprob,
-                    "duracion_ms": extra_dur,
-                    "sla_horas": proy["sla_horas"],
-                    "motivo_rechazo": extra_motivo,
-                    "datos_extra_json": "{}",
-                })
-                version += 1
-
-        t_rech = t0 + timedelta(seconds=1300)
-        por_mes[t_rech.strftime("%Y-%m")].append({
-            "event_id": uid(rng, f"ev-{tarea_id}-{version}"),
-            "tipo_evento": "revision_rechazada",
-            "estado": "rechazada",
-            "ocurrido_en": t_rech,
-            "tarea_id": tarea_id,
-            "proyecto_id": proy["proyecto_id"],
-            "cliente_id": proy["cliente_id"],
-            "batch_id": batch_id,
-            "anotador_id": ant_id,
-            "revisor_id": rev_id,
-            "equipo_id": eq_id,
-            "modalidad": mod,
-            "tipo_tarea": geom,
-            "version": version,
-            "tomada_en": t0,
-            "aprobada_en": None,
-            "duracion_ms": None,
-            "sla_horas": proy["sla_horas"],
-            "motivo_rechazo": rng.choice(MOTIVOS_RECHAZO),
-            "datos_extra_json": "{}",
-        })
-        version += 1
-
-        t_aprob = t0 + timedelta(hours=rng.randint(1, 12))
-        por_mes[t_aprob.strftime("%Y-%m")].append({
-            "event_id": uid(rng, f"ev-{tarea_id}-{version}"),
-            "tipo_evento": "revision_aprobada",
-            "estado": "aprobada",
-            "ocurrido_en": t_aprob,
-            "tarea_id": tarea_id,
-            "proyecto_id": proy["proyecto_id"],
-            "cliente_id": proy["cliente_id"],
-            "batch_id": batch_id,
-            "anotador_id": ant_id,
-            "revisor_id": rev_id,
-            "equipo_id": eq_id,
-            "modalidad": mod,
-            "tipo_tarea": geom,
-            "version": version,
-            "tomada_en": t0,
-            "aprobada_en": t_aprob,
-            "duracion_ms": None,
-            "sla_horas": proy["sla_horas"],
-            "motivo_rechazo": None,
-            "datos_extra_json": "{}",
-        })
-
-        if (t_idx + 1) % 25_000 == 0:
-            for mes, filas in por_mes.items():
-                escribir_parte(mes, filas)
-                filas.clear()
-
-    for mes, filas in por_mes.items():
-        escribir_parte(mes, filas)
-        filas.clear()
-
-    total_eventos = 0
-    for mes_dir in sorted(dir_eventos.glob("mes=*")):
-        for pq_file in mes_dir.glob("*.parquet"):
-            total_eventos += pq.read_metadata(pq_file).num_rows
+    for idx in range(N_TAREAS_HIST):
+        p = cat["proyectos"][idx % len(cat["proyectos"])]
+        for e in eventos_tarea(semilla, idx, p, cat, rng):
+            por_mes[e["ocurrido_en"].strftime("%Y-%m")].append(e)
+        if (idx + 1) % 20_000 == 0:
+            volcar()
+    volcar()
 
     return {
         "semilla": semilla,
-        "tareas_historial": n_tareas,
-        "eventos_parquet": total_eventos,
-        "meses": sorted(d.name for d in dir_eventos.glob("mes=*")),
+        "tareas_historial": N_TAREAS_HIST,
+        "proyectos_historial": len(cat["proyectos"]),
+        "eventos_generados": total,
+        "archivos_generados": sum(partes.values()),
+        "meses": sorted(partes),
     }
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generador reproducible de dataset")
-    parser.add_argument("--semilla", type=int, default=SEED_DEFECTO)
+    parser = argparse.ArgumentParser(description="Generador reproducible del dataset")
+    parser.add_argument("--semilla", type=int, default=SEMILLA)
     parser.add_argument("--solo", choices=["mongo", "parquet", "todo"], default="todo")
-    parser.add_argument(
-        "--dir-eventos",
-        default=os.getenv("DATALAKE_EVENTOS", "/workspace/datalake/eventos"),
-    )
+    parser.add_argument("--dir-eventos", default=os.getenv("DATALAKE_EVENTOS", "/datalake/eventos"))
     args = parser.parse_args()
 
-    resumen: dict = {}
+    resumen: dict = {"generado_en": datetime.now(timezone.utc).isoformat()}
     if args.solo in ("mongo", "todo"):
-        resumen["mongo"] = generar_mongo(
-            args.semilla,
-            os.environ["MONGO_URI"],
-            os.getenv("MONGO_DB", "plataforma"),
-        )
+        resumen["mongo"] = generar_mongo(args.semilla, os.environ["MONGO_URI"],
+                                         os.getenv("MONGO_DB", "plataforma"))
     if args.solo in ("parquet", "todo"):
         resumen["parquet"] = generar_parquet(args.semilla, Path(args.dir_eventos))
-
     print(json.dumps(resumen, indent=2, ensure_ascii=False))
 
 
